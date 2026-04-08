@@ -4,8 +4,6 @@ import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import PageHeader from '@/components/PageHeader'
 import { useToast } from '@/components/Toast'
-import { generateDailySummary } from '@/lib/utils'
-
 interface WorkoutLog {
   id: string
   type: string
@@ -17,7 +15,17 @@ interface WorkoutLog {
 interface FoodLog {
   id: string
   meal_type: string
-  foods: { name: string; weight: number; calories?: number }[]
+  foods: { name: string; weight?: number; weight_g?: number; calories?: number; protein_g?: number }[]
+}
+
+interface AIReview {
+  summary: string
+  insights: string[]
+  actions: string[]
+  data_quality_tip: string
+  tone: string
+  cached: boolean
+  feedback?: string | null
 }
 
 interface BodyMetric {
@@ -36,28 +44,50 @@ export default function HistoryDetailPage() {
   const [workouts, setWorkouts] = useState<WorkoutLog[]>([])
   const [foods, setFoods] = useState<FoodLog[]>([])
   const [metric, setMetric] = useState<BodyMetric | null>(null)
-  const [summary, setSummary] = useState<{ workout_status: string; food_status: string; suggestion: string } | null>(null)
   const [loading, setLoading] = useState(true)
   const [confirmDelete, setConfirmDelete] = useState<{ type: 'workout' | 'food' | 'metric'; id: string } | null>(null)
+  const [aiReview, setAiReview] = useState<AIReview | null>(null)
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiError, setAiError] = useState(false)
+  const [feedbackSaving, setFeedbackSaving] = useState(false)
 
   const load = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.push('/auth'); return }
 
-    const [wRes, fRes, mRes, profileRes] = await Promise.all([
+    const [wRes, fRes, mRes] = await Promise.all([
       supabase.from('workout_logs').select('*').eq('user_id', user.id).eq('date', date),
       supabase.from('food_logs').select('*').eq('user_id', user.id).eq('date', date),
       supabase.from('body_metrics').select('id,weight_kg,body_fat_pct,muscle_mass,notes').eq('user_id', user.id).eq('date', date).maybeSingle(),
-      supabase.from('user_profiles').select('daily_calorie_target').eq('id', user.id).single(),
     ])
     setWorkouts(wRes.data || [])
     setFoods(fRes.data || [])
     setMetric(mRes.data)
-    setSummary(generateDailySummary(wRes.data || [], fRes.data || [], profileRes.data))
     setLoading(false)
   }, [date, router, supabase])
 
+  // Trigger AI review after data loads
+  const triggerAIReview = useCallback(async () => {
+    setAiLoading(true)
+    setAiError(false)
+    try {
+      const res = await fetch('/api/ai/daily-review', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date }),
+      })
+      if (!res.ok) throw new Error('failed')
+      const data = await res.json()
+      setAiReview(data)
+    } catch {
+      setAiError(true)
+    } finally {
+      setAiLoading(false)
+    }
+  }, [date])
+
   useEffect(() => { load() }, [load])
+  useEffect(() => { if (!loading) triggerAIReview() }, [loading, triggerAIReview])
 
   async function handleDelete() {
     if (!confirmDelete) return
@@ -79,6 +109,19 @@ export default function HistoryDetailPage() {
       show('操作成功')
       load()
     }
+  }
+
+  async function handleFeedback(feedback: 'liked' | 'disliked') {
+    if (feedbackSaving || !aiReview) return
+    const next = aiReview.feedback === feedback ? null : feedback
+    setAiReview(r => r ? { ...r, feedback: next } : r)
+    setFeedbackSaving(true)
+    await fetch('/api/ai/daily-review', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ date, feedback: next }),
+    })
+    setFeedbackSaving(false)
   }
 
   if (loading) return (
@@ -169,7 +212,9 @@ export default function HistoryDetailPage() {
                     <div className="space-y-0.5">
                       {f.foods.map((item, i) => (
                         <p key={i} className="text-xs text-gray-600">
-                          {item.name} {item.weight}g{item.calories ? ` · ${item.calories} kcal` : ''}
+                          {item.name} {item.weight_g ?? item.weight}g
+                          {item.calories ? ` · ${item.calories} kcal` : ''}
+                          {item.protein_g ? ` · 蛋白质 ${item.protein_g}g` : ''}
                         </p>
                       ))}
                     </div>
@@ -214,17 +259,84 @@ export default function HistoryDetailPage() {
           }
         </div>
 
-        {/* Summary */}
-        {summary && (
-          <div className="bg-white rounded-2xl p-4">
-            <h2 className="text-sm font-semibold mb-3">今日总结</h2>
-            <div className="space-y-1 text-sm text-gray-600">
-              <p>{summary.workout_status}</p>
-              <p>{summary.food_status}</p>
-              <p className="text-xs text-gray-400">{summary.suggestion}</p>
-            </div>
+        {/* AI Daily Review */}
+        <div className="bg-white rounded-2xl p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold">AI 今日复盘</h2>
+            {aiReview && !aiLoading && (
+              <div className="flex gap-1.5">
+                <button onClick={() => handleFeedback('liked')}
+                  className={`text-base px-1.5 py-0.5 rounded-lg transition-colors ${aiReview.feedback === 'liked' ? 'bg-green-50' : 'opacity-40'}`}>
+                  👍
+                </button>
+                <button onClick={() => handleFeedback('disliked')}
+                  className={`text-base px-1.5 py-0.5 rounded-lg transition-colors ${aiReview.feedback === 'disliked' ? 'bg-red-50' : 'opacity-40'}`}>
+                  👎
+                </button>
+              </div>
+            )}
           </div>
-        )}
+
+          {aiLoading && (
+            <div className="py-4 text-center">
+              <p className="text-xs text-gray-400">AI 分析中…</p>
+            </div>
+          )}
+
+          {aiError && !aiLoading && (
+            <div className="py-2">
+              <p className="text-xs text-gray-400 mb-2">生成失败</p>
+              <button onClick={triggerAIReview}
+                className="text-xs text-black border border-gray-200 px-3 py-1.5 rounded-lg">
+                重试
+              </button>
+            </div>
+          )}
+
+          {aiReview && !aiLoading && (
+            <div className="space-y-3">
+              <p className="text-sm text-gray-800 leading-relaxed">{aiReview.summary}</p>
+
+              {aiReview.insights.length > 0 && (
+                <div>
+                  <p className="text-xs text-gray-400 mb-1.5 font-medium">观察</p>
+                  <div className="space-y-1.5">
+                    {aiReview.insights.map((insight, i) => (
+                      <div key={i} className="flex gap-2">
+                        <span className="text-gray-300 mt-0.5 flex-shrink-0">·</span>
+                        <p className="text-xs text-gray-700 leading-relaxed">{insight}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {aiReview.actions.length > 0 && (
+                <div>
+                  <p className="text-xs text-gray-400 mb-1.5 font-medium">建议</p>
+                  <div className="space-y-1.5">
+                    {aiReview.actions.map((action, i) => (
+                      <div key={i} className="flex gap-2">
+                        <span className="text-gray-300 mt-0.5 flex-shrink-0">→</span>
+                        <p className="text-xs text-gray-700 leading-relaxed">{action}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {aiReview.data_quality_tip && (
+                <p className="text-xs text-amber-600 bg-amber-50 rounded-lg px-3 py-2">
+                  {aiReview.data_quality_tip}
+                </p>
+              )}
+
+              {aiReview.cached && (
+                <p className="text-xs text-gray-300 text-right">已缓存</p>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

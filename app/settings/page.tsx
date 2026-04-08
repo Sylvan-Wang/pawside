@@ -24,6 +24,8 @@ export default function SettingsPage() {
   const [form, setForm] = useState({ gender: '', height_cm: '', weight_kg: '', goal: '', weekly_workout_target: '', daily_calorie_target: '' })
   const [loading, setLoading] = useState(false)
   const [exporting, setExporting] = useState(false)
+  const [preferredModel, setPreferredModel] = useState<'openai' | 'deepseek'>('openai')
+  const [savingModel, setSavingModel] = useState(false)
 
   const load = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser()
@@ -39,6 +41,7 @@ export default function SettingsPage() {
         weekly_workout_target: String(data.weekly_workout_target || ''),
         daily_calorie_target: String(data.daily_calorie_target || ''),
       })
+      setPreferredModel(data.preferred_model === 'deepseek' ? 'deepseek' : 'openai')
     }
   }, [router, supabase])
 
@@ -107,6 +110,20 @@ export default function SettingsPage() {
       show(err instanceof Error ? err.message : '导出失败', 'error')
     } finally {
       setExporting(false)
+    }
+  }
+
+  async function handleModelSwitch(model: 'openai' | 'deepseek') {
+    setPreferredModel(model)
+    setSavingModel(true)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('未登录')
+      await supabase.from('user_profiles').update({ preferred_model: model }).eq('id', user.id)
+    } catch {
+      // silent — next save will also persist this
+    } finally {
+      setSavingModel(false)
     }
   }
 
@@ -188,6 +205,21 @@ export default function SettingsPage() {
           className="w-full bg-black text-white rounded-xl py-3.5 text-sm font-medium disabled:opacity-50">
           {loading ? '加载中…' : '保存'}
         </button>
+
+        {/* AI model */}
+        <div className="bg-white rounded-2xl p-4">
+          <p className="text-sm font-semibold mb-1">AI 模型</p>
+          <p className="text-xs text-gray-400 mb-3">用于每日复盘分析{savingModel ? '　保存中…' : ''}</p>
+          <div className="flex gap-2">
+            {(['openai', 'deepseek'] as const).map(m => (
+              <button key={m} onClick={() => handleModelSwitch(m)}
+                className={`flex-1 py-2.5 rounded-xl text-sm border transition-colors
+                  ${preferredModel === m ? 'bg-black text-white border-black' : 'border-gray-200 text-gray-600'}`}>
+                {m === 'openai' ? 'ChatGPT' : 'DeepSeek'}
+              </button>
+            ))}
+          </div>
+        </div>
 
         {/* Actions */}
         <div className="bg-white rounded-2xl overflow-hidden">

@@ -11,6 +11,7 @@ interface FoodItem {
   name: string
   weight: string
   calories: string
+  protein: string
 }
 
 export default function EditFoodPage() {
@@ -32,10 +33,11 @@ export default function EditFoodPage() {
       setDate(data.date)
       setMealType(data.meal_type)
       setFoods(
-        (data.foods || []).map((f: { name: string; weight: number; calories?: number }) => ({
+        (data.foods || []).map((f: { name: string; weight?: number; weight_g?: number; calories?: number; protein_g?: number }) => ({
           name: f.name || '',
-          weight: f.weight != null ? String(f.weight) : '',
+          weight: (f.weight_g ?? f.weight) != null ? String(f.weight_g ?? f.weight) : '',
           calories: f.calories != null ? String(f.calories) : '',
+          protein: f.protein_g != null ? String(f.protein_g) : '',
         }))
       )
       setLoading(false)
@@ -44,7 +46,7 @@ export default function EditFoodPage() {
   }, [id, router, supabase])
 
   function addFood() {
-    setFoods(f => [...f, { name: '', weight: '', calories: '' }])
+    setFoods(f => [...f, { name: '', weight: '', calories: '', protein: '' }])
   }
 
   function updateFood(i: number, key: keyof FoodItem, val: string) {
@@ -64,8 +66,9 @@ export default function EditFoodPage() {
     try {
       const foodData = valid.map(f => ({
         name: f.name,
-        weight: Number(f.weight),
+        weight_g: Number(f.weight),
         calories: f.calories ? Number(f.calories) : undefined,
+        protein_g: f.protein ? Number(f.protein) : undefined,
       }))
       const { error } = await supabase.from('food_logs').update({
         date,
@@ -130,10 +133,12 @@ export default function EditFoodPage() {
                 </div>
                 <input placeholder="食物名称" value={food.name} onChange={e => updateFood(i, 'name', e.target.value)}
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none" />
-                <div className="grid grid-cols-2 gap-2">
-                  <input placeholder="重量（g）" type="number" value={food.weight} onChange={e => updateFood(i, 'weight', e.target.value)}
+                <div className="grid grid-cols-3 gap-2">
+                  <input placeholder="重量(g)" type="number" value={food.weight} onChange={e => updateFood(i, 'weight', e.target.value)}
                     className="w-full border border-gray-200 rounded-lg px-2 py-2 text-sm outline-none" />
-                  <input placeholder="热量（可选）" type="number" value={food.calories} onChange={e => updateFood(i, 'calories', e.target.value)}
+                  <input placeholder="热量(kcal)" type="number" value={food.calories} onChange={e => updateFood(i, 'calories', e.target.value)}
+                    className="w-full border border-gray-200 rounded-lg px-2 py-2 text-sm outline-none" />
+                  <input placeholder="蛋白质(g)" type="number" value={food.protein} onChange={e => updateFood(i, 'protein', e.target.value)}
                     className="w-full border border-gray-200 rounded-lg px-2 py-2 text-sm outline-none" />
                 </div>
               </div>

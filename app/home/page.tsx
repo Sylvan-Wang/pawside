@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import BottomNav from '@/components/BottomNav'
-import { today, getWeekStart, generateDailySummary } from '@/lib/utils'
+import { today, getWeekStart } from '@/lib/utils'
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis } from 'recharts'
 
 interface Profile {
@@ -30,7 +30,8 @@ export default function HomePage() {
   const [weeklyDone, setWeeklyDone] = useState(0)
   const [weightData, setWeightData] = useState<{ date: string; weight: number }[]>([])
   const [currentWeight, setCurrentWeight] = useState<number | null>(null)
-  const [summary, setSummary] = useState<{ workout_status: string; food_status: string; suggestion: string } | null>(null)
+  const [aiSummary, setAiSummary] = useState<string | null>(null)
+  const [aiSummaryLoading, setAiSummaryLoading] = useState(false)
 
   function closePopup() {
     sessionStorage.setItem(POPUP_SESSION_KEY, '1')
@@ -87,10 +88,28 @@ export default function HomePage() {
       d.setDate(d.getDate() - 1)
     }
     setStreak(s)
-    setSummary(generateDailySummary(workoutRes.data || [], foodRes.data || [], p))
   }, [router, supabase])
 
+  // Load AI summary for today (lightweight — just the summary line)
+  const loadAiSummary = useCallback(async () => {
+    setAiSummaryLoading(true)
+    try {
+      const res = await fetch('/api/ai/daily-review', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date: today() }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setAiSummary(data.summary || null)
+      }
+    } catch { /* silent */ } finally {
+      setAiSummaryLoading(false)
+    }
+  }, [])
+
   useEffect(() => { load() }, [load])
+  useEffect(() => { loadAiSummary() }, [loadAiSummary])
 
   const weekTarget = profile?.weekly_workout_target || 3
   const weekPct = Math.min(100, Math.round((weeklyDone / weekTarget) * 100))
@@ -170,18 +189,19 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Today summary */}
+        {/* Today AI summary */}
         <div className="bg-white rounded-2xl p-4">
-          <h2 className="text-sm font-semibold mb-3">今日总结</h2>
-          {summary ? (
-            <div className="space-y-2">
-              <p className="text-sm text-gray-600">{summary.workout_status}</p>
-              <p className="text-sm text-gray-600">{summary.food_status}</p>
-              <p className="text-xs text-gray-400">{summary.suggestion}</p>
-            </div>
-          ) : (
-            <p className="text-sm text-gray-400">加载中…</p>
-          )}
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-sm font-semibold">今日复盘</h2>
+            <button onClick={() => router.push(`/history/${today()}`)}
+              className="text-xs text-gray-400 underline">查看详情</button>
+          </div>
+          {aiSummaryLoading
+            ? <p className="text-sm text-gray-400">AI 分析中…</p>
+            : aiSummary
+              ? <p className="text-sm text-gray-700 leading-relaxed">{aiSummary}</p>
+              : <p className="text-sm text-gray-400">暂无数据，去记录今天的第一条吧～</p>
+          }
         </div>
 
         {/* Weight trend */}
