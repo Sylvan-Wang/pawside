@@ -48,7 +48,15 @@ export async function callAI(
   model: AIModel,
   data: object,
 ): Promise<DailyReviewResponse | null> {
-  const isDeepSeek = model === 'deepseek'
+  // Fallback: if requested model has no key, try the other one
+  const resolvedModel: AIModel =
+    (model === 'openai' && !process.env.OPENAI_API_KEY && process.env.DEEPSEEK_API_KEY)
+      ? 'deepseek'
+      : (model === 'deepseek' && !process.env.DEEPSEEK_API_KEY && process.env.OPENAI_API_KEY)
+      ? 'openai'
+      : model
+
+  const isDeepSeek = resolvedModel === 'deepseek'
   const apiKey = isDeepSeek
     ? process.env.DEEPSEEK_API_KEY
     : process.env.OPENAI_API_KEY
@@ -56,7 +64,7 @@ export async function callAI(
   const modelName = isDeepSeek ? 'deepseek-chat' : 'gpt-4o-mini'
 
   if (!apiKey) {
-    console.warn(`[ai-client] Missing API key for model: ${model}`)
+    console.warn(`[ai-client] Missing API key for model: ${resolvedModel}`)
     return null
   }
 
