@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__fee6f98a-3bf1-483e-bcb7-160cf9fb26d1__list_projects",
+      "mcp__fee6f98a-3bf1-483e-bcb7-160cf9fb26d1__get_cost",
+      "mcp__fee6f98a-3bf1-483e-bcb7-160cf9fb26d1__confirm_cost",
+      "mcp__fee6f98a-3bf1-483e-bcb7-160cf9fb26d1__create_project",
+      "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --no-src-dir --import-alias \"@/*\" --yes)",
+      "mcp__fee6f98a-3bf1-483e-bcb7-160cf9fb26d1__get_project_url",
+      "mcp__fee6f98a-3bf1-483e-bcb7-160cf9fb26d1__get_publishable_keys",
+      "Bash(/c/Users/28021/Desktop/Pawside/.env.local:*)",
+      "mcp__fee6f98a-3bf1-483e-bcb7-160cf9fb26d1__apply_migration",
+      "Bash(npx next:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)",
+      "Bash(git rm:*)",
+      "Bash(git commit -m \"feat: initial Pawside MVP:*)"
+    ]
+  }
+}

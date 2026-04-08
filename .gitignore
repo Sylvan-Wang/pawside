@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Claude Code local config
+.claude/
+
+# Next.js build output
+.next/
+out/
+
+# Environment variables - NEVER commit these
+.env.local
+.env*.local
+
+# Netlify
+.netlify/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
