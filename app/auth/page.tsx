@@ -37,9 +37,15 @@ export default function AuthPage() {
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : '操作失败'
-      if (msg.includes('Invalid login')) setError('邮箱或密码错误')
-      else if (msg.includes('already registered')) setError('该邮箱已注册')
-      else setError(msg)
+      if (msg.includes('Email not confirmed') || msg.includes('email_not_confirmed')) {
+        setError('邮箱尚未验证，请检查收件箱并点击确认链接')
+      } else if (msg.includes('Invalid login') || msg.includes('invalid_credentials')) {
+        setError('邮箱或密码错误')
+      } else if (msg.includes('already registered')) {
+        setError('该邮箱已注册，请直接登录')
+      } else {
+        setError(msg)
+      }
     } finally {
       setLoading(false)
     }

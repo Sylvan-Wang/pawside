@@ -14,7 +14,15 @@
       "Bash(git init:*)",
       "Bash(git add:*)",
       "Bash(git rm:*)",
-      "Bash(git commit -m \"feat: initial Pawside MVP:*)"
+      "Bash(git commit -m \"feat: initial Pawside MVP:*)",
+      "Bash(gh repo:*)",
+      "Bash(winget install:*)",
+      "Bash(npm install:*)",
+      "Bash(node -e \"console.log\\(require\\(''./package.json''\\).dependencies.next\\)\")",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(/c/Users/28021/Desktop/Pawside/app/favicon.svg:*)",
+      "mcp__fee6f98a-3bf1-483e-bcb7-160cf9fb26d1__get_logs"
     ]
   }
 }
