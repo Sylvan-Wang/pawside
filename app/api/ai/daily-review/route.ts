@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
   const { date } = await req.json()
   if (!date) return NextResponse.json({ error: '缺少 date 参数' }, { status: 400 })
 
-  // Return cached version if exists
+  // Check cache first
   const { data: cached } = await supabase
     .from('ai_generated_content')
     .select('content_json, feedback')
@@ -63,27 +63,38 @@ export async function POST(req: NextRequest) {
   const profile = profileRes.data
   if (!profile) return NextResponse.json({ error: '用户资料缺失' }, { status: 400 })
 
+  const workouts = wRes.data || []
+  const foods = fRes.data || []
+
+  // Edge case: no data at all — don't call AI
+  if (workouts.length === 0 && foods.length === 0) {
+    const noDataResult: DailyReviewResponse = {
+      summary: '今天还没有记录，去完成第一条吧！',
+      insights: [],
+      actions: ['记录今天的训练或饮食，开始你的复盘之旅'],
+      data_quality_tip: '',
+      tone: 'encouraging',
+      cached: false,
+    }
+    return NextResponse.json(noDataResult)
+  }
+
   const latestMetric = mRes.data?.[0] ?? null
-  const preprocessed = preprocessDailyData(
-    wRes.data || [],
-    fRes.data || [],
-    profile,
-    latestMetric,
-  )
+  const preprocessed = preprocessDailyData(workouts, foods, profile, latestMetric)
 
   // Call AI
   let result: DailyReviewResponse | null = await callAI(
-    (profile.preferred_model as 'openai' | 'deepseek') || 'openai',
+    (profile.preferred_model as 'openai' | 'deepseek') || 'deepseek',
     preprocessed,
   )
 
-  // Fallback to rule-based if AI fails
+  // Fallback priority: 1) stale cache (already handled above) 2) rule-based 3) static
   const promptVersion = result ? `ai_daily_review_v1_${profile.preferred_model}` : 'rule_fallback_v1'
   if (!result) {
-    const ruleSummary = generateDailySummary(wRes.data || [], fRes.data || [], profile)
+    const ruleSummary = generateDailySummary(workouts, foods, profile)
     result = {
       summary: ruleSummary.workout_status + '。' + ruleSummary.food_status,
-      insights: [ruleSummary.suggestion],
+      insights: [ruleSummary.suggestion].filter(Boolean),
       actions: [],
       data_quality_tip: '',
       tone: 'encouraging',
@@ -91,7 +102,7 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Write cache
+  // Write cache (only for AI or rule-based results, not no-data)
   await supabase.from('ai_generated_content').upsert({
     user_id: user.id,
     content_type: 'daily_review_ai',

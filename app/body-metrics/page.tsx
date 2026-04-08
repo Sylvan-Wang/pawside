@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import PageHeader from '@/components/PageHeader'
@@ -8,6 +8,8 @@ import { today } from '@/lib/utils'
 
 interface CustomMetric { name: string; value: string }
 
+const LB_TO_KG = 0.453592
+
 export default function BodyMetricsPage() {
   const router = useRouter()
   const supabase = createClient()
@@ -15,6 +17,16 @@ export default function BodyMetricsPage() {
 
   const [date, setDate] = useState(today())
   const [weight, setWeight] = useState('')
+  const [weightUnit, setWeightUnit] = useState<'kg' | 'lb'>('kg')
+
+  // Load user's preferred weight unit
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return
+      supabase.from('user_profiles').select('weight_unit').eq('id', user.id).single()
+        .then(({ data }) => { if (data?.weight_unit) setWeightUnit(data.weight_unit as 'kg' | 'lb') })
+    })
+  }, [supabase])
   const [bodyFat, setBodyFat] = useState('')
   const [muscleMass, setMuscleMass] = useState('')
   const [showGirth, setShowGirth] = useState(false)
@@ -46,10 +58,15 @@ export default function BodyMetricsPage() {
       const customObj: Record<string, number> = {}
       customs.filter(c => c.name && c.value).forEach(c => { customObj[c.name] = Number(c.value) })
 
+      // Convert lb → kg before storing (always store in kg)
+      const weightKg = weight
+        ? weightUnit === 'lb' ? Number(weight) * LB_TO_KG : Number(weight)
+        : null
+
       const { error } = await supabase.from('body_metrics').insert({
         user_id: user.id,
         date,
-        weight_kg: n(weight),
+        weight_kg: weightKg,
         body_fat_pct: n(bodyFat),
         muscle_mass: n(muscleMass),
         chest_cm: n(girth.chest_cm),
@@ -102,9 +119,20 @@ export default function BodyMetricsPage() {
         <div className="bg-white rounded-2xl p-4 space-y-3">
           <p className="text-sm font-medium text-gray-700">基础数据</p>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">体重（kg）</label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-xs text-gray-500">体重</label>
+              <div className="flex rounded-lg overflow-hidden border border-gray-200">
+                {(['kg', 'lb'] as const).map(u => (
+                  <button key={u} type="button" onClick={() => setWeightUnit(u)}
+                    className={`px-3 py-1 text-xs transition-colors ${weightUnit === u ? 'bg-black text-white' : 'text-gray-500'}`}>
+                    {u}
+                  </button>
+                ))}
+              </div>
+            </div>
             <input type="number" step="0.1" value={weight} onChange={e => setWeight(e.target.value)}
-              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-gray-400" placeholder="62.5" />
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-gray-400"
+              placeholder={weightUnit === 'kg' ? '62.5' : '138'} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>

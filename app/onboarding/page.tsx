@@ -17,8 +17,11 @@ export default function OnboardingPage() {
     weekly_workout_target: '',
     daily_calorie_target: '',
   })
+  const [weightUnit, setWeightUnit] = useState<'kg' | 'lb'>('kg')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  const LB_TO_KG = 0.453592
 
   function set(key: string, value: string) {
     setForm(f => ({ ...f, [key]: value }))
@@ -33,11 +36,14 @@ export default function OnboardingPage() {
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('未登录')
+      const rawWeight = Number(form.weight_kg)
+      const weightKg = weightUnit === 'lb' ? rawWeight * LB_TO_KG : rawWeight
       const { error } = await supabase.from('user_profiles').update({
         goal: form.goal,
         gender: form.gender,
         height_cm: Number(form.height_cm),
-        weight_kg: Number(form.weight_kg),
+        weight_kg: weightKg,
+        weight_unit: weightUnit,
         weekly_workout_target: Number(form.weekly_workout_target) || 3,
         daily_calorie_target: Number(form.daily_calorie_target) || 2000,
         onboarding_completed: true,
@@ -92,10 +98,20 @@ export default function OnboardingPage() {
               placeholder="170" min="1" required />
           </div>
           <div>
-            <label className="block text-sm text-gray-600 mb-1">体重（kg）</label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-sm text-gray-600">体重</label>
+              <div className="flex rounded-lg overflow-hidden border border-gray-200">
+                {(['kg', 'lb'] as const).map(u => (
+                  <button key={u} type="button" onClick={() => setWeightUnit(u)}
+                    className={`px-2.5 py-0.5 text-xs transition-colors ${weightUnit === u ? 'bg-black text-white' : 'text-gray-500'}`}>
+                    {u}
+                  </button>
+                ))}
+              </div>
+            </div>
             <input type="number" value={form.weight_kg} onChange={e => set('weight_kg', e.target.value)}
               className="w-full border border-gray-200 rounded-xl px-3 py-3 text-sm outline-none focus:border-gray-400"
-              placeholder="60" min="1" step="0.1" required />
+              placeholder={weightUnit === 'kg' ? '60' : '132'} min="1" step="0.1" required />
           </div>
         </div>
 

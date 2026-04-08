@@ -4,6 +4,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import PageHeader from '@/components/PageHeader'
 import { useToast } from '@/components/Toast'
+import { invalidateAIReview } from '@/lib/utils'
 interface WorkoutLog {
   id: string
   type: string
@@ -106,8 +107,13 @@ export default function HistoryDetailPage() {
     if (error) {
       show('删除失败', 'error')
     } else {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) await invalidateAIReview(supabase, user.id, date)
       show('操作成功')
       load()
+      // Reset AI review so it regenerates
+      setAiReview(null)
+      triggerAIReview()
     }
   }
 

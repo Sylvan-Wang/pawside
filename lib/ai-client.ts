@@ -17,27 +17,34 @@ export interface DailyReviewResponse {
 const OPENAI_BASE = 'https://api.openai.com/v1'
 const DEEPSEEK_BASE = 'https://api.deepseek.com/v1'
 
-const SYSTEM_PROMPT = `你是爪边 Pawside 的 AI 健身教练，负责帮助用户做每日训练和饮食复盘。
+const SYSTEM_PROMPT = `You are an AI fitness review assistant for Pawside (爪边), a fitness tracking app.
 
-你会收到用户当天的训练和饮食数据，以 JSON 格式提供。你的任务是：
-1. 给出一句话的今日总结（summary）
-2. 2-3 条具体的观察（insights）
-3. 1-3 条明天或接下来的行动建议（actions）
-4. 若数据有明显缺失或异常，给出一句温和的提示（data_quality_tip），否则留空字符串
+Your job is to analyze a user's daily workout and nutrition data and generate a structured daily review IN CHINESE.
 
-风格要求：
-- 中文回复
-- 语气积极鼓励（encouraging）
-- 具体，基于数据，避免空话
-- 简洁，不要超过指定字数
+Goals:
+1. Help user understand today's performance
+2. Highlight key insights based on actual data
+3. Provide actionable next steps
 
-你必须严格按照以下 JSON schema 输出，不要输出任何其他内容：
+Rules:
+- Be specific and practical — base everything on the data provided
+- Avoid vague advice like "eat more protein". Instead say "明天早餐加 2 个鸡蛋可补充约 12g 蛋白质"
+- Base tone and evaluation on user's goal (lose_fat / gain_muscle / maintain)
+- If data is incomplete, explicitly acknowledge it in data_quality_tip
+- Do NOT give medical advice
+- Do NOT hallucinate or invent numbers not present in the data
+- Keep tone supportive but honest — use "warning" tone when calorie or protein flags indicate a real issue
+- Actions MUST be: executable, specific, low-friction (something user can do tomorrow)
+- Generate 2-3 insights and 1-3 actions maximum
+- All text output must be in Chinese (中文)
+
+Output ONLY valid JSON matching this exact schema, no other text:
 {
-  "summary": "string, 不超过50字",
+  "summary": "string (max 50 chars, one-sentence overview)",
   "insights": ["string", "string"],
   "actions": ["string", "string"],
-  "data_quality_tip": "string 或空字符串",
-  "tone": "encouraging"
+  "data_quality_tip": "string (empty string if data is complete)",
+  "tone": "encouraging | neutral | warning"
 }`
 
 function buildUserMessage(data: object): string {
@@ -97,7 +104,24 @@ export async function callAI(
     const content = json.choices?.[0]?.message?.content
     if (!content) return null
 
-    const parsed = JSON.parse(content) as DailyReviewResponse
+    let parsed: DailyReviewResponse
+    try {
+      parsed = JSON.parse(content) as DailyReviewResponse
+    } catch {
+      console.error('[ai-client] JSON parse failed, content:', content)
+      return null
+    }
+
+    // Schema validation — require minimum shape
+    if (
+      typeof parsed.summary !== 'string' ||
+      !Array.isArray(parsed.insights) ||
+      !Array.isArray(parsed.actions)
+    ) {
+      console.error('[ai-client] Invalid schema from AI:', parsed)
+      return null
+    }
+
     parsed.cached = false
     return parsed
   } catch (e) {

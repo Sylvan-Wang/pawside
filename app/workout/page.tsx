@@ -1,10 +1,10 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import PageHeader from '@/components/PageHeader'
 import { useToast } from '@/components/Toast'
-import { today } from '@/lib/utils'
+import { today, invalidateAIReview } from '@/lib/utils'
 
 const WORKOUT_TYPES = ['胸', '背', '腿', '肩', '手臂', '有氧', '拉伸', '其他']
 
@@ -26,6 +26,15 @@ export default function WorkoutPage() {
   const [notes, setNotes] = useState('')
   const [exercises, setExercises] = useState<Exercise[]>([])
   const [loading, setLoading] = useState(false)
+  const [weightUnit, setWeightUnit] = useState<'kg' | 'lb'>('kg')
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return
+      supabase.from('user_profiles').select('weight_unit').eq('id', user.id).single()
+        .then(({ data }) => { if (data?.weight_unit) setWeightUnit(data.weight_unit as 'kg' | 'lb') })
+    })
+  }, [supabase])
 
   function addExercise() {
     setExercises(ex => [...ex, { name: '', sets: '', reps: '', weight: '' }])
@@ -61,6 +70,7 @@ export default function WorkoutPage() {
         exercises: exData.length > 0 ? exData : null,
       })
       if (error) throw error
+      await invalidateAIReview(supabase, user.id, date)
       show('保存成功')
       setTimeout(() => router.push('/home'), 1200)
     } catch (err: unknown) {
@@ -109,7 +119,17 @@ export default function WorkoutPage() {
         <div className="bg-white rounded-2xl p-4">
           <div className="flex justify-between items-center mb-3">
             <label className="text-sm font-medium text-gray-700">动作记录（可选）</label>
-            <button onClick={addExercise} className="text-sm text-black font-medium">+ 添加动作</button>
+            <div className="flex items-center gap-2">
+              <div className="flex rounded-lg overflow-hidden border border-gray-200">
+                {(['kg', 'lb'] as const).map(u => (
+                  <button key={u} type="button" onClick={() => setWeightUnit(u)}
+                    className={`px-2.5 py-1 text-xs transition-colors ${weightUnit === u ? 'bg-black text-white' : 'text-gray-500'}`}>
+                    {u}
+                  </button>
+                ))}
+              </div>
+              <button onClick={addExercise} className="text-sm text-black font-medium">+ 添加动作</button>
+            </div>
           </div>
           {exercises.length === 0 && (
             <p className="text-sm text-gray-400">暂无动作，可选择添加</p>
@@ -128,7 +148,7 @@ export default function WorkoutPage() {
                     className="border border-gray-200 rounded-lg px-2 py-2 text-sm outline-none" />
                   <input placeholder="次数" value={ex.reps} onChange={e => updateExercise(i, 'reps', e.target.value)}
                     className="border border-gray-200 rounded-lg px-2 py-2 text-sm outline-none" />
-                  <input placeholder="重量" type="number" value={ex.weight} onChange={e => updateExercise(i, 'weight', e.target.value)}
+                  <input placeholder={`重量(${weightUnit})`} type="number" value={ex.weight} onChange={e => updateExercise(i, 'weight', e.target.value)}
                     className="border border-gray-200 rounded-lg px-2 py-2 text-sm outline-none" />
                 </div>
               </div>

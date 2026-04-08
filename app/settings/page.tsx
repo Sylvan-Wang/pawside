@@ -26,6 +26,7 @@ export default function SettingsPage() {
   const [exporting, setExporting] = useState(false)
   const [preferredModel, setPreferredModel] = useState<'openai' | 'deepseek'>('openai')
   const [savingModel, setSavingModel] = useState(false)
+  const [weightUnit, setWeightUnit] = useState<'kg' | 'lb'>('kg')
 
   const load = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser()
@@ -42,6 +43,7 @@ export default function SettingsPage() {
         daily_calorie_target: String(data.daily_calorie_target || ''),
       })
       setPreferredModel(data.preferred_model === 'deepseek' ? 'deepseek' : 'openai')
+      setWeightUnit(data.weight_unit === 'lb' ? 'lb' : 'kg')
     }
   }, [router, supabase])
 
@@ -59,6 +61,7 @@ export default function SettingsPage() {
         goal: form.goal || null,
         weekly_workout_target: Number(form.weekly_workout_target) || 3,
         daily_calorie_target: Number(form.daily_calorie_target) || 2000,
+        weight_unit: weightUnit,
         updated_at: new Date().toISOString(),
       }).eq('id', user.id)
       if (error) throw error
@@ -165,9 +168,20 @@ export default function SettingsPage() {
                   className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none" placeholder="170" />
               </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">体重（kg）</label>
+                <label className="block text-xs text-gray-500 mb-1">体重参考值</label>
                 <input type="number" step="0.1" value={form.weight_kg} onChange={e => setForm(f => ({ ...f, weight_kg: e.target.value }))}
                   className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none" placeholder="60" />
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">体重单位偏好</label>
+              <div className="flex gap-2">
+                {(['kg', 'lb'] as const).map(u => (
+                  <button key={u} type="button" onClick={() => setWeightUnit(u)}
+                    className={`flex-1 py-2 rounded-xl text-sm border transition-colors ${weightUnit === u ? 'bg-black text-white border-black' : 'border-gray-200 text-gray-600'}`}>
+                    {u}
+                  </button>
+                ))}
               </div>
             </div>
           </div>

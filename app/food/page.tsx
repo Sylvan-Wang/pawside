@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import PageHeader from '@/components/PageHeader'
 import { useToast } from '@/components/Toast'
-import { today } from '@/lib/utils'
+import { today, invalidateAIReview } from '@/lib/utils'
 
 const MEAL_TYPES = ['早餐', '午餐', '晚餐', '加餐']
 
@@ -59,6 +59,7 @@ export default function FoodPage() {
         foods: foodData,
       })
       if (error) throw error
+      await invalidateAIReview(supabase, user.id, date)
       show('保存成功')
       setTimeout(() => router.push('/home'), 1200)
     } catch (err: unknown) {

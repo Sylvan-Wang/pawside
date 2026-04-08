@@ -1,3 +1,22 @@
+import type { SupabaseClient } from '@supabase/supabase-js'
+
+/**
+ * Deletes the cached AI daily review for a given date so it regenerates next time.
+ * Call after any create/update/delete on workout_logs, food_logs, or body_metrics.
+ */
+export async function invalidateAIReview(
+  supabase: SupabaseClient,
+  userId: string,
+  date: string,
+) {
+  await supabase
+    .from('ai_generated_content')
+    .delete()
+    .eq('user_id', userId)
+    .eq('content_type', 'daily_review_ai')
+    .eq('target_date', date)
+}
+
 export function getWeekStart(date: Date): Date {
   const d = new Date(date)
   const day = d.getDay()

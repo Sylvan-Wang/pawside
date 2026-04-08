@@ -4,6 +4,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import PageHeader from '@/components/PageHeader'
 import { useToast } from '@/components/Toast'
+import { invalidateAIReview } from '@/lib/utils'
 
 const WORKOUT_TYPES = ['胸', '背', '腿', '肩', '手臂', '有氧', '拉伸', '其他']
 
@@ -81,6 +82,8 @@ export default function EditWorkoutPage() {
         updated_at: new Date().toISOString(),
       }).eq('id', id)
       if (error) throw error
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) await invalidateAIReview(supabase, user.id, date)
       show('保存成功')
       setTimeout(() => router.back(), 1200)
     } catch (err: unknown) {

@@ -22,7 +22,11 @@
       "Bash(git commit:*)",
       "Bash(git push:*)",
       "Bash(/c/Users/28021/Desktop/Pawside/app/favicon.svg:*)",
-      "mcp__fee6f98a-3bf1-483e-bcb7-160cf9fb26d1__get_logs"
+      "mcp__fee6f98a-3bf1-483e-bcb7-160cf9fb26d1__get_logs",
+      "Bash(for f:*)",
+      "Bash(do echo:*)",
+      "Read(//c/Users/28021/Desktop/Pawside/**)",
+      "Bash(done)"
     ]
   }
 }
