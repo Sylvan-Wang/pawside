@@ -4,12 +4,23 @@ import './globals.css'
 export const metadata: Metadata = {
   title: '爪边 Pawside',
   description: '移动端健身记录 App',
+  manifest: '/manifest.webmanifest',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: '爪边',
+  },
+  icons: {
+    icon: '/icon.svg',
+    apple: '/apple-touch-icon.svg',
+  },
 }
 
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
+  themeColor: '#111111',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

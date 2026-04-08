@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#111111"/>
+  <!-- Toe pads -->
+  <ellipse cx="168" cy="198" rx="48" ry="58" fill="white"/>
+  <ellipse cx="256" cy="162" rx="48" ry="58" fill="white"/>
+  <ellipse cx="344" cy="198" rx="48" ry="58" fill="white"/>
+  <!-- Main pad -->
+  <ellipse cx="256" cy="330" rx="96" ry="80" fill="white"/>
+  <!-- Thumb pad -->
+  <ellipse cx="120" cy="268" rx="36" ry="44" fill="white"/>
+</svg>

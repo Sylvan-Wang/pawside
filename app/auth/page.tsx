@@ -11,6 +11,7 @@ export default function AuthPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [registered, setRegistered] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -20,7 +21,8 @@ export default function AuthPage() {
       if (mode === 'register') {
         const { error } = await supabase.auth.signUp({ email, password })
         if (error) throw error
-        router.push('/onboarding')
+        setRegistered(true)
+        setTimeout(() => router.push('/onboarding'), 2000)
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
@@ -53,6 +55,15 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col justify-center px-6">
+      {registered && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+          <div className="bg-gray-900 text-white px-8 py-5 rounded-2xl shadow-2xl text-center animate-fade-in">
+            <p className="text-2xl mb-1">🍻</p>
+            <p className="text-base font-medium">注册成功！</p>
+            <p className="text-xs text-gray-400 mt-1">正在跳转…</p>
+          </div>
+        </div>
+      )}
       <div className="mb-10">
         <h1 className="text-2xl font-bold text-gray-900 mb-1">爪边 Pawside</h1>
         <p className="text-gray-400 text-sm">健身记录，简单有效</p>
