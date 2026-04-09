@@ -21,7 +21,8 @@ export default function BodyMetricsPage() {
 
   // Load user's preferred weight unit
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      const user = session?.user
       if (!user) return
       supabase.from('user_profiles').select('weight_unit').eq('id', user.id).single()
         .then(({ data }) => { if (data?.weight_unit) setWeightUnit(data.weight_unit as 'kg' | 'lb') })

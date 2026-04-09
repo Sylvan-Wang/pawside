@@ -53,7 +53,8 @@ export default function HistoryDetailPage() {
   const [feedbackSaving, setFeedbackSaving] = useState(false)
 
   const load = useCallback(async () => {
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: { session } } = await supabase.auth.getSession()
+    const user = session?.user
     if (!user) { router.push('/auth'); return }
 
     const [wRes, fRes, mRes] = await Promise.all([
@@ -67,8 +68,17 @@ export default function HistoryDetailPage() {
     setLoading(false)
   }, [date, router, supabase])
 
-  // Trigger AI review after data loads
-  const triggerAIReview = useCallback(async () => {
+  // Trigger AI review — sessionStorage cache per date so revisiting is instant
+  const triggerAIReview = useCallback(async (forceRefresh = false) => {
+    const cacheKey = `ai_review_${date}`
+
+    if (!forceRefresh && typeof window !== 'undefined') {
+      const cached = sessionStorage.getItem(cacheKey)
+      if (cached) {
+        try { setAiReview(JSON.parse(cached)); return } catch { /* ignore */ }
+      }
+    }
+
     setAiLoading(true)
     setAiError(false)
     try {
@@ -80,6 +90,9 @@ export default function HistoryDetailPage() {
       if (!res.ok) throw new Error('failed')
       const data = await res.json()
       setAiReview(data)
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem(cacheKey, JSON.stringify(data))
+      }
     } catch {
       setAiError(true)
     } finally {
@@ -109,11 +122,12 @@ export default function HistoryDetailPage() {
     } else {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) await invalidateAIReview(supabase, user.id, date)
+      // Clear sessionStorage so next visit regenerates
+      if (typeof window !== 'undefined') sessionStorage.removeItem(`ai_review_${date}`)
       show('操作成功')
       load()
-      // Reset AI review so it regenerates
       setAiReview(null)
-      triggerAIReview()
+      triggerAIReview(true) // force refresh
     }
   }
 
@@ -292,7 +306,7 @@ export default function HistoryDetailPage() {
           {aiError && !aiLoading && (
             <div className="py-2">
               <p className="text-xs text-gray-400 mb-2">生成失败</p>
-              <button onClick={triggerAIReview}
+              <button onClick={() => triggerAIReview()}
                 className="text-xs text-black border border-gray-200 px-3 py-1.5 rounded-lg">
                 重试
               </button>

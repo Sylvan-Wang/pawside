@@ -39,7 +39,9 @@ export default function HomePage() {
   }
 
   const load = useCallback(async () => {
-    const { data: { user } } = await supabase.auth.getUser()
+    // getSession reads from localStorage — no network call
+    const { data: { session } } = await supabase.auth.getSession()
+    const user = session?.user
     if (!user) { router.push('/auth'); return }
 
     const todayStr = today()
@@ -90,18 +92,31 @@ export default function HomePage() {
     setStreak(s)
   }, [router, supabase])
 
-  // Load AI summary for today (lightweight — just the summary line)
+  // Load AI summary — sessionStorage cache so revisiting /home is instant
   const loadAiSummary = useCallback(async () => {
+    const dateKey = today()
+    const cacheKey = `ai_summary_${dateKey}`
+
+    // Check sessionStorage first (same session, same day)
+    if (typeof window !== 'undefined') {
+      const cached = sessionStorage.getItem(cacheKey)
+      if (cached) { setAiSummary(cached); return }
+    }
+
     setAiSummaryLoading(true)
     try {
       const res = await fetch('/api/ai/daily-review', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ date: today() }),
+        body: JSON.stringify({ date: dateKey }),
       })
       if (res.ok) {
         const data = await res.json()
-        setAiSummary(data.summary || null)
+        const summary = data.summary || null
+        setAiSummary(summary)
+        if (summary && typeof window !== 'undefined') {
+          sessionStorage.setItem(cacheKey, summary)
+        }
       }
     } catch { /* silent */ } finally {
       setAiSummaryLoading(false)

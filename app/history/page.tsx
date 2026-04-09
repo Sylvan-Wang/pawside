@@ -22,7 +22,8 @@ export default function HistoryPage() {
   const [page, setPage] = useState(1)
 
   const load = useCallback(async () => {
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: { session } } = await supabase.auth.getSession()
+    const user = session?.user
     if (!user) { router.push('/auth'); return }
 
     const [workoutRes, foodRes, metricsRes] = await Promise.all([
