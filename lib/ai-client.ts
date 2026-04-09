@@ -14,8 +14,18 @@ export interface DailyReviewResponse {
   cached: boolean
 }
 
-const OPENAI_BASE = 'https://api.openai.com/v1'
-const DEEPSEEK_BASE = 'https://api.deepseek.com/v1'
+// If CF_AI_GATEWAY_URL is set, route through Cloudflare AI Gateway
+// e.g. https://gateway.ai.cloudflare.com/v1/{account_id}/{gateway_name}
+const CF_GATEWAY = process.env.CF_AI_GATEWAY_URL?.replace(/\/$/, '')
+
+const OPENAI_BASE = CF_GATEWAY
+  ? `${CF_GATEWAY}/openai`           // → Cloudflare proxies to api.openai.com
+  : 'https://api.openai.com/v1'
+
+// DeepSeek is OpenAI-compatible; CF Gateway Universal endpoint wraps it
+const DEEPSEEK_BASE = CF_GATEWAY
+  ? `${CF_GATEWAY}/deepseek`         // CF natively supports DeepSeek since Jan 2025
+  : 'https://api.deepseek.com/v1'
 
 const SYSTEM_PROMPT = `You are an AI fitness review assistant for Pawside (爪边), a fitness tracking app.
 
