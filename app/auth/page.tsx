@@ -19,10 +19,10 @@ export default function AuthPage() {
     setLoading(true)
     try {
       if (mode === 'register') {
-        const { error } = await supabase.auth.signUp({ email, password })
+        const { data, error } = await supabase.auth.signUp({ email, password })
         if (error) throw error
+        if (!data.session) throw new Error('该邮箱已注册，请直接登录')
         setRegistered(true)
-        setTimeout(() => router.push('/onboarding'), 2000)
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
@@ -56,11 +56,11 @@ export default function AuthPage() {
   return (
     <div className="min-h-screen bg-white flex flex-col justify-center px-6">
       {registered && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+        <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={() => router.push('/home')}>
           <div className="bg-gray-900 text-white px-8 py-5 rounded-2xl shadow-2xl text-center animate-fade-in">
             <p className="text-2xl mb-1">🍻</p>
             <p className="text-base font-medium">注册成功！</p>
-            <p className="text-xs text-gray-400 mt-1">正在跳转…</p>
+            <p className="text-xs text-gray-400 mt-1">点击继续</p>
           </div>
         </div>
       )}
@@ -71,13 +71,13 @@ export default function AuthPage() {
 
       <div className="flex mb-6 border-b border-gray-100">
         <button
-          onClick={() => setMode('login')}
+          onClick={() => { setMode('login'); setRegistered(false) }}
           className={`flex-1 pb-3 text-sm font-medium transition-colors ${mode === 'login' ? 'text-black border-b-2 border-black' : 'text-gray-400'}`}
         >
           登录
         </button>
         <button
-          onClick={() => setMode('register')}
+          onClick={() => { setMode('register'); setRegistered(false) }}
           className={`flex-1 pb-3 text-sm font-medium transition-colors ${mode === 'register' ? 'text-black border-b-2 border-black' : 'text-gray-400'}`}
         >
           注册
@@ -129,7 +129,7 @@ export default function AuthPage() {
       <p className="text-center text-sm text-gray-400 mt-6">
         {mode === 'login' ? '还没有账号？' : '已有账号？'}
         <button
-          onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
+          onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setRegistered(false) }}
           className="text-black ml-1 font-medium"
         >
           {mode === 'login' ? '去注册' : '去登录'}
