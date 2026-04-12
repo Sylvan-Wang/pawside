@@ -9,6 +9,7 @@ export default function AuthPage() {
   const [mode, setMode] = useState<'login' | 'register'>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirm, setConfirm] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [registered, setRegistered] = useState(false)
@@ -19,6 +20,7 @@ export default function AuthPage() {
     setLoading(true)
     try {
       if (mode === 'register') {
+        if (password !== confirm) throw new Error('两次密码不一致')
         const { data, error } = await supabase.auth.signUp({ email, password })
         if (error) throw error
         if (!data.session) throw new Error('该邮箱已注册，请直接登录')
@@ -71,13 +73,13 @@ export default function AuthPage() {
 
       <div className="flex mb-6 border-b border-gray-100">
         <button
-          onClick={() => { setMode('login'); setRegistered(false) }}
+          onClick={() => { setMode('login'); setRegistered(false); setConfirm('') }}
           className={`flex-1 pb-3 text-sm font-medium transition-colors ${mode === 'login' ? 'text-black border-b-2 border-black' : 'text-gray-400'}`}
         >
           登录
         </button>
         <button
-          onClick={() => { setMode('register'); setRegistered(false) }}
+          onClick={() => { setMode('register'); setRegistered(false); setConfirm('') }}
           className={`flex-1 pb-3 text-sm font-medium transition-colors ${mode === 'register' ? 'text-black border-b-2 border-black' : 'text-gray-400'}`}
         >
           注册
@@ -103,11 +105,24 @@ export default function AuthPage() {
             value={password}
             onChange={e => setPassword(e.target.value)}
             className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-gray-400"
-            placeholder="••••••••"
+            placeholder="至少 6 位"
             required
             minLength={6}
           />
         </div>
+        {mode === 'register' && (
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">确认密码</label>
+            <input
+              type="password"
+              value={confirm}
+              onChange={e => setConfirm(e.target.value)}
+              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-gray-400"
+              placeholder="再输一次"
+              required
+            />
+          </div>
+        )}
 
         {error && <p className="text-red-500 text-sm">{error}</p>}
 
@@ -129,7 +144,7 @@ export default function AuthPage() {
       <p className="text-center text-sm text-gray-400 mt-6">
         {mode === 'login' ? '还没有账号？' : '已有账号？'}
         <button
-          onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setRegistered(false) }}
+          onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setRegistered(false); setConfirm('') }}
           className="text-black ml-1 font-medium"
         >
           {mode === 'login' ? '去注册' : '去登录'}
