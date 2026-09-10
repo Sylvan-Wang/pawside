@@ -12,7 +12,7 @@ export default function AuthPage() {
   const [confirm, setConfirm] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const [registered, setRegistered] = useState(false)
+  const [registrationResult, setRegistrationResult] = useState<'signed-in' | 'confirmation-pending' | null>(null)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -21,10 +21,14 @@ export default function AuthPage() {
     try {
       if (mode === 'register') {
         if (password !== confirm) throw new Error('两次密码不一致')
-        const { data, error } = await supabase.auth.signUp({ email, password })
+        const emailRedirectTo = `${window.location.origin}/auth/callback?next=/onboarding`
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { emailRedirectTo },
+        })
         if (error) throw error
-        if (!data.session) throw new Error('该邮箱已注册，请直接登录')
-        setRegistered(true)
+        setRegistrationResult(data.session ? 'signed-in' : 'confirmation-pending')
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
@@ -57,12 +61,33 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col justify-center px-6">
-      {registered && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={() => router.push('/home')}>
-          <div className="bg-gray-900 text-white px-8 py-5 rounded-2xl shadow-2xl text-center animate-fade-in">
+      {registrationResult && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 px-6">
+          <div className="bg-gray-900 text-white px-8 py-6 rounded-2xl shadow-2xl text-center animate-fade-in max-w-sm">
             <p className="text-2xl mb-1">🍻</p>
-            <p className="text-base font-medium">注册成功！</p>
-            <p className="text-xs text-gray-400 mt-1">点击继续</p>
+            <p className="text-base font-medium">
+              {registrationResult === 'signed-in' ? '注册成功！' : '请确认你的邮箱'}
+            </p>
+            <p className="text-xs text-gray-400 mt-2 leading-5">
+              {registrationResult === 'signed-in'
+                ? '账户已登录，可以继续完成基础资料。'
+                : '如果该邮箱可以注册，确认邮件已经发送。请从邮件链接返回 Pawside。'}
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                if (registrationResult === 'signed-in') {
+                  router.push('/onboarding')
+                } else {
+                  setMode('login')
+                  setRegistrationResult(null)
+                  setConfirm('')
+                }
+              }}
+              className="mt-4 rounded-lg bg-white px-5 py-2 text-sm font-medium text-gray-900"
+            >
+              {registrationResult === 'signed-in' ? '继续' : '返回登录'}
+            </button>
           </div>
         </div>
       )}
@@ -73,13 +98,13 @@ export default function AuthPage() {
 
       <div className="flex mb-6 border-b border-gray-100">
         <button
-          onClick={() => { setMode('login'); setRegistered(false); setConfirm('') }}
+          onClick={() => { setMode('login'); setRegistrationResult(null); setConfirm('') }}
           className={`flex-1 pb-3 text-sm font-medium transition-colors ${mode === 'login' ? 'text-black border-b-2 border-black' : 'text-gray-400'}`}
         >
           登录
         </button>
         <button
-          onClick={() => { setMode('register'); setRegistered(false); setConfirm('') }}
+          onClick={() => { setMode('register'); setRegistrationResult(null); setConfirm('') }}
           className={`flex-1 pb-3 text-sm font-medium transition-colors ${mode === 'register' ? 'text-black border-b-2 border-black' : 'text-gray-400'}`}
         >
           注册
@@ -144,7 +169,7 @@ export default function AuthPage() {
       <p className="text-center text-sm text-gray-400 mt-6">
         {mode === 'login' ? '还没有账号？' : '已有账号？'}
         <button
-          onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setRegistered(false); setConfirm('') }}
+          onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setRegistrationResult(null); setConfirm('') }}
           className="text-black ml-1 font-medium"
         >
           {mode === 'login' ? '去注册' : '去登录'}

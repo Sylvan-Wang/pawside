@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -26,8 +26,11 @@ export async function middleware(request: NextRequest) {
 
   const publicPaths = ['/auth']
   const isPublic = publicPaths.some(p => pathname.startsWith(p)) || pathname === '/auth/reset-password'
+  const isLocalMethodPreview =
+    process.env.PAWSIDE_VISUAL_PREVIEW === '1' &&
+    (pathname.startsWith('/training/method') || pathname === '/onboarding')
 
-  if (!user && !isPublic && !pathname.startsWith('/api')) {
+  if (!user && !isPublic && !isLocalMethodPreview && !pathname.startsWith('/api')) {
     return NextResponse.redirect(new URL('/auth', request.url))
   }
 

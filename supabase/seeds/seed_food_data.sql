@@ -2,6 +2,8 @@
 -- Source: China Food Composition Table, cleaned from 各种食物营养成分表.xlsx
 -- Generated: 2026-04-13
 
+begin;
+
 -- Disable triggers during bulk insert for performance
 set session_replication_role = replica;
 
@@ -3473,6 +3475,8 @@ insert into food_aliases (food_id, alias, alias_type) values
 
 -- Re-enable triggers
 set session_replication_role = DEFAULT;
+
+commit;
 
 -- Summary:
 -- Total foods inserted:          1697

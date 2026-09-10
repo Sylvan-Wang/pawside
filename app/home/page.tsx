@@ -11,19 +11,25 @@ interface Profile {
   weekly_workout_target: number
   daily_calorie_target: number
   weight_kg: number
+  onboarding_completed: boolean
 }
 
-const POPUP_SESSION_KEY = 'pawside_popup_closed'
+interface MethodContext {
+  current_cycle_number: number
+  next_split_key: 'push' | 'pull' | 'legs'
+  current_state: 'ready' | 'recovery_check' | 'rest' | 'session_in_progress'
+  method: { name: string; version: string } | null
+}
+
+const splitNames = { push: '推', pull: '拉', legs: '腿' } as const
 
 export default function HomePage() {
   const router = useRouter()
   const supabase = createClient()
-  // 每次 mount 检查 sessionStorage，本次 session 关过就不弹
-  const [showPopup, setShowPopup] = useState(() => {
-    if (typeof window === 'undefined') return false
-    return sessionStorage.getItem(POPUP_SESSION_KEY) !== '1'
-  })
   const [profile, setProfile] = useState<Profile | null>(null)
+  const [methodContext, setMethodContext] = useState<MethodContext | null>(null)
+  const [methodMessage, setMethodMessage] = useState('官方训练方法仍在规则校验中。')
+  const [setupNotice, setSetupNotice] = useState('')
   const [todayWorkouts, setTodayWorkouts] = useState<{ type: string; duration_minutes: number }[]>([])
   const [todayFoods, setTodayFoods] = useState<{ meal_type: string; foods: { calories?: number }[] }[]>([])
   const [streak, setStreak] = useState(0)
@@ -32,11 +38,6 @@ export default function HomePage() {
   const [currentWeight, setCurrentWeight] = useState<number | null>(null)
   const [aiSummary, setAiSummary] = useState<string | null>(null)
   const [aiSummaryLoading, setAiSummaryLoading] = useState(false)
-
-  function closePopup() {
-    sessionStorage.setItem(POPUP_SESSION_KEY, '1')
-    setShowPopup(false)
-  }
 
   const load = useCallback(async () => {
     // getSession reads from localStorage — no network call
@@ -52,7 +53,7 @@ export default function HomePage() {
     const streakFrom = sixtyDaysAgo.toISOString().split('T')[0]
 
     const [profileRes, workoutRes, foodRes, weekWorkoutRes, metricsRes, streakWRes, streakFRes] = await Promise.all([
-      supabase.from('user_profiles').select('goal,weekly_workout_target,daily_calorie_target,weight_kg').eq('id', user.id).single(),
+      supabase.from('user_profiles').select('goal,weekly_workout_target,daily_calorie_target,weight_kg,onboarding_completed').eq('id', user.id).single(),
       supabase.from('workout_logs').select('type,duration_minutes').eq('user_id', user.id).eq('date', todayStr),
       supabase.from('food_logs').select('meal_type,foods').eq('user_id', user.id).eq('date', todayStr),
       supabase.from('workout_logs').select('date').eq('user_id', user.id).gte('date', weekStart),
@@ -92,6 +93,22 @@ export default function HomePage() {
     setStreak(s)
   }, [router, supabase])
 
+  const loadMethod = useCallback(async () => {
+    try {
+      const response = await fetch('/api/method/current')
+      if (!response.ok) {
+        setMethodContext(null)
+        setMethodMessage('暂时无法读取官方训练方法状态。')
+        return
+      }
+      const result = await response.json()
+      setMethodContext(result.data)
+      if (result.availability?.message) setMethodMessage(result.availability.message)
+    } catch {
+      setMethodContext(null)
+    }
+  }, [])
+
   // Load AI summary — sessionStorage cache so revisiting /home is instant
   const loadAiSummary = useCallback(async () => {
     const dateKey = today()
@@ -123,39 +140,23 @@ export default function HomePage() {
     }
   }, [])
 
-  useEffect(() => { load() }, [load])
-  useEffect(() => { loadAiSummary() }, [loadAiSummary])
+  useEffect(() => { void Promise.resolve().then(load) }, [load])
+  useEffect(() => { void Promise.resolve().then(loadMethod) }, [loadMethod])
+  useEffect(() => { void Promise.resolve().then(loadAiSummary) }, [loadAiSummary])
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const notice = sessionStorage.getItem('pawside_setup_notice')
+    if (!notice) return
+    sessionStorage.removeItem('pawside_setup_notice')
+    const frame = window.requestAnimationFrame(() => setSetupNotice(notice))
+    return () => window.cancelAnimationFrame(frame)
+  }, [])
 
   const weekTarget = profile?.weekly_workout_target || 3
   const weekPct = Math.min(100, Math.round((weeklyDone / weekTarget) * 100))
 
   return (
     <div className="pb-20 bg-gray-50 min-h-screen">
-      {/* Popup */}
-      {showPopup && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-end">
-          <div className="bg-white w-full rounded-t-2xl p-6">
-            <div className="flex justify-between items-center mb-5">
-              <h2 className="text-base font-semibold">今天想做什么？</h2>
-              <button onClick={closePopup} className="text-gray-400 text-xl leading-none">×</button>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <button onClick={() => router.push('/workout')}
-                className="bg-black text-white rounded-xl py-4 text-sm font-medium">
-                记录训练
-              </button>
-              <button onClick={() => router.push('/food')}
-                className="border border-gray-200 rounded-xl py-4 text-sm text-gray-700">
-                记录饮食
-              </button>
-            </div>
-            <button onClick={closePopup} className="w-full mt-3 py-3 text-sm text-gray-400">
-              关闭
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* Header */}
       <div className="bg-white px-4 py-4 border-b border-gray-100">
         <div className="flex justify-between items-center">
@@ -164,8 +165,20 @@ export default function HomePage() {
             <h1 className="text-lg font-bold text-gray-900">爪边</h1>
           </div>
           <div className="flex gap-2">
-            <button onClick={() => router.push('/workout')}
-              className="text-xs bg-black text-white px-3 py-1.5 rounded-lg">记录训练</button>
+            <button onClick={() => router.push(
+              methodContext
+                ? '/training/today'
+                : profile?.onboarding_completed
+                  ? '/workout'
+                  : '/onboarding'
+            )}
+              className="text-xs bg-black text-white px-3 py-1.5 rounded-lg">
+              {methodContext
+                ? '开始今天'
+                : profile?.onboarding_completed
+                  ? '记录训练'
+                  : '完成基础设置'}
+            </button>
             <button onClick={() => router.push('/food')}
               className="text-xs border border-gray-200 px-3 py-1.5 rounded-lg text-gray-700">记录饮食</button>
           </div>
@@ -173,6 +186,48 @@ export default function HomePage() {
       </div>
 
       <div className="px-4 py-4 space-y-4">
+        {setupNotice && (
+          <div className="rounded-2xl border border-green-100 bg-green-50 px-4 py-3 text-sm text-green-800">
+            {setupNotice}
+          </div>
+        )}
+        <div className="bg-black text-white rounded-2xl p-5">
+          {methodContext ? (
+            <>
+              <p className="text-xs text-white/60">{methodContext.method?.name || '官方三分化'} · 第 {methodContext.current_cycle_number} 轮</p>
+              <div className="flex items-end justify-between mt-2">
+                <div>
+                  <p className="text-xl font-semibold">下一次：{splitNames[methodContext.next_split_key]}</p>
+                  <p className="text-sm text-white/70 mt-1">训练顺序按方法推进，休息不会跳过下一练。</p>
+                </div>
+                <button onClick={() => router.push('/training/today')} className="bg-white text-black rounded-xl px-4 py-2 text-sm font-medium">
+                  开始今天
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="text-xs text-white/60">训练方法</p>
+              <p className="text-lg font-semibold mt-2">官方三分化尚未开放</p>
+              <p className="text-sm text-white/70 mt-1">{methodMessage}</p>
+              <div className="mt-4 flex items-center gap-3">
+                <button
+                  onClick={() => router.push(profile?.onboarding_completed ? '/workout' : '/onboarding')}
+                  className="bg-white text-black rounded-xl px-4 py-2 text-sm font-medium"
+                >
+                  {profile?.onboarding_completed ? '开始自由训练' : '完成基础设置'}
+                </button>
+                <button
+                  onClick={() => router.push('/training/method')}
+                  className="rounded-xl border border-white/20 px-4 py-2 text-sm text-white/80"
+                >
+                  预览方法
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+
         {/* Dashboard cards */}
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-white rounded-2xl p-4">

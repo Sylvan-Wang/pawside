@@ -3,29 +3,39 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "dev": "node scripts/run-next-with-proxy.mjs dev",
+    "build": "node scripts/run-next-with-proxy.mjs build",
+    "start": "node scripts/run-next-with-proxy.mjs start",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:method": "vitest run tests/method-import tests/method-rules",
+    "method:validate": "node --no-warnings --experimental-strip-types scripts/method-import/cli.mts",
+    "backend:preflight": "node scripts/validate-backend-package.mjs",
+    "ai:smoke": "node --no-warnings --env-file-if-exists=.env.local --env-file-if-exists=.env.proxy.local --use-env-proxy --experimental-strip-types scripts/verify-openai-provider.mts",
+    "media:validate": "node scripts/validate-exercise-media.mjs"
   },
   "dependencies": {
+    "@bryllim/workout-guide": "1.0.0",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.49.4",
     "clsx": "^2.1.1",
-    "next": "^16.2.2",
+    "next": "^16.3.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "recharts": "^2.15.0"
+    "read-excel-file": "^9.3.10",
+    "recharts": "^2.15.0",
+    "zod": "^4.5.4"
   },
   "devDependencies": {
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "autoprefixer": "^10.0.1",
-    "eslint": "^8",
-    "eslint-config-next": "15.2.4",
-    "postcss": "^8",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^16.3.4",
+    "postcss": "^8.5.23",
     "tailwindcss": "^3.4.1",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.11"
   }
 }

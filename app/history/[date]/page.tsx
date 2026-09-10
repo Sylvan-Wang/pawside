@@ -100,8 +100,10 @@ export default function HistoryDetailPage() {
     }
   }, [date])
 
-  useEffect(() => { load() }, [load])
-  useEffect(() => { if (!loading) triggerAIReview() }, [loading, triggerAIReview])
+  useEffect(() => { void Promise.resolve().then(load) }, [load])
+  useEffect(() => {
+    if (!loading) void Promise.resolve().then(() => triggerAIReview())
+  }, [loading, triggerAIReview])
 
   async function handleDelete() {
     if (!confirmDelete) return
