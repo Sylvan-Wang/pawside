@@ -1,9 +1,12 @@
 [build]
-  command = "npm run build"
+  command = "npm run build:netlify"
   publish = ".next"
 
 [build.environment]
   NODE_VERSION = "20"
+
+[[plugins]]
+  package = "/netlify/plugins/copy-next-proxy-runtime"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"

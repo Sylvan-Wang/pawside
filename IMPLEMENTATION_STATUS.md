@@ -3,7 +3,7 @@
 > 更新日期：2026-09-10  
 > 工作分支：`feature/method-guidance-v1`  
 > 范围：仅 Pawside；不涉及 Morrow。  
-> 发布边界：Phase 2 schema 已推送至 Supabase；不激活 Method，production 代码部署后仅供未激活态测试。
+> 发布边界：Phase 2 schema 已推送至 Supabase，代码已部署 Netlify production；Method release 保持未激活，当前用于未激活态测试。
 
 ## 发布门结论
 
@@ -31,6 +31,7 @@
 | 11 | Internal/Beta Activation | `WAITING FOR LATER PHASES` | 至少完成 Enrollment、Prescription、Actual 与安全验收 |
 | 12 | Phase 2 能力画像与 Enrollment | `DB APPLIED / NOT ACTIVE` | Onboarding 能力画像、active release guard、release pin、Cycle 1/Push 原子初始化、重试 API 均已实现并 replay；release 未激活 |
 | 13 | Phase 2 移动端视觉回归 | `PASS` | 480px 真机比例渲染通过；未改变底部导航和运动记录 UI |
+| 14 | Netlify production 部署 | `LIVE` | Deploy `6aa2c1064b505d8a19fcbcb9` 已上线 `https://paw-side.com`；Auth/Proxy/API 未登录边界健康检查通过 |
 
 ## 明确不做
 
@@ -57,3 +58,5 @@
 - Phase 2 安全降级：非完整健身房返回 `EQUIPMENT_REVIEW_REQUIRED`；无 active release 返回 `METHOD_NOT_READY`；基础设置仍可保存。
 - Phase 2 视觉：480×3400 本地移动端整页实渲染通过，无溢出、截断或虚假启用提示。
 - Supabase replay：目标项目 `sbwevlhzqujrtucppacl` 为 `ACTIVE_HEALTHY`；13 个本地 migration 与远端历史完全一致。
+- Netlify：production deploy `6aa2c1064b505d8a19fcbcb9` 已上线；`/auth`=200，未登录 Method 跳转后=200，`/api/ai/status`=401 `UNAUTHORIZED`。
+- Netlify Windows CLI：使用 Next 16 官方 `--webpack` production build，并仅在本地 Windows 打包时标准化 Next Runtime 虚拟模块路径；Linux 云构建不应用该补丁。

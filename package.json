@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "node scripts/run-next-with-proxy.mjs dev",
     "build": "node scripts/run-next-with-proxy.mjs build",
+    "build:netlify": "node scripts/run-next-with-proxy.mjs build --webpack",
     "start": "node scripts/run-next-with-proxy.mjs start",
     "lint": "eslint .",
     "test": "vitest run",
