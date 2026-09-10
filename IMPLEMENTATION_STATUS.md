@@ -31,7 +31,7 @@
 | 11 | Internal/Beta Activation | `WAITING FOR LATER PHASES` | 至少完成 Enrollment、Prescription、Actual 与安全验收 |
 | 12 | Phase 2 能力画像与 Enrollment | `DB APPLIED / NOT ACTIVE` | Onboarding 能力画像、active release guard、release pin、Cycle 1/Push 原子初始化、重试 API 均已实现并 replay；release 未激活 |
 | 13 | Phase 2 移动端视觉回归 | `PASS` | 480px 真机比例渲染通过；未改变底部导航和运动记录 UI |
-| 14 | Netlify production 部署 | `LIVE` | Deploy `6aa2c1064b505d8a19fcbcb9` 已上线 `https://paw-side.com`；Auth/Proxy/API 未登录边界健康检查通过 |
+| 14 | Netlify production 部署 | `LIVE / ASSETS VERIFIED` | Deploy `6aa2c9bba263680cb036fadc` 已上线 `https://paw-side.com`；CSS/JS、Auth、Proxy、API 未登录边界均通过 |
 
 ## 明确不做
 
@@ -58,5 +58,6 @@
 - Phase 2 安全降级：非完整健身房返回 `EQUIPMENT_REVIEW_REQUIRED`；无 active release 返回 `METHOD_NOT_READY`；基础设置仍可保存。
 - Phase 2 视觉：480×3400 本地移动端整页实渲染通过，无溢出、截断或虚假启用提示。
 - Supabase replay：目标项目 `sbwevlhzqujrtucppacl` 为 `ACTIVE_HEALTHY`；13 个本地 migration 与远端历史完全一致。
-- Netlify：production deploy `6aa2c1064b505d8a19fcbcb9` 已上线；`/auth`=200，未登录 Method 跳转后=200，`/api/ai/status`=401 `UNAUTHORIZED`。
+- Netlify：production deploy `6aa2c9bba263680cb036fadc` 已上线；登录页 CSS 与 8 个 JS 资源全部 200，`/auth`=200，未登录 Method=307 → `/auth`，`/api/ai/status`=401 `UNAUTHORIZED`。
+- 静态资源修复：manual deploy 的发布根目录由错误的 `.next` 改为 Netlify adapter 产出的 `.netlify/static`，并显式携带已构建 Functions；线上移动端截图确认样式恢复。
 - Netlify Windows CLI：使用 Next 16 官方 `--webpack` production build，并仅在本地 Windows 打包时标准化 Next Runtime 虚拟模块路径；Linux 云构建不应用该补丁。

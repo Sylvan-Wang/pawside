@@ -71,7 +71,7 @@ Phase 2 外部状态：
 - 7 个 Phase 1/2 增量 migration 已在 Supabase 项目 `sbwevlhzqujrtucppacl` replay，远端 migration history 与本地一致。
 - SQL contract 尚未以独立测试事务执行；当前证据为 migration replay 成功与远端版本一致。
 - v1.2 release 尚未 activation，因此线上不会创建 enrollment。
-- Netlify production deploy `6aa2c1064b505d8a19fcbcb9` 已上线 `https://paw-side.com`，可测试 Auth、Onboarding 和未激活态降级。
+- Netlify production deploy `6aa2c9bba263680cb036fadc` 已上线 `https://paw-side.com`；静态资源、Auth、Proxy 和 API 未登录边界已验证，可测试 Onboarding 和未激活态降级。
 - Phase 3 尚未启动。
 
 ## 3. Phase 1 目标
