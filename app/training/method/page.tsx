@@ -15,14 +15,14 @@ export default function MethodOverviewPage() {
           </div>
           <h1 className="mt-4 text-2xl font-semibold tracking-tight">推 · 拉 · 腿</h1>
           <p className="mt-2 text-sm leading-6 text-white/70">
-            先理解今天为什么这样练。正式启用前，这里只展示已校验的计划，不会写入训练记录。
+            先理解今天为什么这样练。浏览动作不会写入训练记录，开始训练后才会保存实际完成情况。
           </p>
         </header>
 
         <section className="rounded-2xl border border-amber-100 bg-amber-50 p-4">
           <p className="text-xs font-medium text-amber-900">当前状态</p>
           <p className="mt-1 text-sm leading-6 text-amber-800">
-            V1 运行规则已通过本地校验；严格方法来源仍有 2 项待补证据，因此生产启用继续保持关闭。
+            Method v1.2 已按 internal beta 运行；当前采用 v1 runtime 默认值，仍有 2 项严格来源证据待补，因此暂不标记 Strict Method 认证。
           </p>
         </section>
 

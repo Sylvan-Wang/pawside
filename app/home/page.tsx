@@ -21,13 +21,23 @@ interface MethodContext {
   method: { name: string; version: string } | null
 }
 
+interface MethodAvailability {
+  status: 'active' | 'available' | 'unavailable'
+  reason: string | null
+  message: string | null
+}
+
 const splitNames = { push: '推', pull: '拉', legs: '腿' } as const
 
 export default function HomePage() {
   const router = useRouter()
   const supabase = createClient()
   const [profile, setProfile] = useState<Profile | null>(null)
+  const [profileLoading, setProfileLoading] = useState(true)
   const [methodContext, setMethodContext] = useState<MethodContext | null>(null)
+  const [methodAvailability, setMethodAvailability] = useState<MethodAvailability | null>(null)
+  const [methodLoading, setMethodLoading] = useState(true)
+  const [methodActivating, setMethodActivating] = useState(false)
   const [methodMessage, setMethodMessage] = useState('官方训练方法仍在规则校验中。')
   const [setupNotice, setSetupNotice] = useState('')
   const [todayWorkouts, setTodayWorkouts] = useState<{ type: string; duration_minutes: number }[]>([])
@@ -91,23 +101,64 @@ export default function HomePage() {
       d.setDate(d.getDate() - 1)
     }
     setStreak(s)
+    setProfileLoading(false)
   }, [router, supabase])
 
   const loadMethod = useCallback(async () => {
+    setMethodLoading(true)
     try {
       const response = await fetch('/api/method/current')
       if (!response.ok) {
         setMethodContext(null)
+        setMethodAvailability(null)
         setMethodMessage('暂时无法读取官方训练方法状态。')
         return
       }
       const result = await response.json()
       setMethodContext(result.data)
+      setMethodAvailability(result.availability ?? null)
       if (result.availability?.message) setMethodMessage(result.availability.message)
     } catch {
       setMethodContext(null)
+      setMethodAvailability(null)
+      setMethodMessage('暂时无法读取官方训练方法状态。')
+    } finally {
+      setMethodLoading(false)
     }
   }, [])
+
+  const handleMethodAction = useCallback(async () => {
+    if (profileLoading || methodLoading || methodActivating) return
+    if (!profile?.onboarding_completed) {
+      router.push('/onboarding')
+      return
+    }
+    if (methodAvailability?.status !== 'available') {
+      router.push('/training/method')
+      return
+    }
+
+    setMethodActivating(true)
+    try {
+      const response = await fetch('/api/method/enroll', { method: 'POST' })
+      const result = await response.json()
+      if (!response.ok) {
+        const message = result?.error?.message || result?.message || '暂时无法启用训练方法'
+        setMethodMessage(message)
+        if (result?.error?.code === 'ONBOARDING_INCOMPLETE') router.push('/onboarding')
+        return
+      }
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('pawside_setup_notice', result?.message || '三分化已启用。')
+      }
+      await loadMethod()
+      router.push('/training/today')
+    } catch {
+      setMethodMessage('暂时无法启用训练方法，请稍后重试。')
+    } finally {
+      setMethodActivating(false)
+    }
+  }, [loadMethod, methodActivating, methodAvailability?.status, methodLoading, profile?.onboarding_completed, profileLoading, router])
 
   // Load AI summary — sessionStorage cache so revisiting /home is instant
   const loadAiSummary = useCallback(async () => {
@@ -154,6 +205,8 @@ export default function HomePage() {
 
   const weekTarget = profile?.weekly_workout_target || 3
   const weekPct = Math.min(100, Math.round((weeklyDone / weekTarget) * 100))
+  const entryLoading = profileLoading || methodLoading
+  const methodAvailable = methodAvailability?.status === 'available'
 
   return (
     <div className="pb-20 bg-gray-50 min-h-screen">
@@ -165,15 +218,20 @@ export default function HomePage() {
             <h1 className="text-lg font-bold text-gray-900">爪边</h1>
           </div>
           <div className="flex gap-2">
-            <button onClick={() => router.push(
-              methodContext
-                ? '/training/today'
-                : profile?.onboarding_completed
-                  ? '/workout'
-                  : '/onboarding'
-            )}
+            <button disabled={entryLoading} onClick={() => {
+              if (entryLoading) return
+              router.push(
+                methodContext
+                  ? '/training/today'
+                  : profile?.onboarding_completed
+                    ? '/workout'
+                    : '/onboarding'
+              )
+            }}
               className="text-xs bg-black text-white px-3 py-1.5 rounded-lg">
-              {methodContext
+              {entryLoading
+                ? '读取中…'
+                : methodContext
                 ? '开始今天'
                 : profile?.onboarding_completed
                   ? '记录训练'
@@ -208,14 +266,31 @@ export default function HomePage() {
           ) : (
             <>
               <p className="text-xs text-white/60">训练方法</p>
-              <p className="text-lg font-semibold mt-2">官方三分化尚未开放</p>
-              <p className="text-sm text-white/70 mt-1">{methodMessage}</p>
+              <p className="text-lg font-semibold mt-2">
+                {entryLoading
+                  ? '正在读取训练方法'
+                  : methodAvailable
+                    ? '官方三分化已准备好'
+                    : '官方三分化尚未开放'}
+              </p>
+              <p className="text-sm text-white/70 mt-1">
+                {entryLoading ? '正在同步你的训练状态…' : methodMessage}
+              </p>
               <div className="mt-4 flex items-center gap-3">
                 <button
-                  onClick={() => router.push(profile?.onboarding_completed ? '/workout' : '/onboarding')}
-                  className="bg-white text-black rounded-xl px-4 py-2 text-sm font-medium"
+                  disabled={entryLoading || methodActivating}
+                  onClick={handleMethodAction}
+                  className="bg-white text-black rounded-xl px-4 py-2 text-sm font-medium disabled:opacity-60"
                 >
-                  {profile?.onboarding_completed ? '开始自由训练' : '完成基础设置'}
+                  {entryLoading
+                    ? '读取中…'
+                    : methodActivating
+                      ? '正在启用…'
+                      : !profile?.onboarding_completed
+                        ? '完成基础设置'
+                        : methodAvailable
+                          ? '启用训练方法'
+                          : '查看训练方法'}
                 </button>
                 <button
                   onClick={() => router.push('/training/method')}
@@ -307,7 +382,7 @@ export default function HomePage() {
           <h2 className="text-sm font-semibold mb-3">快捷入口</h2>
           <div className="grid grid-cols-3 gap-2">
             {[
-              { label: '记录训练', href: '/workout', icon: '🏋️' },
+              { label: '记录自由训练', href: '/workout', icon: '🏋️' },
               { label: '记录饮食', href: '/food', icon: '🥗' },
               { label: '记录身体', href: '/body-metrics', icon: '📏' },
             ].map(({ label, href, icon }) => (

@@ -84,7 +84,7 @@ export default function WorkoutPage() {
   return (
     <div className="min-h-screen bg-gray-50 pb-8">
       {ToastEl}
-      <PageHeader title="记录训练" back />
+      <PageHeader title="记录自由训练" back />
 
       <div className="px-4 py-4 space-y-4">
         {/* Date */}
