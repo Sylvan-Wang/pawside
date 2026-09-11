@@ -82,11 +82,20 @@ export async function GET() {
     }
   })
 
+  const { data: workoutActual, error: workoutError } = await supabase
+    .from('workout_sessions')
+    .select('id,status,started_at,completed_at')
+    .eq('session_prescription_id', prescription.id)
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  if (workoutError) return apiError('DATABASE_ERROR', '暂时无法读取训练状态', 500)
+
   return NextResponse.json({
     data: {
       recovery: null,
       prescription: { ...prescription, exercises },
-      workout_actual: null,
+      workout_actual: workoutActual,
     },
   })
 }

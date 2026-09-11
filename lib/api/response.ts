@@ -8,6 +8,7 @@ export type ApiErrorCode =
   | 'ONBOARDING_INCOMPLETE'
   | 'NOT_ENROLLED'
   | 'NOT_FOUND'
+  | 'CONFLICT'
   | 'RATE_LIMITED'
   | 'AI_NOT_CONFIGURED'
   | 'AI_PROVIDER_ERROR'

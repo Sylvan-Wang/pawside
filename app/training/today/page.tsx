@@ -3,6 +3,7 @@
 import PageHeader from '@/components/PageHeader'
 import ExerciseMotion from '@/components/workout/ExerciseMotion'
 import type { ExerciseMedia } from '@/lib/exercise-media'
+import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
 interface SetPrescription {
@@ -26,10 +27,16 @@ interface ExercisePrescription {
 }
 
 interface TodayTraining {
+  id: string
   split_key: 'push' | 'pull' | 'legs'
   status: string
   method_split: { name_zh: string } | null
   exercises: ExercisePrescription[]
+}
+
+interface WorkoutActual {
+  id: string
+  status: 'started' | 'completed'
 }
 
 const setTypeNames: Record<string, string> = {
@@ -42,9 +49,12 @@ const setTypeNames: Record<string, string> = {
 }
 
 export default function TodayTrainingPage() {
+  const router = useRouter()
   const [training, setTraining] = useState<TodayTraining | null>(null)
+  const [workoutActual, setWorkoutActual] = useState<WorkoutActual | null>(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
+  const [starting, setStarting] = useState(false)
 
   useEffect(() => {
     let active = true
@@ -54,7 +64,10 @@ export default function TodayTrainingPage() {
         const response = await fetch('/api/training/today', { cache: 'no-store' })
         const payload = await response.json()
         if (!response.ok) throw new Error(payload?.error?.message || '暂时无法读取今天的训练')
-        if (active) setTraining(payload.data.prescription)
+        if (active) {
+          setTraining(payload.data.prescription)
+          setWorkoutActual(payload.data.workout_actual)
+        }
       } catch (reason: unknown) {
         if (active) setError(reason instanceof Error ? reason.message : '加载失败')
       } finally {
@@ -65,6 +78,26 @@ export default function TodayTrainingPage() {
     void load()
     return () => { active = false }
   }, [])
+
+  async function startTraining() {
+    if (!training || starting) return
+    if (workoutActual?.id) {
+      router.push(`/training/sessions/${workoutActual.id}`)
+      return
+    }
+
+    setStarting(true)
+    setError('')
+    try {
+      const response = await fetch(`/api/training/${training.id}/start`, { method: 'POST' })
+      const payload = await response.json()
+      if (!response.ok) throw new Error(payload?.error?.message || '暂时无法开始训练')
+      router.push(`/training/sessions/${payload.data.session_id}`)
+    } catch (reason: unknown) {
+      setError(reason instanceof Error ? reason.message : '暂时无法开始训练')
+      setStarting(false)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 pb-10">
@@ -79,6 +112,14 @@ export default function TodayTrainingPage() {
               <p className="text-xs text-white/60">今日处方</p>
               <h1 className="mt-1 text-xl font-semibold">{training.method_split?.name_zh || training.split_key}</h1>
               <p className="mt-2 text-sm text-white/70">每个动作均显示固定版本素材与许可证状态。</p>
+              <button
+                type="button"
+                onClick={startTraining}
+                disabled={starting}
+                className="mt-4 w-full rounded-xl bg-white py-3 text-sm font-semibold text-black disabled:opacity-60"
+              >
+                {starting ? '正在开始…' : workoutActual?.id ? '继续训练' : '开始今天的训练'}
+              </button>
             </header>
 
             {training.exercises.map((item) => {
