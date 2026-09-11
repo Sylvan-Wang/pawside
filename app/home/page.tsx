@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import BottomNav from '@/components/BottomNav'
 import { today, getWeekStart } from '@/lib/utils'
@@ -386,11 +387,11 @@ export default function HomePage() {
               { label: '记录饮食', href: '/food', icon: '🥗' },
               { label: '记录身体', href: '/body-metrics', icon: '📏' },
             ].map(({ label, href, icon }) => (
-              <button key={href} onClick={() => router.push(href)}
-                className="flex flex-col items-center py-3 border border-gray-100 rounded-xl text-xs text-gray-600">
+              <Link key={href} href={href} prefetch
+                className="flex flex-col items-center rounded-xl border border-gray-100 py-3 text-xs text-gray-600 transition active:scale-[0.98] active:bg-gray-50">
                 <span className="text-xl mb-1">{icon}</span>
                 {label}
-              </button>
+              </Link>
             ))}
           </div>
         </div>

@@ -11,6 +11,7 @@ describe('training entry semantics and exercise media contrast', () => {
     expect(home).toContain("{ label: '记录自由训练', href: '/workout'")
     expect(home).toContain("? '启用训练方法'")
     expect(home).not.toContain('开始自由训练')
+    expect(home).toContain('<Link key={href} href={href} prefetch')
     expect(workout).toContain('title="记录自由训练"')
   })
 
