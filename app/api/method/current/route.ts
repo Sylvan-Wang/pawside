@@ -1,4 +1,5 @@
 import { apiError } from '@/lib/api/response'
+import { evaluateMethodAvailability } from '@/lib/method-availability'
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
@@ -30,26 +31,44 @@ export async function GET() {
     })
   }
 
-  const { data: release, error: releaseError } = await supabase
-    .from('method_releases')
-    .select('id,version,status,release_channel,method:methods(id,key,name,description)')
-    .eq('status', 'active')
-    .eq('runtime_gate_status', 'passed')
-    .order('activated_at', { ascending: false })
-    .limit(1)
-    .maybeSingle()
+  const [profileResult, capabilityResult, releaseResult] = await Promise.all([
+    supabase
+      .from('user_profiles')
+      .select('onboarding_completed')
+      .eq('id', user.id)
+      .maybeSingle(),
+    supabase
+      .from('onboarding_capability_profiles')
+      .select('equipment_access')
+      .eq('user_id', user.id)
+      .maybeSingle(),
+    supabase
+      .from('method_releases')
+      .select('id,version,status,release_channel,method:methods(id,key,name,description)')
+      .eq('status', 'active')
+      .eq('runtime_gate_status', 'passed')
+      .order('activated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ])
 
-  if (releaseError) {
-    return apiError('DATABASE_ERROR', '暂时无法读取训练方法发布状态', 500)
+  if (profileResult.error || capabilityResult.error || releaseResult.error) {
+    return apiError('DATABASE_ERROR', '暂时无法读取训练方法资格状态', 500)
   }
 
-  if (release) {
+  const release = releaseResult.data
+  const availability = evaluateMethodAvailability({
+    onboardingCompleted: profileResult.data?.onboarding_completed === true,
+    capabilityProfileExists: capabilityResult.data !== null,
+    equipmentAccess: capabilityResult.data?.equipment_access ?? null,
+    releaseAvailable: release !== null,
+  })
+
+  if (availability.status === 'available' && release) {
     return NextResponse.json({
       data: null,
       availability: {
-        status: 'available',
-        reason: 'NOT_ENROLLED',
-        message: '三分化已经准备好，完成能力画像后即可从「推」开始。',
+        ...availability,
         release,
       },
     })
@@ -57,10 +76,6 @@ export async function GET() {
 
   return NextResponse.json({
     data: null,
-    availability: {
-      status: 'unavailable',
-      reason: 'METHOD_NOT_READY',
-      message: '官方训练方法仍在发布校验中，基础设置和自由训练不受影响。',
-    },
+    availability,
   })
 }

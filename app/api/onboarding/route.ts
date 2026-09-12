@@ -17,6 +17,37 @@ interface Phase2OnboardingResult {
   }
 }
 
+export async function GET() {
+  const supabase = await createClient()
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+  if (authError || !user) return apiError('UNAUTHORIZED', '请先登录', 401)
+
+  const [profileResult, capabilityResult] = await Promise.all([
+    supabase
+      .from('user_profiles')
+      .select('goal,gender,height_cm,weight_kg,weight_unit,onboarding_completed,onboarding_version')
+      .eq('id', user.id)
+      .maybeSingle(),
+    supabase
+      .from('onboarding_capability_profiles')
+      .select('training_experience,pushup_capacity,equipment_access,preferred_session_minutes')
+      .eq('user_id', user.id)
+      .maybeSingle(),
+  ])
+
+  if (profileResult.error || capabilityResult.error) {
+    return apiError('DATABASE_ERROR', '暂时无法读取现有设置', 500)
+  }
+
+  return NextResponse.json({
+    data: {
+      profile: profileResult.data,
+      capability_profile: capabilityResult.data,
+    },
+  })
+}
+
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -61,12 +92,17 @@ export async function POST(request: NextRequest) {
 
   const result = data as Phase2OnboardingResult
   const methodActive = result.method.status === 'active'
+  const message = methodActive
+    ? '基础设置已保存，三分化已从「推」开始。'
+    : result.method.reason === 'EQUIPMENT_REVIEW_REQUIRED'
+      ? '基础设置已保存。当前三分化仅支持完整健身房器械；自由训练仍可使用。'
+      : result.method.reason === 'METHOD_NOT_READY'
+        ? '基础设置已保存。训练方法通过发布校验后即可启用。'
+        : '基础设置已保存，请完成 Method 启用条件。'
   return NextResponse.json(
     {
       data: result,
-      message: methodActive
-        ? '基础设置已保存，三分化已从「推」开始。'
-        : '基础设置已保存。训练方法准备好后可单独启用。',
+      message,
     },
     { status: 200 },
   )

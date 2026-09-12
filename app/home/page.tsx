@@ -24,7 +24,7 @@ interface MethodContext {
 
 interface MethodAvailability {
   status: 'active' | 'available' | 'unavailable'
-  reason: string | null
+  reason: 'NOT_ENROLLED' | 'ONBOARDING_INCOMPLETE' | 'CAPABILITY_PROFILE_MISSING' | 'EQUIPMENT_REVIEW_REQUIRED' | 'METHOD_NOT_READY' | null
   message: string | null
 }
 
@@ -130,7 +130,11 @@ export default function HomePage() {
 
   const handleMethodAction = useCallback(async () => {
     if (profileLoading || methodLoading || methodActivating) return
-    if (!profile?.onboarding_completed) {
+    if (!profile?.onboarding_completed || methodAvailability?.reason === 'ONBOARDING_INCOMPLETE' || methodAvailability?.reason === 'CAPABILITY_PROFILE_MISSING') {
+      router.push('/onboarding')
+      return
+    }
+    if (methodAvailability?.reason === 'EQUIPMENT_REVIEW_REQUIRED') {
       router.push('/onboarding')
       return
     }
@@ -159,7 +163,7 @@ export default function HomePage() {
     } finally {
       setMethodActivating(false)
     }
-  }, [loadMethod, methodActivating, methodAvailability?.status, methodLoading, profile?.onboarding_completed, profileLoading, router])
+  }, [loadMethod, methodActivating, methodAvailability?.reason, methodAvailability?.status, methodLoading, profile?.onboarding_completed, profileLoading, router])
 
   // Load AI summary — sessionStorage cache so revisiting /home is instant
   const loadAiSummary = useCallback(async () => {
@@ -208,6 +212,10 @@ export default function HomePage() {
   const weekPct = Math.min(100, Math.round((weeklyDone / weekTarget) * 100))
   const entryLoading = profileLoading || methodLoading
   const methodAvailable = methodAvailability?.status === 'available'
+  const methodNeedsSetup = !profile?.onboarding_completed
+    || methodAvailability?.reason === 'ONBOARDING_INCOMPLETE'
+    || methodAvailability?.reason === 'CAPABILITY_PROFILE_MISSING'
+  const methodEquipmentBlocked = methodAvailability?.reason === 'EQUIPMENT_REVIEW_REQUIRED'
 
   return (
     <div className="pb-20 bg-gray-50 min-h-screen">
@@ -272,6 +280,8 @@ export default function HomePage() {
                   ? '正在读取训练方法'
                   : methodAvailable
                     ? '官方三分化已准备好'
+                    : methodEquipmentBlocked
+                      ? '当前训练条件不匹配'
                     : '官方三分化尚未开放'}
               </p>
               <p className="text-sm text-white/70 mt-1">
@@ -287,8 +297,10 @@ export default function HomePage() {
                     ? '读取中…'
                     : methodActivating
                       ? '正在启用…'
-                      : !profile?.onboarding_completed
+                      : methodNeedsSetup
                         ? '完成基础设置'
+                        : methodEquipmentBlocked
+                          ? '修改训练条件'
                         : methodAvailable
                           ? '启用训练方法'
                           : '查看训练方法'}

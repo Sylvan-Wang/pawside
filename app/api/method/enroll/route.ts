@@ -1,4 +1,5 @@
 import { apiError } from '@/lib/api/response'
+import { methodAvailabilityMessage, type MethodAvailabilityReason } from '@/lib/method-availability'
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
@@ -27,18 +28,8 @@ export async function POST() {
 
   const result = data as EnrollmentResult
   if (result.status === 'unavailable') {
-    const message = result.reason === 'ONBOARDING_INCOMPLETE'
-      ? '请先完成基础设置'
-      : result.reason === 'CAPABILITY_PROFILE_MISSING'
-        ? '请先完成轻量能力画像'
-        : result.reason === 'EQUIPMENT_REVIEW_REQUIRED'
-          ? '当前三分化需要完整健身房器械，暂不自动创建训练计划'
-        : '训练方法仍在发布校验中'
-    return apiError(
-      result.reason === 'METHOD_NOT_READY' ? 'METHOD_NOT_READY' : 'ONBOARDING_INCOMPLETE',
-      message,
-      409,
-    )
+    const reason = (result.reason || 'METHOD_NOT_READY') as Exclude<MethodAvailabilityReason, 'NOT_ENROLLED'>
+    return apiError(reason, methodAvailabilityMessage(reason), 409)
   }
 
   return NextResponse.json({

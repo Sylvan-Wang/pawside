@@ -7,7 +7,7 @@ import type {
   TrainingExperience,
 } from '@/lib/contracts/onboarding'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 const goals = [
   { value: 'lose_fat', label: '减脂' },
@@ -58,8 +58,47 @@ export default function OnboardingPage() {
   const [weightUnit, setWeightUnit] = useState<'kg' | 'lb'>('kg')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [initialLoading, setInitialLoading] = useState(true)
 
   const LB_TO_KG = 0.453592
+
+  useEffect(() => {
+    let active = true
+
+    async function loadExistingSettings() {
+      try {
+        const response = await fetch('/api/onboarding', { cache: 'no-store' })
+        const result = await response.json()
+        if (!response.ok) throw new Error(result?.error?.message || '暂时无法读取现有设置')
+        if (!active) return
+
+        const profile = result.data?.profile
+        const capability = result.data?.capability_profile
+        const unit: 'kg' | 'lb' = profile?.weight_unit === 'lb' ? 'lb' : 'kg'
+        const weightKg = Number(profile?.weight_kg)
+        setWeightUnit(unit)
+        setForm((current) => ({
+          goal: profile?.goal || current.goal,
+          gender: profile?.gender || current.gender,
+          height_cm: profile?.height_cm == null ? current.height_cm : String(profile.height_cm),
+          weight_kg: Number.isFinite(weightKg) && weightKg > 0
+            ? String(unit === 'lb' ? Number((weightKg / LB_TO_KG).toFixed(1)) : weightKg)
+            : current.weight_kg,
+          training_experience: capability?.training_experience || current.training_experience,
+          pushup_capacity: capability?.pushup_capacity || current.pushup_capacity,
+          equipment_access: capability?.equipment_access || current.equipment_access,
+          preferred_session_minutes: capability?.preferred_session_minutes || current.preferred_session_minutes,
+        }))
+      } catch (reason: unknown) {
+        if (active) setError(reason instanceof Error ? reason.message : '暂时无法读取现有设置')
+      } finally {
+        if (active) setInitialLoading(false)
+      }
+    }
+
+    void loadExistingSettings()
+    return () => { active = false }
+  }, [])
 
   function set<K extends keyof typeof form>(key: K, value: typeof form[K]) {
     setForm((current) => ({ ...current, [key]: value }))
@@ -125,7 +164,15 @@ export default function OnboardingPage() {
         </p>
       </header>
 
-      <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+      {initialLoading && (
+        <p className="mt-4 rounded-2xl bg-white p-4 text-sm text-gray-500">正在读取现有设置…</p>
+      )}
+
+      <form
+        onSubmit={handleSubmit}
+        aria-busy={initialLoading}
+        className={`mt-4 space-y-4 ${initialLoading ? 'pointer-events-none opacity-60' : ''}`}
+      >
         <section className="rounded-2xl bg-white p-4">
           <div className="mb-4">
             <p className="text-xs text-gray-400">01</p>
@@ -332,10 +379,10 @@ export default function OnboardingPage() {
 
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || initialLoading}
           className="w-full rounded-xl bg-black py-3.5 text-sm font-medium text-white disabled:opacity-50"
         >
-          {loading ? '正在保存…' : '完成设置'}
+          {initialLoading ? '正在读取…' : loading ? '正在保存…' : '保存设置'}
         </button>
       </form>
     </div>
