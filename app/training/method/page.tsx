@@ -52,7 +52,7 @@ export default function MethodOverviewPage() {
                 </div>
 
                 {exercise.media ? (
-                  <ExerciseMotion name={exercise.name} media={exercise.media} compact />
+                  <ExerciseMotion name={exercise.name} media={exercise.media} compact animate={false} loading="lazy" />
                 ) : (
                   <div className="mt-3 flex aspect-[2/1] items-center justify-center rounded-xl bg-gray-50 px-6 text-center text-xs leading-5 text-gray-400">
                     暂无准确匹配的动作素材<br />不使用相似动作代替

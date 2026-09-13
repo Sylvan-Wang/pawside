@@ -1,7 +1,13 @@
 import PageHeader from '@/components/PageHeader'
 import ExerciseMotion from '@/components/workout/ExerciseMotion'
-import { formatAuthority, getMethodExercise } from '@/lib/method-catalog'
+import { formatAuthority, getMethodExercise, METHOD_SPLITS } from '@/lib/method-catalog'
 import { notFound } from 'next/navigation'
+
+export function generateStaticParams() {
+  return METHOD_SPLITS.flatMap((split) => split.exercises.map((exercise) => ({
+    exerciseKey: exercise.key,
+  })))
+}
 
 export default async function MethodExercisePage({
   params,

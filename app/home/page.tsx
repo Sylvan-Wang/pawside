@@ -200,6 +200,10 @@ export default function HomePage() {
   useEffect(() => { void Promise.resolve().then(loadMethod) }, [loadMethod])
   useEffect(() => { void Promise.resolve().then(loadAiSummary) }, [loadAiSummary])
   useEffect(() => {
+    router.prefetch('/training/today')
+    router.prefetch('/training/method')
+  }, [router])
+  useEffect(() => {
     if (typeof window === 'undefined') return
     const notice = sessionStorage.getItem('pawside_setup_notice')
     if (!notice) return

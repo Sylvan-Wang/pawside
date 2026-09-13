@@ -42,5 +42,8 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+  // Every API route performs its own authenticated user check. Keeping API
+  // requests out of this page redirect proxy removes a duplicate Supabase
+  // getUser round trip from every data request.
+  matcher: ['/((?!api(?:/|$)|_next/static|_next/image|favicon.ico).*)'],
 }

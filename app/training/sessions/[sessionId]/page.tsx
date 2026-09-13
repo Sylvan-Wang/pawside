@@ -105,6 +105,7 @@ export default function TrainingSessionPage() {
   const sessionId = params.sessionId
   const [data, setData] = useState<SessionResponse | null>(null)
   const [drafts, setDrafts] = useState<Record<string, SetDraft[]>>({})
+  const [activeExerciseIndex, setActiveExerciseIndex] = useState(0)
   const [loading, setLoading] = useState(true)
   const [savingKey, setSavingKey] = useState('')
   const [finishing, setFinishing] = useState(false)
@@ -123,6 +124,8 @@ export default function TrainingSessionPage() {
         const nextData = payload.data as SessionResponse
         setData(nextData)
         setDrafts(Object.fromEntries(nextData.exercises.map((exercise) => [exercise.id, initialDrafts(exercise)])))
+        const firstOpen = nextData.exercises.findIndex((exercise) => !['completed', 'skipped'].includes(exercise.status))
+        setActiveExerciseIndex(firstOpen >= 0 ? firstOpen : 0)
       } catch (reason: unknown) {
         if (active) setError(reason instanceof Error ? reason.message : '暂时无法读取训练')
       } finally {
@@ -133,6 +136,21 @@ export default function TrainingSessionPage() {
     void load()
     return () => { active = false }
   }, [sessionId])
+
+  useEffect(() => {
+    const nextMedia = data?.exercises[activeExerciseIndex + 1]?.media
+    if (!nextMedia) return
+
+    const timer = window.setTimeout(() => {
+      nextMedia.frames.forEach((frame) => {
+        const preload = new Image()
+        preload.decoding = 'async'
+        preload.src = frame.url
+      })
+    }, 250)
+
+    return () => window.clearTimeout(timer)
+  }, [activeExerciseIndex, data])
 
   function updateDraft(executionId: string, position: number, field: 'weight' | 'reps' | 'rir', value: string) {
     setDrafts((current) => ({
@@ -159,6 +177,13 @@ export default function TrainingSessionPage() {
         }],
       }
     })
+  }
+
+  function showExercise(index: number) {
+    if (!data || index < 0 || index >= data.exercises.length) return
+    setActiveExerciseIndex(index)
+    setError('')
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   async function saveSet(executionId: string, position: number) {
@@ -230,82 +255,121 @@ export default function TrainingSessionPage() {
     return <div className="min-h-screen bg-gray-50"><PageHeader title="训练中" back /><p className="p-5 text-sm text-red-500">{error || '训练记录不存在'}</p></div>
   }
 
+  const exercise = data.exercises[activeExerciseIndex]
+  if (!exercise) {
+    return <div className="min-h-screen bg-gray-50"><PageHeader title="训练中" back /><p className="p-5 text-sm text-gray-500">本次训练没有动作。</p></div>
+  }
+
   const isCompleted = data.session.status === 'completed'
+  const exerciseName = exercise.exercise?.canonical_name_zh || `动作 ${exercise.order_index}`
+  const exerciseDrafts = drafts[exercise.id] ?? []
+  const savedSetCount = exerciseDrafts.filter((draft) => draft.saved).length
+  const isLastExercise = activeExerciseIndex === data.exercises.length - 1
 
   return (
     <div className="min-h-screen bg-gray-50 pb-10">
       <PageHeader title={`${splitNames[data.session.split_key]}训练`} back />
       <main className="mx-auto max-w-2xl space-y-4 px-4 py-5">
         <header className="rounded-2xl bg-black p-5 text-white">
-          <p className="text-xs text-white/60">{isCompleted ? '本次训练已完成' : '实际训练记录'}</p>
-          <h1 className="mt-1 text-xl font-semibold">{splitNames[data.session.split_key]}训练</h1>
-          <p className="mt-2 text-sm text-white/70">计划与实际分开保存。重量可调整，完成事实不会覆盖方法要求。</p>
+          <div className="flex items-center justify-between text-xs text-white/60">
+            <span>{isCompleted ? '本次训练已完成' : '实际训练记录'}</span>
+            <span>动作 {activeExerciseIndex + 1} / {data.exercises.length}</span>
+          </div>
+          <h1 className="mt-2 text-xl font-semibold">{splitNames[data.session.split_key]}训练</h1>
+          <span className="sr-only" aria-live="polite">
+            当前为第 {activeExerciseIndex + 1} 个动作，共 {data.exercises.length} 个动作
+          </span>
+          <div className="mt-4 flex gap-1.5" role="group" aria-label="选择训练动作">
+            {data.exercises.map((item, index) => (
+              <button key={item.id} type="button" onClick={() => showExercise(index)}
+                aria-label={`查看动作 ${index + 1}`}
+                className={`h-1.5 flex-1 rounded-full ${index <= activeExerciseIndex ? 'bg-white' : 'bg-white/20'}`} />
+            ))}
+          </div>
         </header>
 
-        {error && <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
+        {error && <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">{error}</p>}
 
-        {data.exercises.map((exercise) => {
-          const exerciseName = exercise.exercise?.canonical_name_zh || `动作 ${exercise.order_index}`
-          return (
-            <section key={exercise.id} className="rounded-2xl bg-white p-4">
+        <section key={exercise.id} className="rounded-2xl bg-white p-4" aria-labelledby={`exercise-${exercise.id}`}>
+          <div className="flex items-start justify-between gap-3">
+            <div>
               <p className="text-xs text-gray-400">动作 {exercise.order_index}</p>
-              <h2 className="mt-1 font-semibold text-gray-900">{exerciseName}</h2>
-              {exercise.prescription?.target_summary_zh && (
-                <p className="mt-1 text-sm text-gray-500">今天建议：{exercise.prescription.target_summary_zh}</p>
-              )}
+              <h2 id={`exercise-${exercise.id}`} className="mt-1 font-semibold text-gray-900">{exerciseName}</h2>
+            </div>
+            <span className="shrink-0 rounded-full bg-gray-100 px-2.5 py-1 text-xs text-gray-600">
+              {savedSetCount} / {exerciseDrafts.length} 组
+            </span>
+          </div>
 
-              {exercise.media && <ExerciseMotion name={exerciseName} media={exercise.media} />}
+          {exercise.prescription?.target_summary_zh && (
+            <p className="mt-1 text-sm text-gray-500">今天建议：{exercise.prescription.target_summary_zh}</p>
+          )}
 
-              <div className="mt-4 space-y-3">
-                {(drafts[exercise.id] ?? []).map((draft, position) => {
-                  const key = `${exercise.id}:${draft.setIndex}`
-                  return (
-                    <div key={draft.setIndex} className="rounded-xl border border-gray-100 p-3">
-                      <div className="mb-2 flex items-center justify-between">
-                        <span className="text-sm font-medium">第 {draft.setIndex} 组{draft.isExtra ? ' · 实际记录' : ''}</span>
-                        <span className={`text-xs ${draft.saved ? 'text-green-600' : 'text-gray-400'}`}>
-                          {draft.saved ? '已保存' : '待保存'}
-                        </span>
-                      </div>
-                      <div className="grid grid-cols-3 gap-2">
-                        <label className="text-xs text-gray-500">
-                          重量 kg
-                          <input type="number" min="0" step="0.5" value={draft.weight} disabled={isCompleted}
-                            onChange={(event) => updateDraft(exercise.id, position, 'weight', event.target.value)}
-                            className="mt-1 w-full rounded-lg border border-gray-200 px-2 py-2 text-gray-900 outline-none focus:border-gray-500 disabled:bg-gray-50" />
-                        </label>
-                        <label className="text-xs text-gray-500">
-                          实际次数
-                          <input type="number" min="0" step="1" value={draft.reps} disabled={isCompleted}
-                            onChange={(event) => updateDraft(exercise.id, position, 'reps', event.target.value)}
-                            className="mt-1 w-full rounded-lg border border-gray-200 px-2 py-2 text-gray-900 outline-none focus:border-gray-500 disabled:bg-gray-50" />
-                        </label>
-                        <label className="text-xs text-gray-500">
-                          还能再做
-                          <input type="number" min="0" max="20" step="1" value={draft.rir} disabled={isCompleted}
-                            onChange={(event) => updateDraft(exercise.id, position, 'rir', event.target.value)}
-                            className="mt-1 w-full rounded-lg border border-gray-200 px-2 py-2 text-gray-900 outline-none focus:border-gray-500 disabled:bg-gray-50" />
-                        </label>
-                      </div>
-                      {!isCompleted && (
-                        <button type="button" onClick={() => saveSet(exercise.id, position)} disabled={savingKey === key}
-                          className="mt-3 w-full rounded-lg border border-gray-200 py-2 text-sm font-medium disabled:opacity-50">
-                          {savingKey === key ? '保存中…' : draft.saved ? '更新这一组' : '完成这一组'}
-                        </button>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
+          {exercise.media && (
+            <ExerciseMotion key={exercise.id} name={exerciseName} media={exercise.media} loading="eager" />
+          )}
 
-              {!isCompleted && (
-                <button type="button" onClick={() => addSet(exercise.id)} className="mt-3 text-sm font-medium text-gray-700">
-                  + 记录额外一组
-                </button>
-              )}
-            </section>
-          )
-        })}
+          <div className="mt-4 space-y-3">
+            {exerciseDrafts.map((draft, position) => {
+              const key = `${exercise.id}:${draft.setIndex}`
+              return (
+                <div key={draft.setIndex} className="rounded-xl border border-gray-100 p-3">
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="text-sm font-medium">第 {draft.setIndex} 组{draft.isExtra ? ' · 实际记录' : ''}</span>
+                    <span className={`text-xs ${draft.saved ? 'text-green-600' : 'text-gray-400'}`}>
+                      {draft.saved ? '已保存' : '待保存'}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <label className="text-xs text-gray-500">
+                      重量 kg
+                      <input type="number" min="0" step="0.5" value={draft.weight} disabled={isCompleted}
+                        onChange={(event) => updateDraft(exercise.id, position, 'weight', event.target.value)}
+                        className="mt-1 w-full rounded-lg border border-gray-200 px-2 py-2 text-gray-900 outline-none focus:border-gray-500 disabled:bg-gray-50" />
+                    </label>
+                    <label className="text-xs text-gray-500">
+                      实际次数
+                      <input type="number" min="0" step="1" value={draft.reps} disabled={isCompleted}
+                        onChange={(event) => updateDraft(exercise.id, position, 'reps', event.target.value)}
+                        className="mt-1 w-full rounded-lg border border-gray-200 px-2 py-2 text-gray-900 outline-none focus:border-gray-500 disabled:bg-gray-50" />
+                    </label>
+                    <label className="text-xs text-gray-500">
+                      还能再做
+                      <input type="number" min="0" max="20" step="1" value={draft.rir} disabled={isCompleted}
+                        onChange={(event) => updateDraft(exercise.id, position, 'rir', event.target.value)}
+                        className="mt-1 w-full rounded-lg border border-gray-200 px-2 py-2 text-gray-900 outline-none focus:border-gray-500 disabled:bg-gray-50" />
+                    </label>
+                  </div>
+                  {!isCompleted && (
+                    <button type="button" onClick={() => saveSet(exercise.id, position)} disabled={savingKey === key}
+                      className="mt-3 w-full rounded-lg border border-gray-200 py-2 text-sm font-medium disabled:opacity-50">
+                      {savingKey === key ? '保存中…' : draft.saved ? '更新这一组' : '完成这一组'}
+                    </button>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+
+          {!isCompleted && (
+            <button type="button" onClick={() => addSet(exercise.id)} className="mt-3 text-sm font-medium text-gray-700">
+              + 记录额外一组
+            </button>
+          )}
+        </section>
+
+        <nav className="grid grid-cols-2 gap-3" aria-label="训练动作切换">
+          <button type="button" onClick={() => showExercise(activeExerciseIndex - 1)}
+            disabled={activeExerciseIndex === 0}
+            className="rounded-xl border border-gray-200 bg-white py-3 text-sm font-medium text-gray-700 disabled:opacity-35">
+            上一个动作
+          </button>
+          <button type="button" onClick={() => showExercise(activeExerciseIndex + 1)}
+            disabled={isLastExercise}
+            className="rounded-xl bg-black py-3 text-sm font-semibold text-white disabled:opacity-35">
+            下一个动作
+          </button>
+        </nav>
 
         {isCompleted ? (
           <section className="rounded-2xl bg-white p-5">
@@ -322,7 +386,7 @@ export default function TrainingSessionPage() {
               查看下一次训练
             </button>
           </section>
-        ) : (
+        ) : isLastExercise ? (
           <section className="rounded-2xl bg-white p-4">
             <p className="text-xs leading-5 text-gray-500">结束训练时，已保存的组会进入训练历史；未记录的动作会保留为跳过，不会被伪装成已完成。</p>
             <button type="button" onClick={completeSession} disabled={finishing || savingKey !== ''}
@@ -330,6 +394,10 @@ export default function TrainingSessionPage() {
               {finishing ? '正在完成…' : '完成本次训练'}
             </button>
           </section>
+        ) : (
+          <p className="rounded-2xl bg-white px-4 py-3 text-center text-xs text-gray-500">
+            下一动作素材正在后台准备，已填写内容会保留在本次训练中。
+          </p>
         )}
       </main>
     </div>

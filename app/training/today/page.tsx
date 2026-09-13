@@ -79,6 +79,10 @@ export default function TodayTrainingPage() {
     return () => { active = false }
   }, [])
 
+  useEffect(() => {
+    if (workoutActual?.id) router.prefetch(`/training/sessions/${workoutActual.id}`)
+  }, [router, workoutActual?.id])
+
   async function startTraining() {
     if (!training || starting) return
     if (workoutActual?.id) {
@@ -131,7 +135,7 @@ export default function TodayTrainingPage() {
                   {item.target_summary_zh && <p className="mt-1 text-sm text-gray-500">{item.target_summary_zh}</p>}
 
                   {item.media ? (
-                    <ExerciseMotion name={exerciseName} media={item.media} />
+                    <ExerciseMotion name={exerciseName} media={item.media} animate={false} loading="lazy" />
                   ) : (
                     <p className="mt-3 rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-800">此动作尚无已登记素材。</p>
                   )}

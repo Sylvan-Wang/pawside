@@ -8,6 +8,8 @@ interface ExerciseMotionProps {
   media: ExerciseMedia
   mode?: 'carousel' | 'steps'
   compact?: boolean
+  animate?: boolean
+  loading?: 'eager' | 'lazy'
 }
 
 export default function ExerciseMotion({
@@ -15,19 +17,21 @@ export default function ExerciseMotion({
   media,
   mode = 'carousel',
   compact = false,
+  animate = true,
+  loading = 'lazy',
 }: ExerciseMotionProps) {
   const [frameIndex, setFrameIndex] = useState(0)
 
   useEffect(() => {
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (mode === 'steps' || reducedMotion || media.frames.length < 2) return
+    if (!animate || mode === 'steps' || reducedMotion || media.frames.length < 2) return
 
     const timer = window.setInterval(() => {
       setFrameIndex((current) => (current + 1) % media.frames.length)
     }, 700)
 
     return () => window.clearInterval(timer)
-  }, [media.frames.length, mode])
+  }, [animate, media.frames.length, mode])
 
   const frame = media.frames[frameIndex]
 
@@ -43,6 +47,8 @@ export default function ExerciseMotion({
               src={item.url}
               width={item.width}
               height={item.height}
+              loading={loading}
+              decoding="async"
               alt={name + '动作示意，第 ' + item.index + ' 帧'}
               className="aspect-square w-full rounded-lg bg-neutral-800 object-contain"
             />
@@ -54,6 +60,8 @@ export default function ExerciseMotion({
           src={frame.url}
           width={frame.width}
           height={frame.height}
+          loading={loading}
+          decoding="async"
           alt={name + '动作示意，第 ' + frame.index + ' 帧'}
           className={compact
             ? 'mx-auto aspect-square w-full max-w-40 object-contain'

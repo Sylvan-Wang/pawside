@@ -22,4 +22,43 @@ describe('training entry semantics and exercise media contrast', () => {
     expect(motion).toContain('text-neutral-300')
     expect(motion).not.toContain('bg-gray-50')
   })
+
+  it('keeps API authentication in route handlers instead of duplicating it in the page proxy', async () => {
+    const proxy = await readFile('proxy.ts', 'utf8')
+
+    expect(proxy).toContain("api(?:/|$)")
+    expect(proxy).toContain('Every API route performs its own authenticated user check')
+  })
+
+  it('keeps catalog animations static and lazy until the user opens one exercise', async () => {
+    const [method, today, motion] = await Promise.all([
+      readFile('app/training/method/page.tsx', 'utf8'),
+      readFile('app/training/today/page.tsx', 'utf8'),
+      readFile('components/workout/ExerciseMotion.tsx', 'utf8'),
+    ])
+
+    expect(method).toContain('animate={false} loading="lazy"')
+    expect(today).toContain('animate={false} loading="lazy"')
+    expect(motion).toContain('decoding="async"')
+  })
+
+  it('renders one live exercise and preloads only the next exercise in the background', async () => {
+    const session = await readFile('app/training/sessions/[sessionId]/page.tsx', 'utf8')
+
+    expect(session).toContain('const exercise = data.exercises[activeExerciseIndex]')
+    expect(session).toContain('data?.exercises[activeExerciseIndex + 1]?.media')
+    expect(session).toContain('nextMedia.frames.forEach')
+    expect(session).toContain('上一个动作')
+    expect(session).toContain('下一个动作')
+  })
+
+  it('prebuilds Method detail routes and shows a training route skeleton', async () => {
+    const [detail, loading] = await Promise.all([
+      readFile('app/training/method/[exerciseKey]/page.tsx', 'utf8'),
+      readFile('app/training/loading.tsx', 'utf8'),
+    ])
+
+    expect(detail).toContain('export function generateStaticParams()')
+    expect(loading).toContain('aria-busy="true"')
+  })
 })
