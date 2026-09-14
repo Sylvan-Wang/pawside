@@ -1,7 +1,8 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { clearTrainingNavigationCache } from '@/lib/training-navigation-cache'
 
 function getAuthErrorMessage(err: unknown) {
   const code = typeof err === 'object' && err !== null && 'code' in err
@@ -40,6 +41,10 @@ export default function AuthPage() {
   const [confirmationMessage, setConfirmationMessage] = useState('')
   const [confirmationError, setConfirmationError] = useState('')
   const [registrationResult, setRegistrationResult] = useState<'signed-in' | 'confirmation-pending' | null>(null)
+
+  useEffect(() => {
+    clearTrainingNavigationCache()
+  }, [])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()

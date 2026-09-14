@@ -3,6 +3,13 @@
 import PageHeader from '@/components/PageHeader'
 import ExerciseMotion from '@/components/workout/ExerciseMotion'
 import type { ExerciseMedia } from '@/lib/exercise-media'
+import {
+  clearTodayTrainingCache,
+  readTodayTrainingCache,
+  readTrainingSessionCache,
+  warmTrainingSessionCache,
+  writeTodayTrainingCache,
+} from '@/lib/training-navigation-cache'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
@@ -39,6 +46,11 @@ interface WorkoutActual {
   status: 'started' | 'completed'
 }
 
+interface TodayTrainingPayload {
+  prescription: TodayTraining
+  workout_actual: WorkoutActual | null
+}
+
 const setTypeNames: Record<string, string> = {
   warmup: '热身',
   working: '正式',
@@ -60,6 +72,14 @@ export default function TodayTrainingPage() {
     let active = true
 
     async function load() {
+      const cached = readTodayTrainingCache<TodayTrainingPayload>()
+      if (cached) {
+        setTraining(cached.prescription)
+        setWorkoutActual(cached.workout_actual)
+        setLoading(false)
+        return
+      }
+
       try {
         const response = await fetch('/api/training/today', { cache: 'no-store' })
         const payload = await response.json()
@@ -67,6 +87,7 @@ export default function TodayTrainingPage() {
         if (active) {
           setTraining(payload.data.prescription)
           setWorkoutActual(payload.data.workout_actual)
+          writeTodayTrainingCache(payload.data as TodayTrainingPayload)
         }
       } catch (reason: unknown) {
         if (active) setError(reason instanceof Error ? reason.message : '加载失败')
@@ -80,7 +101,13 @@ export default function TodayTrainingPage() {
   }, [])
 
   useEffect(() => {
-    if (workoutActual?.id) router.prefetch(`/training/sessions/${workoutActual.id}`)
+    if (!workoutActual?.id) return
+    const sessionUrl = `/training/sessions/${workoutActual.id}`
+    router.prefetch(sessionUrl)
+    if (readTrainingSessionCache(workoutActual.id)) return
+
+    void warmTrainingSessionCache(workoutActual.id)
+      .catch(() => undefined)
   }, [router, workoutActual?.id])
 
   async function startTraining() {
@@ -96,7 +123,12 @@ export default function TodayTrainingPage() {
       const response = await fetch(`/api/training/${training.id}/start`, { method: 'POST' })
       const payload = await response.json()
       if (!response.ok) throw new Error(payload?.error?.message || '暂时无法开始训练')
-      router.push(`/training/sessions/${payload.data.session_id}`)
+      const sessionId = payload.data.session_id as string
+      clearTodayTrainingCache()
+      const sessionUrl = `/training/sessions/${sessionId}`
+      router.prefetch(sessionUrl)
+      void warmTrainingSessionCache(sessionId).catch(() => undefined)
+      router.push(sessionUrl)
     } catch (reason: unknown) {
       setError(reason instanceof Error ? reason.message : '暂时无法开始训练')
       setStarting(false)

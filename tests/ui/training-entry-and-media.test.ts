@@ -61,4 +61,28 @@ describe('training entry semantics and exercise media contrast', () => {
     expect(detail).toContain('export function generateStaticParams()')
     expect(loading).toContain('aria-busy="true"')
   })
+
+  it('warms training payloads before navigation and clears them across authentication boundaries', async () => {
+    const [home, today, session, auth, settings, cache] = await Promise.all([
+      readFile('app/home/page.tsx', 'utf8'),
+      readFile('app/training/today/page.tsx', 'utf8'),
+      readFile('app/training/sessions/[sessionId]/page.tsx', 'utf8'),
+      readFile('app/auth/page.tsx', 'utf8'),
+      readFile('app/settings/page.tsx', 'utf8'),
+      readFile('lib/training-navigation-cache.ts', 'utf8'),
+    ])
+
+    expect(home).toContain("fetch('/api/training/today'")
+    expect(home).toContain('writeTodayTrainingCache(payload.data)')
+    expect(today).toContain('readTodayTrainingCache<TodayTrainingPayload>()')
+    expect(today).toContain('warmTrainingSessionCache(workoutActual.id)')
+    expect(today).toContain('void warmTrainingSessionCache(sessionId)')
+    expect(today).toContain('router.push(sessionUrl)')
+    expect(session).toContain('readTrainingSessionCache<SessionResponse>(sessionId)')
+    expect(session).toContain('await warmTrainingSessionCache<SessionResponse>(sessionId)')
+    expect(cache).toContain('const pendingSessionLoads = new Map')
+    expect(cache).toContain('const CACHE_TTL_MS = 60_000')
+    expect(auth).toContain('clearTrainingNavigationCache()')
+    expect(settings).toContain('clearTrainingNavigationCache()')
+  })
 })

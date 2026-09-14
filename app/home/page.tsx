@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import BottomNav from '@/components/BottomNav'
 import { today, getWeekStart } from '@/lib/utils'
+import { writeTodayTrainingCache } from '@/lib/training-navigation-cache'
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis } from 'recharts'
 
 interface Profile {
@@ -203,6 +204,20 @@ export default function HomePage() {
     router.prefetch('/training/today')
     router.prefetch('/training/method')
   }, [router])
+  useEffect(() => {
+    if (!methodContext) return
+    let active = true
+
+    void fetch('/api/training/today', { cache: 'no-store' })
+      .then(async (response) => {
+        if (!response.ok) return
+        const payload = await response.json()
+        if (active) writeTodayTrainingCache(payload.data)
+      })
+      .catch(() => undefined)
+
+    return () => { active = false }
+  }, [methodContext])
   useEffect(() => {
     if (typeof window === 'undefined') return
     const notice = sessionStorage.getItem('pawside_setup_notice')

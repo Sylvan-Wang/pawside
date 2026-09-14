@@ -3,6 +3,12 @@
 import PageHeader from '@/components/PageHeader'
 import ExerciseMotion from '@/components/workout/ExerciseMotion'
 import type { ExerciseMedia } from '@/lib/exercise-media'
+import {
+  clearTodayTrainingCache,
+  clearTrainingSessionCache,
+  readTrainingSessionCache,
+  warmTrainingSessionCache,
+} from '@/lib/training-navigation-cache'
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
@@ -116,12 +122,19 @@ export default function TrainingSessionPage() {
     let active = true
 
     async function load() {
+      const cached = readTrainingSessionCache<SessionResponse>(sessionId)
+      if (cached) {
+        setData(cached)
+        setDrafts(Object.fromEntries(cached.exercises.map((exercise) => [exercise.id, initialDrafts(exercise)])))
+        const firstOpen = cached.exercises.findIndex((exercise) => !['completed', 'skipped'].includes(exercise.status))
+        setActiveExerciseIndex(firstOpen >= 0 ? firstOpen : 0)
+        setLoading(false)
+        return
+      }
+
       try {
-        const response = await fetch(`/api/training/sessions/${sessionId}`, { cache: 'no-store' })
-        const payload = await response.json()
-        if (!response.ok) throw new Error(payload?.error?.message || '暂时无法读取训练')
+        const nextData = await warmTrainingSessionCache<SessionResponse>(sessionId)
         if (!active) return
-        const nextData = payload.data as SessionResponse
         setData(nextData)
         setDrafts(Object.fromEntries(nextData.exercises.map((exercise) => [exercise.id, initialDrafts(exercise)])))
         const firstOpen = nextData.exercises.findIndex((exercise) => !['completed', 'skipped'].includes(exercise.status))
@@ -217,6 +230,7 @@ export default function TrainingSessionPage() {
           index === position ? { ...item, saved: true } : item
         )),
       }))
+      clearTrainingSessionCache(sessionId)
     } catch (reason: unknown) {
       setError(reason instanceof Error ? reason.message : '保存失败')
     } finally {
@@ -236,6 +250,8 @@ export default function TrainingSessionPage() {
       const payload = await response.json()
       if (!response.ok) throw new Error(payload?.error?.message || '暂时无法完成训练')
       setCompletion(payload.data)
+      clearTrainingSessionCache(sessionId)
+      clearTodayTrainingCache()
       setData((current) => current ? {
         ...current,
         session: { ...current.session, status: 'completed', completed_at: new Date().toISOString() },

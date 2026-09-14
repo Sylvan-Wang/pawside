@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import BottomNav from '@/components/BottomNav'
 import PageHeader from '@/components/PageHeader'
 import { useToast } from '@/components/Toast'
+import { clearTrainingNavigationCache } from '@/lib/training-navigation-cache'
 
 interface Profile {
   email: string
@@ -115,6 +116,7 @@ export default function SettingsPage() {
   }
 
   async function handleLogout() {
+    clearTrainingNavigationCache()
     await supabase.auth.signOut()
     router.push('/auth')
   }
