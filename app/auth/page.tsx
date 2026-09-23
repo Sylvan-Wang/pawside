@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { createClient, setAuthPersistence } from '@/lib/supabase/client'
 import { clearTrainingNavigationCache } from '@/lib/training-navigation-cache'
 
 function getAuthErrorMessage(err: unknown) {
@@ -35,6 +35,7 @@ export default function AuthPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
+  const [rememberMe, setRememberMe] = useState(true)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [resending, setResending] = useState(false)
@@ -62,6 +63,7 @@ export default function AuthPage() {
         if (error) throw error
         setRegistrationResult(data.session ? 'signed-in' : 'confirmation-pending')
       } else {
+        setAuthPersistence(rememberMe)
         const { data, error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
         const { data: profile } = await supabase
@@ -70,10 +72,11 @@ export default function AuthPage() {
           .eq('id', data.user.id)
           .single()
         if (profile?.onboarding_completed) {
-          router.push('/home')
+          router.replace('/home')
         } else {
-          router.push('/onboarding')
+          router.replace('/onboarding')
         }
+        router.refresh()
       }
     } catch (err: unknown) {
       setError(getAuthErrorMessage(err))
@@ -212,6 +215,18 @@ export default function AuthPage() {
               required
             />
           </div>
+        )}
+
+        {mode === 'login' && (
+          <label className="flex cursor-pointer items-center gap-2 text-sm text-gray-600">
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={event => setRememberMe(event.target.checked)}
+              className="h-4 w-4 rounded border-gray-300 accent-black"
+            />
+            <span>记住我，后续不再重复登录</span>
+          </label>
         )}
 
         {error && <p className="text-red-500 text-sm">{error}</p>}

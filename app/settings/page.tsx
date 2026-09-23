@@ -118,7 +118,8 @@ export default function SettingsPage() {
   async function handleLogout() {
     clearTrainingNavigationCache()
     await supabase.auth.signOut()
-    router.push('/auth')
+    router.replace('/auth')
+    router.refresh()
   }
 
   const goalOptions = ['减脂', '增肌', '保持']

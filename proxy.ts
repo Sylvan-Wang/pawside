@@ -1,8 +1,24 @@
-import { createServerClient } from '@supabase/ssr'
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import {
+  applyAuthPersistence,
+  AUTH_PERSISTENCE_COOKIE,
+  authPersistenceFromCookie,
+} from '@/lib/supabase/auth-persistence'
+
+function redirectWithAuthCookies(url: URL, authResponse: NextResponse) {
+  const redirectResponse = NextResponse.redirect(url)
+  authResponse.cookies.getAll().forEach(cookie => {
+    redirectResponse.cookies.set(cookie)
+  })
+  return redirectResponse
+}
 
 export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
+  const persistence = authPersistenceFromCookie(
+    request.cookies.get(AUTH_PERSISTENCE_COOKIE)?.value,
+  )
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -10,11 +26,15 @@ export async function proxy(request: NextRequest) {
     {
       cookies: {
         getAll() { return request.cookies.getAll() },
-        setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
+        setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
           supabaseResponse = NextResponse.next({ request })
           cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
+            supabaseResponse.cookies.set(
+              name,
+              value,
+              applyAuthPersistence(options, persistence),
+            )
           )
         },
       },
@@ -31,11 +51,11 @@ export async function proxy(request: NextRequest) {
     (pathname.startsWith('/training/method') || pathname === '/onboarding')
 
   if (!user && !isPublic && !isLocalMethodPreview && !pathname.startsWith('/api')) {
-    return NextResponse.redirect(new URL('/auth', request.url))
+    return redirectWithAuthCookies(new URL('/auth', request.url), supabaseResponse)
   }
 
   if (user && pathname === '/auth') {
-    return NextResponse.redirect(new URL('/home', request.url))
+    return redirectWithAuthCookies(new URL('/home', request.url), supabaseResponse)
   }
 
   return supabaseResponse
