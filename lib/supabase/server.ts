@@ -1,18 +1,26 @@
-import { createServerClient } from '@supabase/ssr'
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import {
+  applyAuthPersistence,
+  AUTH_PERSISTENCE_COOKIE,
+  authPersistenceFromCookie,
+} from './auth-persistence'
 
 export async function createClient() {
   const cookieStore = await cookies()
+  const persistence = authPersistenceFromCookie(
+    cookieStore.get(AUTH_PERSISTENCE_COOKIE)?.value,
+  )
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         getAll() { return cookieStore.getAll() },
-        setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
+        setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
           try {
             cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
+              cookieStore.set(name, value, applyAuthPersistence(options, persistence))
             )
           } catch {}
         },
