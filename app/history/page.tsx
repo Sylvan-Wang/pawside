@@ -47,7 +47,7 @@ export default function HistoryPage() {
     setLoading(false)
   }, [router, supabase])
 
-  useEffect(() => { load() }, [load])
+  useEffect(() => { void Promise.resolve().then(load) }, [load])
 
   const totalPages = Math.max(1, Math.ceil(entries.length / PAGE_SIZE))
   const pageEntries = entries.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)

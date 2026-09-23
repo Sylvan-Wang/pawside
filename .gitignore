@@ -9,11 +9,23 @@ node_modules/
 out/
 
 # Environment variables - NEVER commit these
+.env
+.env.*
+!.env.example
 .env.local
 .env*.local
 
+# Supabase CLI local state
+supabase/.temp/
+supabase/.branches/
+
 # Netlify
 .netlify/
+
+# Local authoring and generated Method import reports
+.tmp-spreadsheet/
+artifacts/method-import/*
+!artifacts/method-import/.gitkeep
 
 # OS
 .DS_Store
@@ -22,3 +34,6 @@ Thumbs.db
 # Logs
 *.log
 npm-debug.log*
+
+# TypeScript incremental build cache
+*.tsbuildinfo

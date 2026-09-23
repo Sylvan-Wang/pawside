@@ -95,7 +95,7 @@ export default function WeeklyPage() {
     setLoading(false)
   }, [router, supabase])
 
-  useEffect(() => { load(weekOffset) }, [load, weekOffset])
+  useEffect(() => { void Promise.resolve().then(() => load(weekOffset)) }, [load, weekOffset])
 
   const weekStart = getWeekStart(new Date())
   weekStart.setDate(weekStart.getDate() - weekOffset * 7)

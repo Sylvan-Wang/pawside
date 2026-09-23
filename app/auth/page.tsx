@@ -1,7 +1,32 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient, setAuthPersistence } from '@/lib/supabase/client'
+import { clearTrainingNavigationCache } from '@/lib/training-navigation-cache'
+
+function getAuthErrorMessage(err: unknown) {
+  const code = typeof err === 'object' && err !== null && 'code' in err
+    ? String(err.code)
+    : ''
+  const message = err instanceof Error ? err.message : '操作失败'
+
+  if (code === 'email_address_not_authorized') {
+    return '当前邮件服务无法向这个邮箱发送确认邮件，请联系管理员配置正式邮件服务'
+  }
+  if (code === 'over_email_send_rate_limit' || code === 'over_request_rate_limit') {
+    return '确认邮件发送过于频繁，请至少等待 60 秒后再试'
+  }
+  if (code === 'email_not_confirmed' || message.includes('Email not confirmed')) {
+    return '邮箱尚未验证，请检查收件箱并点击确认链接'
+  }
+  if (code === 'invalid_credentials' || message.includes('Invalid login')) {
+    return '邮箱或密码错误'
+  }
+  if (message.includes('already registered')) {
+    return '该邮箱已注册，请直接登录'
+  }
+  return message
+}
 
 export default function AuthPage() {
   const router = useRouter()
@@ -13,7 +38,14 @@ export default function AuthPage() {
   const [rememberMe, setRememberMe] = useState(true)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const [registered, setRegistered] = useState(false)
+  const [resending, setResending] = useState(false)
+  const [confirmationMessage, setConfirmationMessage] = useState('')
+  const [confirmationError, setConfirmationError] = useState('')
+  const [registrationResult, setRegistrationResult] = useState<'signed-in' | 'confirmation-pending' | null>(null)
+
+  useEffect(() => {
+    clearTrainingNavigationCache()
+  }, [])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -22,10 +54,14 @@ export default function AuthPage() {
     try {
       if (mode === 'register') {
         if (password !== confirm) throw new Error('两次密码不一致')
-        const { data, error } = await supabase.auth.signUp({ email, password })
+        const emailRedirectTo = `${window.location.origin}/auth/callback?next=/onboarding`
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { emailRedirectTo },
+        })
         if (error) throw error
-        if (!data.session) throw new Error('该邮箱已注册，请直接登录')
-        setRegistered(true)
+        setRegistrationResult(data.session ? 'signed-in' : 'confirmation-pending')
       } else {
         setAuthPersistence(rememberMe)
         const { data, error } = await supabase.auth.signInWithPassword({ email, password })
@@ -43,29 +79,83 @@ export default function AuthPage() {
         router.refresh()
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : '操作失败'
-      if (msg.includes('Email not confirmed') || msg.includes('email_not_confirmed')) {
-        setError('邮箱尚未验证，请检查收件箱并点击确认链接')
-      } else if (msg.includes('Invalid login') || msg.includes('invalid_credentials')) {
-        setError('邮箱或密码错误')
-      } else if (msg.includes('already registered')) {
-        setError('该邮箱已注册，请直接登录')
-      } else {
-        setError(msg)
-      }
+      setError(getAuthErrorMessage(err))
     } finally {
       setLoading(false)
     }
   }
 
+  async function handleResendConfirmation() {
+    setConfirmationError('')
+    setConfirmationMessage('')
+    setResending(true)
+    try {
+      const emailRedirectTo = `${window.location.origin}/auth/callback?next=/onboarding`
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+        options: { emailRedirectTo },
+      })
+      if (error) throw error
+      setConfirmationMessage('确认邮件已重新发送，请检查收件箱和垃圾邮件文件夹。')
+    } catch (err: unknown) {
+      setConfirmationError(getAuthErrorMessage(err))
+    } finally {
+      setResending(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-white flex flex-col justify-center px-6">
-      {registered && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={() => router.push('/home')}>
-          <div className="bg-gray-900 text-white px-8 py-5 rounded-2xl shadow-2xl text-center animate-fade-in">
+      {registrationResult && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 px-6">
+          <div className="bg-gray-900 text-white px-8 py-6 rounded-2xl shadow-2xl text-center animate-fade-in max-w-sm">
             <p className="text-2xl mb-1">🍻</p>
-            <p className="text-base font-medium">注册成功！</p>
-            <p className="text-xs text-gray-400 mt-1">点击继续</p>
+            <p className="text-base font-medium">
+              {registrationResult === 'signed-in' ? '注册成功！' : '请确认你的邮箱'}
+            </p>
+            <p className="text-xs text-gray-400 mt-2 leading-5">
+              {registrationResult === 'signed-in'
+                ? '账户已登录，可以继续完成基础资料。'
+                : '如果该邮箱可以注册，确认邮件已经发送。请从邮件链接返回 Pawside。'}
+            </p>
+            {registrationResult === 'confirmation-pending' && (
+              <>
+                {confirmationMessage && (
+                  <p className="mt-3 text-xs leading-5 text-emerald-300" aria-live="polite">
+                    {confirmationMessage}
+                  </p>
+                )}
+                {confirmationError && (
+                  <p className="mt-3 text-xs leading-5 text-red-300" role="alert">
+                    {confirmationError}
+                  </p>
+                )}
+                <button
+                  type="button"
+                  onClick={handleResendConfirmation}
+                  disabled={resending}
+                  className="mt-4 w-full rounded-lg border border-white/25 px-5 py-2 text-sm font-medium text-white disabled:opacity-50"
+                >
+                  {resending ? '发送中…' : '重新发送确认邮件'}
+                </button>
+              </>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                if (registrationResult === 'signed-in') {
+                  router.push('/onboarding')
+                } else {
+                  setMode('login')
+                  setRegistrationResult(null)
+                  setConfirm('')
+                }
+              }}
+              className="mt-3 rounded-lg bg-white px-5 py-2 text-sm font-medium text-gray-900"
+            >
+              {registrationResult === 'signed-in' ? '继续' : '返回登录'}
+            </button>
           </div>
         </div>
       )}
@@ -76,13 +166,13 @@ export default function AuthPage() {
 
       <div className="flex mb-6 border-b border-gray-100">
         <button
-          onClick={() => { setMode('login'); setRegistered(false); setConfirm('') }}
+          onClick={() => { setMode('login'); setRegistrationResult(null); setConfirm('') }}
           className={`flex-1 pb-3 text-sm font-medium transition-colors ${mode === 'login' ? 'text-black border-b-2 border-black' : 'text-gray-400'}`}
         >
           登录
         </button>
         <button
-          onClick={() => { setMode('register'); setRegistered(false); setConfirm('') }}
+          onClick={() => { setMode('register'); setRegistrationResult(null); setConfirm('') }}
           className={`flex-1 pb-3 text-sm font-medium transition-colors ${mode === 'register' ? 'text-black border-b-2 border-black' : 'text-gray-400'}`}
         >
           注册
@@ -159,7 +249,7 @@ export default function AuthPage() {
       <p className="text-center text-sm text-gray-400 mt-6">
         {mode === 'login' ? '还没有账号？' : '已有账号？'}
         <button
-          onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setRegistered(false); setConfirm('') }}
+          onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setRegistrationResult(null); setConfirm('') }}
           className="text-black ml-1 font-medium"
         >
           {mode === 'login' ? '去注册' : '去登录'}

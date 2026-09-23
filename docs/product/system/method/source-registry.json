@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "methodKey": "ksw_tcy_three_split_2026",
+  "sources": [
+    {
+      "sourceKey": "SRC-CANONICAL-V1.2",
+      "type": "workbook",
+      "version": "1.2",
+      "path": "outputs/method-p0-resolution/Pawside_三分化_Canonical_Method_Workbook_v1.2.xlsx",
+      "sha256": "52e762d6867d672e9dffd9f6c890aef8235f4b6280dd0eb6902909cf53baf3cd",
+      "status": "registered",
+      "role": "canonical_editorial_input"
+    },
+    {
+      "sourceKey": "SRC-P0-RESOLUTION-01",
+      "type": "product_patch",
+      "version": "0.1",
+      "sha256": "BE6AB7F112B73B8EC07DEB3770F858CE80C8D42C0532055D08F57118E5E977F7",
+      "status": "registered_external_input",
+      "role": "runtime_fallback_and_release_policy",
+      "limitations": "Does not replace the original Method transcript or certify product defaults as method_explicit."
+    },
+    {
+      "sourceKey": "SRC-METHOD-TXT",
+      "type": "transcript",
+      "version": "2026-04-24",
+      "status": "missing",
+      "role": "strict_method_evidence",
+      "limitations": "Filename and historical checksum are metadata only until source bytes are present."
+    },
+    {
+      "sourceKey": "SRC-METHOD-UI-WORKOUT-GUIDE",
+      "type": "product_patch",
+      "version": "1.0",
+      "sha256": "72E48896755FC34D1460D97013B690DD03D9D9B46395C0659ED222623590A31A",
+      "status": "registered_external_input",
+      "role": "method_ui_ux_and_standard_media",
+      "limitations": "Preserves the existing navigation, home IA and workout-log entry. UI work must not imply that later runtime phases already exist."
+    }
+  ]
+}

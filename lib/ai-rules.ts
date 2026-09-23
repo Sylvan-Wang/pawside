@@ -37,7 +37,6 @@ export interface UserProfile {
   weight_kg: number    // onboarding weight, fallback
   weekly_workout_target: number
   daily_calorie_target: number
-  preferred_model: string
 }
 
 export interface BodyMetric {

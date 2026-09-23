@@ -1,8 +1,24 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { preprocessDailyData } from '@/lib/ai-rules'
-import { callAI, type DailyReviewResponse } from '@/lib/ai-client'
+import {
+  callDailyReview,
+  DAILY_REVIEW_PROMPT_VERSION,
+  getOpenAIConfigStatus,
+  type DailyReviewPayload,
+  type OpenAIFailureReason,
+} from '@/lib/ai-client'
 import { generateDailySummary } from '@/lib/utils'
+
+interface DailyReviewResponse extends DailyReviewPayload {
+  cached: boolean
+  generation: {
+    source: 'openai' | 'rules' | 'no_data'
+    provider: 'openai'
+    model: string
+    fallback_reason: OpenAIFailureReason | null
+  }
+}
 
 // ─── GET: read cache ──────────────────────────────────────────────────────────
 
@@ -16,13 +32,13 @@ export async function GET(req: NextRequest) {
 
   const { data: cached } = await supabase
     .from('ai_generated_content')
-    .select('content_json, feedback')
+    .select('content_json, feedback, prompt_version')
     .eq('user_id', user.id)
     .eq('content_type', 'daily_review_ai')
     .eq('target_date', date)
     .maybeSingle()
 
-  if (cached?.content_json) {
+  if (cached?.content_json && cached.prompt_version === DAILY_REVIEW_PROMPT_VERSION) {
     return NextResponse.json({ ...(cached.content_json as object), cached: true, feedback: cached.feedback })
   }
 
@@ -36,19 +52,27 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: '未登录' }, { status: 401 })
 
-  const { date } = await req.json()
-  if (!date) return NextResponse.json({ error: '缺少 date 参数' }, { status: 400 })
+  let body: unknown
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: '请求体不是有效 JSON' }, { status: 400 })
+  }
+  const date = body && typeof body === 'object' ? (body as { date?: unknown }).date : null
+  if (typeof date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return NextResponse.json({ error: 'date 必须是 YYYY-MM-DD' }, { status: 400 })
+  }
 
   // Check cache first
   const { data: cached } = await supabase
     .from('ai_generated_content')
-    .select('content_json, feedback')
+    .select('content_json, feedback, prompt_version')
     .eq('user_id', user.id)
     .eq('content_type', 'daily_review_ai')
     .eq('target_date', date)
     .maybeSingle()
 
-  if (cached?.content_json) {
+  if (cached?.content_json && cached.prompt_version === DAILY_REVIEW_PROMPT_VERSION) {
     return NextResponse.json({ ...(cached.content_json as object), cached: true, feedback: cached.feedback })
   }
 
@@ -57,7 +81,7 @@ export async function POST(req: NextRequest) {
     supabase.from('workout_logs').select('type,duration_minutes,exercises').eq('user_id', user.id).eq('date', date),
     supabase.from('food_logs').select('meal_type,foods').eq('user_id', user.id).eq('date', date),
     supabase.from('body_metrics').select('weight_kg,date').eq('user_id', user.id).order('date', { ascending: false }).limit(1),
-    supabase.from('user_profiles').select('goal,gender,height_cm,weight_kg,weekly_workout_target,daily_calorie_target,preferred_model').eq('id', user.id).single(),
+    supabase.from('user_profiles').select('goal,gender,height_cm,weight_kg,weekly_workout_target,daily_calorie_target').eq('id', user.id).single(),
   ])
 
   const profile = profileRes.data
@@ -68,6 +92,7 @@ export async function POST(req: NextRequest) {
 
   // Edge case: no data at all — don't call AI
   if (workouts.length === 0 && foods.length === 0) {
+    const openAI = getOpenAIConfigStatus()
     const noDataResult: DailyReviewResponse = {
       summary: '今天还没有记录，去完成第一条吧！',
       insights: [],
@@ -75,6 +100,12 @@ export async function POST(req: NextRequest) {
       data_quality_tip: '',
       tone: 'encouraging',
       cached: false,
+      generation: {
+        source: 'no_data',
+        provider: 'openai',
+        model: openAI.model,
+        fallback_reason: null,
+      },
     }
     return NextResponse.json(noDataResult)
   }
@@ -82,15 +113,21 @@ export async function POST(req: NextRequest) {
   const latestMetric = mRes.data?.[0] ?? null
   const preprocessed = preprocessDailyData(workouts, foods, profile, latestMetric)
 
-  // Call AI
-  let result: DailyReviewResponse | null = await callAI(
-    (profile.preferred_model as 'openai' | 'deepseek') || 'deepseek',
-    preprocessed,
-  )
+  const aiResult = await callDailyReview(preprocessed)
+  let result: DailyReviewResponse
 
-  // Fallback priority: 1) stale cache (already handled above) 2) rule-based 3) static
-  const promptVersion = result ? `ai_daily_review_v1_${profile.preferred_model}` : 'rule_fallback_v1'
-  if (!result) {
+  if (aiResult.ok) {
+    result = {
+      ...aiResult.data,
+      cached: false,
+      generation: {
+        source: 'openai',
+        provider: aiResult.provider,
+        model: aiResult.model,
+        fallback_reason: null,
+      },
+    }
+  } else {
     const ruleSummary = generateDailySummary(workouts, foods, profile)
     result = {
       summary: ruleSummary.workout_status + '。' + ruleSummary.food_status,
@@ -99,17 +136,27 @@ export async function POST(req: NextRequest) {
       data_quality_tip: '',
       tone: 'encouraging',
       cached: false,
+      generation: {
+        source: 'rules',
+        provider: aiResult.provider,
+        model: aiResult.model,
+        fallback_reason: aiResult.reason,
+      },
     }
   }
 
-  // Write cache (only for AI or rule-based results, not no-data)
-  await supabase.from('ai_generated_content').upsert({
-    user_id: user.id,
-    content_type: 'daily_review_ai',
-    target_date: date,
-    content_json: result,
-    prompt_version: promptVersion,
-  }, { onConflict: 'user_id,content_type,target_date' })
+  // Cache only real OpenAI results. A missing key or provider outage must not
+  // create a durable fallback that masks recovery on the next request.
+  if (aiResult.ok) {
+    const { error: cacheError } = await supabase.from('ai_generated_content').upsert({
+      user_id: user.id,
+      content_type: 'daily_review_ai',
+      target_date: date,
+      content_json: result,
+      prompt_version: DAILY_REVIEW_PROMPT_VERSION,
+    }, { onConflict: 'user_id,content_type,target_date' })
+    if (cacheError) console.error('[daily-review] Failed to cache OpenAI result')
+  }
 
   return NextResponse.json(result)
 }

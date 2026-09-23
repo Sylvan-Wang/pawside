@@ -14,7 +14,7 @@ function redirectWithAuthCookies(url: URL, authResponse: NextResponse) {
   return redirectResponse
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
   const persistence = authPersistenceFromCookie(
     request.cookies.get(AUTH_PERSISTENCE_COOKIE)?.value,
@@ -46,8 +46,11 @@ export async function middleware(request: NextRequest) {
 
   const publicPaths = ['/auth']
   const isPublic = publicPaths.some(p => pathname.startsWith(p)) || pathname === '/auth/reset-password'
+  const isLocalMethodPreview =
+    process.env.PAWSIDE_VISUAL_PREVIEW === '1' &&
+    (pathname.startsWith('/training/method') || pathname === '/onboarding')
 
-  if (!user && !isPublic && !pathname.startsWith('/api')) {
+  if (!user && !isPublic && !isLocalMethodPreview && !pathname.startsWith('/api')) {
     return redirectWithAuthCookies(new URL('/auth', request.url), supabaseResponse)
   }
 
@@ -59,5 +62,8 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+  // Every API route performs its own authenticated user check. Keeping API
+  // requests out of this page redirect proxy removes a duplicate Supabase
+  // getUser round trip from every data request.
+  matcher: ['/((?!api(?:/|$)|_next/static|_next/image|favicon.ico).*)'],
 }
