@@ -4,6 +4,7 @@ import {
   AUTH_PERSISTENCE_MAX_AGE,
   authPersistenceFromCookie,
 } from '../lib/supabase/auth-persistence'
+import { isSupabaseAuthCookie } from '../lib/supabase/client'
 
 describe('Supabase auth persistence', () => {
   it('defaults existing users to persistent sessions', () => {
@@ -29,5 +30,12 @@ describe('Supabase auth persistence', () => {
       path: '/',
       maxAge: 0,
     })
+  })
+
+  it('recognizes Supabase auth cookies and their chunks', () => {
+    expect(isSupabaseAuthCookie('sb-abcdefghijklmnopqrst-auth-token')).toBe(true)
+    expect(isSupabaseAuthCookie('sb-abcdefghijklmnopqrst-auth-token.0')).toBe(true)
+    expect(isSupabaseAuthCookie('pawside-auth-persistence')).toBe(false)
+    expect(isSupabaseAuthCookie('unrelated-cookie')).toBe(false)
   })
 })

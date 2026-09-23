@@ -64,19 +64,11 @@ export default function AuthPage() {
         setRegistrationResult(data.session ? 'signed-in' : 'confirmation-pending')
       } else {
         setAuthPersistence(rememberMe)
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+        const { error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
-        const { data: profile } = await supabase
-          .from('user_profiles')
-          .select('onboarding_completed')
-          .eq('id', data.user.id)
-          .single()
-        if (profile?.onboarding_completed) {
-          router.replace('/home')
-        } else {
-          router.replace('/onboarding')
-        }
-        router.refresh()
+        setAuthPersistence(rememberMe)
+        window.location.replace('/home')
+        return
       }
     } catch (err: unknown) {
       setError(getAuthErrorMessage(err))
