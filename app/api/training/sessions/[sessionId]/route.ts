@@ -87,5 +87,5 @@ export async function GET(
     }
   })
 
-  return NextResponse.json({ data: { session: sessionResult.data, exercises: executions } })
+  return NextResponse.json({ data: { viewer_id: user.id, session: sessionResult.data, exercises: executions } })
 }
