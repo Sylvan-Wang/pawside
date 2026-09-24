@@ -9,6 +9,15 @@ import {
   readTrainingSessionCache,
   warmTrainingSessionCache,
 } from '@/lib/training-navigation-cache'
+import {
+  getPendingSetActual,
+  hasPendingSetActual,
+  listPendingSetActuals,
+  queueSetActual,
+  removePendingSetActual,
+  removePendingSetActualByKey,
+} from '@/lib/training-offline-queue'
+import type { SaveSetActualInput } from '@/lib/contracts/training-runtime'
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
@@ -53,6 +62,7 @@ interface TrainingSession {
 }
 
 interface SessionResponse {
+  viewer_id: string
   session: TrainingSession
   exercises: ExerciseExecution[]
 }
@@ -64,6 +74,7 @@ interface SetDraft {
   rir: string
   saved: boolean
   isExtra: boolean
+  pending: boolean
 }
 
 interface CompletionResult {
@@ -74,35 +85,78 @@ interface CompletionResult {
 
 const splitNames = { push: '推', pull: '拉', legs: '腿' }
 
-function initialDrafts(exercise: ExerciseExecution): SetDraft[] {
+function restorePendingDrafts(
+  base: SetDraft[],
+  exercise: ExerciseExecution,
+  userId: string,
+  sessionId: string,
+) {
+  const drafts = [...base]
+  for (const pending of listPendingSetActuals(userId, sessionId)) {
+    if (pending.payload.exercise_execution_id !== exercise.id) continue
+    const existing = drafts.find((draft) => draft.setIndex === pending.payload.set_index)
+    if (existing) continue
+    drafts.push({
+      setIndex: pending.payload.set_index,
+      weight: pending.payload.actual_weight_kg == null ? '' : String(pending.payload.actual_weight_kg),
+      reps: String(pending.payload.actual_reps),
+      rir: pending.payload.actual_rir == null ? '' : String(pending.payload.actual_rir),
+      saved: false,
+      isExtra: true,
+      pending: true,
+    })
+  }
+  return drafts.sort((a, b) => a.setIndex - b.setIndex)
+}
+
+function initialDrafts(exercise: ExerciseExecution, userId: string, sessionId: string): SetDraft[] {
   if (exercise.sets.length > 0) {
-    return [...exercise.sets]
+    return restorePendingDrafts([...exercise.sets]
       .sort((a, b) => a.set_index - b.set_index)
-      .map((set) => ({
-        setIndex: set.set_index,
-        weight: set.actual_weight_kg == null ? '' : String(set.actual_weight_kg),
-        reps: set.actual_reps == null ? '' : String(set.actual_reps),
-        rir: set.actual_rir == null ? '' : String(set.actual_rir),
-        saved: set.status === 'completed',
-        isExtra: set.is_extra,
-      }))
+      .map((set) => {
+        const pending = getPendingSetActual(userId, sessionId, exercise.id, set.set_index)
+        return {
+          setIndex: set.set_index,
+          weight: pending
+            ? pending.payload.actual_weight_kg == null ? '' : String(pending.payload.actual_weight_kg)
+            : set.actual_weight_kg == null ? '' : String(set.actual_weight_kg),
+          reps: pending ? String(pending.payload.actual_reps) : set.actual_reps == null ? '' : String(set.actual_reps),
+          rir: pending
+            ? pending.payload.actual_rir == null ? '' : String(pending.payload.actual_rir)
+            : set.actual_rir == null ? '' : String(set.actual_rir),
+          saved: !pending && set.status === 'completed',
+          isExtra: set.is_extra,
+          pending: Boolean(pending),
+        }
+      }), exercise, userId, sessionId)
   }
 
   const planned = exercise.prescription?.sets ?? []
   if (planned.length > 0) {
-    return [...planned]
+    return restorePendingDrafts([...planned]
       .sort((a, b) => a.set_index - b.set_index)
-      .map((set) => ({
-        setIndex: set.set_index,
-        weight: set.target_weight_kg == null ? '' : String(set.target_weight_kg),
-        reps: '',
-        rir: '',
-        saved: false,
-        isExtra: false,
-      }))
+      .map((set) => {
+        const pending = getPendingSetActual(userId, sessionId, exercise.id, set.set_index)
+        return {
+          setIndex: set.set_index,
+          weight: pending
+            ? pending.payload.actual_weight_kg == null ? '' : String(pending.payload.actual_weight_kg)
+            : set.target_weight_kg == null ? '' : String(set.target_weight_kg),
+          reps: pending ? String(pending.payload.actual_reps) : '',
+          rir: pending?.payload.actual_rir == null ? '' : String(pending.payload.actual_rir),
+          saved: false,
+          isExtra: false,
+          pending: Boolean(pending),
+        }
+      }), exercise, userId, sessionId)
   }
 
-  return [{ setIndex: 1, weight: '', reps: '', rir: '', saved: false, isExtra: true }]
+  return restorePendingDrafts(
+    [{ setIndex: 1, weight: '', reps: '', rir: '', saved: false, isExtra: true, pending: false }],
+    exercise,
+    userId,
+    sessionId,
+  )
 }
 
 export default function TrainingSessionPage() {
@@ -115,6 +169,7 @@ export default function TrainingSessionPage() {
   const [loading, setLoading] = useState(true)
   const [savingKey, setSavingKey] = useState('')
   const [finishing, setFinishing] = useState(false)
+  const [exerciseActionId, setExerciseActionId] = useState('')
   const [error, setError] = useState('')
   const [completion, setCompletion] = useState<CompletionResult | null>(null)
 
@@ -125,7 +180,7 @@ export default function TrainingSessionPage() {
       const cached = readTrainingSessionCache<SessionResponse>(sessionId)
       if (cached) {
         setData(cached)
-        setDrafts(Object.fromEntries(cached.exercises.map((exercise) => [exercise.id, initialDrafts(exercise)])))
+        setDrafts(Object.fromEntries(cached.exercises.map((exercise) => [exercise.id, initialDrafts(exercise, cached.viewer_id, sessionId)])))
         const firstOpen = cached.exercises.findIndex((exercise) => !['completed', 'skipped'].includes(exercise.status))
         setActiveExerciseIndex(firstOpen >= 0 ? firstOpen : 0)
         setLoading(false)
@@ -136,7 +191,7 @@ export default function TrainingSessionPage() {
         const nextData = await warmTrainingSessionCache<SessionResponse>(sessionId)
         if (!active) return
         setData(nextData)
-        setDrafts(Object.fromEntries(nextData.exercises.map((exercise) => [exercise.id, initialDrafts(exercise)])))
+        setDrafts(Object.fromEntries(nextData.exercises.map((exercise) => [exercise.id, initialDrafts(exercise, nextData.viewer_id, sessionId)])))
         const firstOpen = nextData.exercises.findIndex((exercise) => !['completed', 'skipped'].includes(exercise.status))
         setActiveExerciseIndex(firstOpen >= 0 ? firstOpen : 0)
       } catch (reason: unknown) {
@@ -149,6 +204,16 @@ export default function TrainingSessionPage() {
     void load()
     return () => { active = false }
   }, [sessionId])
+
+  useEffect(() => {
+    if (!data) return
+    const retry = () => { void syncPendingSetActuals() }
+    window.addEventListener('online', retry)
+    if (window.navigator.onLine) retry()
+    return () => window.removeEventListener('online', retry)
+    // syncPendingSetActuals intentionally reads the latest drafts through state setters.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data?.viewer_id, sessionId])
 
   useEffect(() => {
     const nextMedia = data?.exercises[activeExerciseIndex + 1]?.media
@@ -166,10 +231,12 @@ export default function TrainingSessionPage() {
   }, [activeExerciseIndex, data])
 
   function updateDraft(executionId: string, position: number, field: 'weight' | 'reps' | 'rir', value: string) {
+    const setIndex = drafts[executionId][position].setIndex
+    if (data) removePendingSetActualByKey(data.viewer_id, sessionId, executionId, setIndex)
     setDrafts((current) => ({
       ...current,
       [executionId]: current[executionId].map((draft, index) => (
-        index === position ? { ...draft, [field]: value, saved: false } : draft
+        index === position ? { ...draft, [field]: value, saved: false, pending: false } : draft
       )),
     }))
   }
@@ -187,6 +254,7 @@ export default function TrainingSessionPage() {
           rir: '',
           saved: false,
           isExtra: true,
+          pending: false,
         }],
       }
     })
@@ -199,42 +267,124 @@ export default function TrainingSessionPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  async function saveSet(executionId: string, position: number) {
+  function buildSetPayload(executionId: string, position: number): SaveSetActualInput | null {
     const draft = drafts[executionId][position]
     const reps = Number(draft.reps)
     if (draft.reps === '' || !Number.isInteger(reps) || reps < 0) {
       setError('请填写这一组实际完成的次数')
-      return
+      return null
     }
+    return {
+      exercise_execution_id: executionId,
+      set_index: draft.setIndex,
+      actual_weight_kg: draft.weight === '' ? null : Number(draft.weight),
+      actual_reps: reps,
+      actual_rir: draft.rir === '' ? null : Number(draft.rir),
+    }
+  }
 
+  async function sendSetActual(payload: SaveSetActualInput) {
+    return fetch(`/api/training/sessions/${sessionId}/sets`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+  }
+
+  async function syncPendingSetActuals() {
+    if (!data || !window.navigator.onLine) return
+    for (const item of listPendingSetActuals(data.viewer_id, sessionId)) {
+      try {
+        const response = await sendSetActual(item.payload)
+        if (!response.ok) {
+          if (response.status < 500) removePendingSetActual(item)
+          continue
+        }
+        removePendingSetActual(item)
+        setDrafts((current) => ({
+          ...current,
+          [item.payload.exercise_execution_id]: current[item.payload.exercise_execution_id]?.map((draft) => (
+            draft.setIndex === item.payload.set_index ? { ...draft, saved: true, pending: false } : draft
+          )) ?? [],
+        }))
+      } catch {
+        return
+      }
+    }
+    clearTrainingSessionCache(sessionId)
+  }
+
+  async function saveSet(executionId: string, position: number) {
+    if (!data) return
+    const requestPayload = buildSetPayload(executionId, position)
+    if (!requestPayload) return
+    const draft = drafts[executionId][position]
     const key = `${executionId}:${draft.setIndex}`
+    const pending = { userId: data.viewer_id, sessionId, payload: requestPayload, queuedAt: new Date().toISOString() }
     setSavingKey(key)
     setError('')
+    queueSetActual(pending)
+    setDrafts((current) => ({
+      ...current,
+      [executionId]: current[executionId].map((item, index) => (
+        index === position ? { ...item, saved: false, pending: true } : item
+      )),
+    }))
     try {
-      const response = await fetch(`/api/training/sessions/${sessionId}/sets`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          exercise_execution_id: executionId,
-          set_index: draft.setIndex,
-          actual_weight_kg: draft.weight === '' ? null : Number(draft.weight),
-          actual_reps: reps,
-          actual_rir: draft.rir === '' ? null : Number(draft.rir),
-        }),
-      })
-      const payload = await response.json()
-      if (!response.ok) throw new Error(payload?.error?.message || '保存失败')
+      const response = await sendSetActual(requestPayload)
+      const result = await response.json()
+      if (!response.ok) {
+        if (response.status < 500) removePendingSetActual(pending)
+        throw new Error(result?.error?.message || '保存失败')
+      }
+      removePendingSetActual(pending)
       setDrafts((current) => ({
         ...current,
         [executionId]: current[executionId].map((item, index) => (
-          index === position ? { ...item, saved: true } : item
+          index === position ? { ...item, saved: true, pending: false } : item
         )),
       }))
       clearTrainingSessionCache(sessionId)
     } catch (reason: unknown) {
-      setError(reason instanceof Error ? reason.message : '保存失败')
+      const offline = !window.navigator.onLine || reason instanceof TypeError
+      const stillPending = hasPendingSetActual(data.viewer_id, sessionId, executionId, draft.setIndex)
+      setDrafts((current) => ({
+        ...current,
+        [executionId]: current[executionId].map((item, index) => (
+          index === position ? { ...item, pending: stillPending } : item
+        )),
+      }))
+      setError(offline ? '已暂存在本机，联网后会自动同步' : reason instanceof Error ? reason.message : '保存失败')
     } finally {
       setSavingKey('')
+    }
+  }
+
+  async function setExerciseStatus(executionId: string, action: 'skip' | 'resume') {
+    setExerciseActionId(executionId)
+    setError('')
+    try {
+      const response = await fetch(`/api/training/sessions/${sessionId}/exercises/${executionId}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action }),
+      })
+      const result = await response.json()
+      if (!response.ok) throw new Error(result?.error?.message || '动作状态更新失败')
+      setData((current) => current ? {
+        ...current,
+        exercises: current.exercises.map((item) => item.id === executionId
+          ? { ...item, status: result.data.status }
+          : item),
+      } : current)
+      clearTrainingSessionCache(sessionId)
+      if (action === 'skip' && activeExerciseIndex < (data?.exercises.length ?? 0) - 1) {
+        showExercise(activeExerciseIndex + 1)
+      }
+    } catch (reason: unknown) {
+      setError(reason instanceof Error ? reason.message : '动作状态更新失败')
+    } finally {
+      setExerciseActionId('')
     }
   }
 
@@ -242,6 +392,10 @@ export default function TrainingSessionPage() {
     setFinishing(true)
     setError('')
     try {
+      await syncPendingSetActuals()
+      if (data && listPendingSetActuals(data.viewer_id, sessionId).length > 0) {
+        throw new Error('仍有训练记录等待联网同步，请联网后再完成本次训练')
+      }
       const response = await fetch(`/api/training/sessions/${sessionId}/complete`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -321,6 +475,31 @@ export default function TrainingSessionPage() {
             <p className="mt-1 text-sm text-gray-500">今天建议：{exercise.prescription.target_summary_zh}</p>
           )}
 
+          {!isCompleted && (
+            <div className="mt-3 flex gap-2">
+              {exercise.status === 'skipped' ? (
+                <button type="button" onClick={() => setExerciseStatus(exercise.id, 'resume')}
+                  disabled={exerciseActionId === exercise.id}
+                  className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium disabled:opacity-50">
+                  恢复这个动作
+                </button>
+              ) : (
+                <>
+                  <button type="button" onClick={() => showExercise(Math.min(activeExerciseIndex + 1, data.exercises.length - 1))}
+                    disabled={isLastExercise}
+                    className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium disabled:opacity-40">
+                    稍后做
+                  </button>
+                  <button type="button" onClick={() => setExerciseStatus(exercise.id, 'skip')}
+                    disabled={exerciseActionId === exercise.id || savedSetCount > 0}
+                    className="rounded-lg px-3 py-2 text-sm text-gray-500 disabled:opacity-40">
+                    跳过动作
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+
           {exercise.media && (
             <ExerciseMotion key={exercise.id} name={exerciseName} media={exercise.media} loading="eager" />
           )}
@@ -332,32 +511,32 @@ export default function TrainingSessionPage() {
                 <div key={draft.setIndex} className="rounded-xl border border-gray-100 p-3">
                   <div className="mb-2 flex items-center justify-between">
                     <span className="text-sm font-medium">第 {draft.setIndex} 组{draft.isExtra ? ' · 实际记录' : ''}</span>
-                    <span className={`text-xs ${draft.saved ? 'text-green-600' : 'text-gray-400'}`}>
-                      {draft.saved ? '已保存' : '待保存'}
+                    <span className={`text-xs ${draft.pending ? 'text-amber-600' : draft.saved ? 'text-green-600' : 'text-gray-400'}`}>
+                      {draft.pending ? '待同步' : draft.saved ? '已保存' : '待保存'}
                     </span>
                   </div>
                   <div className="grid grid-cols-3 gap-2">
                     <label className="text-xs text-gray-500">
                       重量 kg
-                      <input type="number" min="0" step="0.5" value={draft.weight} disabled={isCompleted}
+                      <input type="number" min="0" step="0.5" value={draft.weight} disabled={isCompleted || exercise.status === 'skipped'}
                         onChange={(event) => updateDraft(exercise.id, position, 'weight', event.target.value)}
                         className="mt-1 w-full rounded-lg border border-gray-200 px-2 py-2 text-gray-900 outline-none focus:border-gray-500 disabled:bg-gray-50" />
                     </label>
                     <label className="text-xs text-gray-500">
                       实际次数
-                      <input type="number" min="0" step="1" value={draft.reps} disabled={isCompleted}
+                      <input type="number" min="0" step="1" value={draft.reps} disabled={isCompleted || exercise.status === 'skipped'}
                         onChange={(event) => updateDraft(exercise.id, position, 'reps', event.target.value)}
                         className="mt-1 w-full rounded-lg border border-gray-200 px-2 py-2 text-gray-900 outline-none focus:border-gray-500 disabled:bg-gray-50" />
                     </label>
                     <label className="text-xs text-gray-500">
                       还能再做
-                      <input type="number" min="0" max="20" step="1" value={draft.rir} disabled={isCompleted}
+                      <input type="number" min="0" max="20" step="1" value={draft.rir} disabled={isCompleted || exercise.status === 'skipped'}
                         onChange={(event) => updateDraft(exercise.id, position, 'rir', event.target.value)}
                         className="mt-1 w-full rounded-lg border border-gray-200 px-2 py-2 text-gray-900 outline-none focus:border-gray-500 disabled:bg-gray-50" />
                     </label>
                   </div>
                   {!isCompleted && (
-                    <button type="button" onClick={() => saveSet(exercise.id, position)} disabled={savingKey === key}
+                    <button type="button" onClick={() => saveSet(exercise.id, position)} disabled={savingKey === key || exercise.status === 'skipped'}
                       className="mt-3 w-full rounded-lg border border-gray-200 py-2 text-sm font-medium disabled:opacity-50">
                       {savingKey === key ? '保存中…' : draft.saved ? '更新这一组' : '完成这一组'}
                     </button>
