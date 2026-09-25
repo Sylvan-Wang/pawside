@@ -33,8 +33,9 @@ export async function POST(
     return apiError('VALIDATION_ERROR', '训练完成信息无效', 400, parsed.error.flatten())
   }
 
-  const { data, error } = await supabase.rpc('complete_method_session', {
+  const { data, error } = await supabase.rpc('complete_method_session_v2', {
     p_session_id: sessionId,
+    p_completion_request_id: parsed.data.completion_request_id,
     p_duration_minutes: parsed.data.duration_minutes ?? null,
     p_notes: parsed.data.notes ?? null,
   })

@@ -19,7 +19,7 @@ import {
 } from '@/lib/training-offline-queue'
 import type { SaveSetActualInput } from '@/lib/contracts/training-runtime'
 import { useParams, useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 interface PlannedSet {
   id: string
@@ -172,6 +172,7 @@ export default function TrainingSessionPage() {
   const [exerciseActionId, setExerciseActionId] = useState('')
   const [error, setError] = useState('')
   const [completion, setCompletion] = useState<CompletionResult | null>(null)
+  const completionRequestId = useRef<string | null>(null)
 
   useEffect(() => {
     let active = true
@@ -396,10 +397,11 @@ export default function TrainingSessionPage() {
       if (data && listPendingSetActuals(data.viewer_id, sessionId).length > 0) {
         throw new Error('仍有训练记录等待联网同步，请联网后再完成本次训练')
       }
+      completionRequestId.current ??= window.crypto.randomUUID()
       const response = await fetch(`/api/training/sessions/${sessionId}/complete`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: '{}',
+        body: JSON.stringify({ completion_request_id: completionRequestId.current }),
       })
       const payload = await response.json()
       if (!response.ok) throw new Error(payload?.error?.message || '暂时无法完成训练')
@@ -583,10 +585,14 @@ export default function TrainingSessionPage() {
           </section>
         ) : isLastExercise ? (
           <section className="rounded-2xl bg-white p-4">
-            <p className="text-xs leading-5 text-gray-500">结束训练时，已保存的组会进入训练历史；未记录的动作会保留为跳过，不会被伪装成已完成。</p>
+            <p className="text-xs leading-5 text-gray-500">所有处方动作都至少保存一组后，才会完成本次训练并推进下一项。体力不足时可直接离开，已保存记录会保留，下次继续。</p>
             <button type="button" onClick={completeSession} disabled={finishing || savingKey !== ''}
               className="mt-3 w-full rounded-xl bg-black py-3.5 text-sm font-semibold text-white disabled:opacity-50">
               {finishing ? '正在完成…' : '完成本次训练'}
+            </button>
+            <button type="button" onClick={() => router.push('/training/today')}
+              className="mt-2 w-full rounded-xl border border-gray-200 py-3 text-sm font-medium text-gray-700">
+              暂停并稍后继续
             </button>
           </section>
         ) : (

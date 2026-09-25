@@ -58,7 +58,15 @@ describe('training runtime input contracts', () => {
   })
 
   it('bounds session completion metadata', () => {
-    expect(completeTrainingSessionSchema.safeParse({ duration_minutes: 60, notes: '状态正常' }).success).toBe(true)
-    expect(completeTrainingSessionSchema.safeParse({ duration_minutes: 0 }).success).toBe(false)
+    expect(completeTrainingSessionSchema.safeParse({
+      completion_request_id: '00000000-0000-4000-8000-000000000002',
+      duration_minutes: 60,
+      notes: '状态正常',
+    }).success).toBe(true)
+    expect(completeTrainingSessionSchema.safeParse({ duration_minutes: 60 }).success).toBe(false)
+    expect(completeTrainingSessionSchema.safeParse({
+      completion_request_id: '00000000-0000-4000-8000-000000000002',
+      duration_minutes: 0,
+    }).success).toBe(false)
   })
 })

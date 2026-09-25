@@ -9,6 +9,7 @@ export const saveSetActualSchema = z.object({
 })
 
 export const completeTrainingSessionSchema = z.object({
+  completion_request_id: z.string().uuid(),
   duration_minutes: z.number().int().positive().max(1440).optional(),
   notes: z.string().trim().max(2000).nullable().optional(),
 })

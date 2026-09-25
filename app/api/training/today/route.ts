@@ -13,58 +13,80 @@ interface RawExercisePrescription {
   [key: string]: unknown
 }
 
+const TODAY_PRESCRIPTION_SELECT = `
+  id,
+  enrollment_id,
+  cycle_id,
+  split_key,
+  planned_for_date,
+  status,
+  generated_from_rule_version,
+  generated_at,
+  started_at,
+  completed_at,
+  method_split:method_splits(id,name_zh,order_index),
+  exercises:exercise_prescriptions(
+    id,
+    exercise_id,
+    order_index,
+    method_role,
+    progression_stage_key,
+    target_summary_zh,
+    target_weight_kg,
+    weight_guidance_type,
+    status,
+    exercise:exercises(
+      canonical_name_zh,
+      media_mappings:exercise_external_mappings(
+        provider,
+        external_slug,
+        source_version,
+        license,
+        attribution,
+        source_url,
+        mapping_status,
+        mapping_notes
+      )
+    ),
+    sets:set_prescriptions(*)
+  )
+`
+
 export async function GET() {
   const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
 
   if (authError || !user) return apiError('UNAUTHORIZED', '请先登录', 401)
 
-  const { data: prescription, error } = await supabase
-    .from('session_prescriptions')
-    .select(`
-      id,
-      enrollment_id,
-      cycle_id,
-      split_key,
-      planned_for_date,
-      status,
-      generated_from_rule_version,
-      generated_at,
-      started_at,
-      completed_at,
-      method_split:method_splits(id,name_zh,order_index),
-      exercises:exercise_prescriptions(
-        id,
-        exercise_id,
-        order_index,
-        method_role,
-        progression_stage_key,
-        target_summary_zh,
-        target_weight_kg,
-        weight_guidance_type,
-        status,
-        exercise:exercises(
-          canonical_name_zh,
-          media_mappings:exercise_external_mappings(
-            provider,
-            external_slug,
-            source_version,
-            license,
-            attribution,
-            source_url,
-            mapping_status,
-            mapping_notes
-          )
-        ),
-        sets:set_prescriptions(*)
-      )
-    `)
+  // Recovery is authoritative: an unfinished actual wins over any newer generated prescription.
+  const { data: activeSession, error: activeSessionError } = await supabase
+    .from('workout_sessions')
+    .select('id,session_prescription_id,status,started_at,completed_at')
     .eq('user_id', user.id)
-    .in('status', ['ready', 'started', 'rest_deferred', 'upcoming'])
-    .order('generated_at', { ascending: false })
+    .eq('status', 'started')
+    .order('started_at', { ascending: false })
     .limit(1)
     .maybeSingle()
 
+  if (activeSessionError) return apiError('DATABASE_ERROR', '暂时无法恢复当前训练', 500)
+
+  const prescriptionResult = activeSession
+    ? await supabase
+        .from('session_prescriptions')
+        .select(TODAY_PRESCRIPTION_SELECT)
+        .eq('user_id', user.id)
+        .eq('id', activeSession.session_prescription_id)
+        .maybeSingle()
+    : await supabase
+        .from('session_prescriptions')
+        .select(TODAY_PRESCRIPTION_SELECT)
+        .eq('user_id', user.id)
+        .in('status', ['ready', 'started', 'rest_deferred', 'upcoming'])
+        .order('generated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+  const { data: prescription, error } = prescriptionResult
   if (error) return apiError('DATABASE_ERROR', '暂时无法读取今日训练要求', 500)
   if (!prescription) return apiError('NOT_FOUND', '当前没有可执行的训练要求', 404)
 
@@ -82,18 +104,21 @@ export async function GET() {
     }
   })
 
-  const { data: workoutActual, error: workoutError } = await supabase
-    .from('workout_sessions')
-    .select('id,status,started_at,completed_at')
-    .eq('session_prescription_id', prescription.id)
-    .eq('user_id', user.id)
-    .maybeSingle()
+  const workoutResult = activeSession
+    ? { data: activeSession, error: null }
+    : await supabase
+        .from('workout_sessions')
+        .select('id,status,started_at,completed_at')
+        .eq('session_prescription_id', prescription.id)
+        .eq('user_id', user.id)
+        .maybeSingle()
 
+  const { data: workoutActual, error: workoutError } = workoutResult
   if (workoutError) return apiError('DATABASE_ERROR', '暂时无法读取训练状态', 500)
 
   return NextResponse.json({
     data: {
-      recovery: null,
+      recovery: activeSession ? { kind: 'active_session', session_id: activeSession.id } : null,
       prescription: { ...prescription, exercises },
       workout_actual: workoutActual,
     },
