@@ -32,7 +32,7 @@ export async function GET(
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   if (authError || !user) return apiError('UNAUTHORIZED', '请先登录', 401)
 
-  const [sessionResult, executionResult] = await Promise.all([
+  const [sessionResult, executionResult, profileResult] = await Promise.all([
     supabase
       .from('workout_sessions')
       .select('id,session_prescription_id,enrollment_id,cycle_id,split_key,status,view_date,performed_at,performed_time_zone,log_date,execution_mode,duration_minutes,notes,started_at,completed_at')
@@ -67,6 +67,11 @@ export async function GET(
       .eq('workout_session_id', sessionId)
       .eq('user_id', user.id)
       .order('order_index'),
+    supabase
+      .from('user_profiles')
+      .select('weight_unit')
+      .eq('id', user.id)
+      .maybeSingle(),
   ])
 
   if (sessionResult.error || executionResult.error) {
@@ -87,5 +92,12 @@ export async function GET(
     }
   })
 
-  return NextResponse.json({ data: { viewer_id: user.id, session: sessionResult.data, exercises: executions } })
+  return NextResponse.json({
+    data: {
+      viewer_id: user.id,
+      preferred_weight_unit: profileResult.data?.weight_unit === 'lb' ? 'lb' : 'kg',
+      session: sessionResult.data,
+      exercises: executions,
+    },
+  })
 }

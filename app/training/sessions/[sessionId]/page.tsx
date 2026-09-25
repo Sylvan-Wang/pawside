@@ -18,6 +18,12 @@ import {
   removePendingSetActualByKey,
 } from '@/lib/training-offline-queue'
 import type { SaveSetActualInput } from '@/lib/contracts/training-runtime'
+import {
+  kgToWeightInput,
+  normalizeTrainingWeightUnit,
+  weightInputToKg,
+  type TrainingWeightUnit,
+} from '@/lib/training-weight-unit'
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 
@@ -68,6 +74,7 @@ interface TrainingSession {
 
 interface SessionResponse {
   viewer_id: string
+  preferred_weight_unit: TrainingWeightUnit
   session: TrainingSession
   exercises: ExerciseExecution[]
 }
@@ -75,6 +82,7 @@ interface SessionResponse {
 interface SetDraft {
   setIndex: number
   weight: string
+  weightKg: number | null
   reps: string
   rir: string
   saved: boolean
@@ -91,12 +99,23 @@ interface CompletionResult {
 }
 
 const splitNames = { push: '推', pull: '拉', legs: '腿' }
+const WEIGHT_UNIT_STORAGE_KEY = 'pawside:training:weight-unit:v1'
+
+function preferredWeightUnit(profileUnit: TrainingWeightUnit) {
+  if (typeof window === 'undefined') return profileUnit
+  try {
+    return normalizeTrainingWeightUnit(window.localStorage.getItem(WEIGHT_UNIT_STORAGE_KEY) || profileUnit)
+  } catch {
+    return profileUnit
+  }
+}
 
 function restorePendingDrafts(
   base: SetDraft[],
   exercise: ExerciseExecution,
   userId: string,
   sessionId: string,
+  weightUnit: TrainingWeightUnit,
 ) {
   const drafts = [...base]
   for (const pending of listPendingSetActuals(userId, sessionId)) {
@@ -105,7 +124,8 @@ function restorePendingDrafts(
     if (existing) continue
     drafts.push({
       setIndex: pending.payload.set_index,
-      weight: pending.payload.actual_weight_kg == null ? '' : String(pending.payload.actual_weight_kg),
+      weight: kgToWeightInput(pending.payload.actual_weight_kg ?? null, weightUnit),
+      weightKg: pending.payload.actual_weight_kg ?? null,
       reps: String(pending.payload.actual_reps),
       rir: pending.payload.actual_rir == null ? '' : String(pending.payload.actual_rir),
       saved: false,
@@ -116,7 +136,12 @@ function restorePendingDrafts(
   return drafts.sort((a, b) => a.setIndex - b.setIndex)
 }
 
-function initialDrafts(exercise: ExerciseExecution, userId: string, sessionId: string): SetDraft[] {
+function initialDrafts(
+  exercise: ExerciseExecution,
+  userId: string,
+  sessionId: string,
+  weightUnit: TrainingWeightUnit,
+): SetDraft[] {
   if (exercise.sets.length > 0) {
     return restorePendingDrafts([...exercise.sets]
       .sort((a, b) => a.set_index - b.set_index)
@@ -124,9 +149,11 @@ function initialDrafts(exercise: ExerciseExecution, userId: string, sessionId: s
         const pending = getPendingSetActual(userId, sessionId, exercise.id, set.set_index)
         return {
           setIndex: set.set_index,
-          weight: pending
-            ? pending.payload.actual_weight_kg == null ? '' : String(pending.payload.actual_weight_kg)
-            : set.actual_weight_kg == null ? '' : String(set.actual_weight_kg),
+          weight: kgToWeightInput(
+            pending ? pending.payload.actual_weight_kg ?? null : set.actual_weight_kg,
+            weightUnit,
+          ),
+          weightKg: pending ? pending.payload.actual_weight_kg ?? null : set.actual_weight_kg,
           reps: pending ? String(pending.payload.actual_reps) : set.actual_reps == null ? '' : String(set.actual_reps),
           rir: pending
             ? pending.payload.actual_rir == null ? '' : String(pending.payload.actual_rir)
@@ -135,7 +162,7 @@ function initialDrafts(exercise: ExerciseExecution, userId: string, sessionId: s
           isExtra: set.is_extra,
           pending: Boolean(pending),
         }
-      }), exercise, userId, sessionId)
+      }), exercise, userId, sessionId, weightUnit)
   }
 
   const planned = exercise.prescription?.sets ?? []
@@ -146,23 +173,26 @@ function initialDrafts(exercise: ExerciseExecution, userId: string, sessionId: s
         const pending = getPendingSetActual(userId, sessionId, exercise.id, set.set_index)
         return {
           setIndex: set.set_index,
-          weight: pending
-            ? pending.payload.actual_weight_kg == null ? '' : String(pending.payload.actual_weight_kg)
-            : set.target_weight_kg == null ? '' : String(set.target_weight_kg),
+          weight: kgToWeightInput(
+            pending ? pending.payload.actual_weight_kg ?? null : set.target_weight_kg,
+            weightUnit,
+          ),
+          weightKg: pending ? pending.payload.actual_weight_kg ?? null : set.target_weight_kg,
           reps: pending ? String(pending.payload.actual_reps) : '',
           rir: pending?.payload.actual_rir == null ? '' : String(pending.payload.actual_rir),
           saved: false,
           isExtra: false,
           pending: Boolean(pending),
         }
-      }), exercise, userId, sessionId)
+      }), exercise, userId, sessionId, weightUnit)
   }
 
   return restorePendingDrafts(
-    [{ setIndex: 1, weight: '', reps: '', rir: '', saved: false, isExtra: true, pending: false }],
+    [{ setIndex: 1, weight: '', weightKg: null, reps: '', rir: '', saved: false, isExtra: true, pending: false }],
     exercise,
     userId,
     sessionId,
+    weightUnit,
   )
 }
 
@@ -173,6 +203,7 @@ export default function TrainingSessionPage() {
   const [data, setData] = useState<SessionResponse | null>(null)
   const [drafts, setDrafts] = useState<Record<string, SetDraft[]>>({})
   const [activeExerciseIndex, setActiveExerciseIndex] = useState(0)
+  const [weightUnit, setWeightUnit] = useState<TrainingWeightUnit>('kg')
   const [loading, setLoading] = useState(true)
   const [savingKey, setSavingKey] = useState('')
   const [finishing, setFinishing] = useState(false)
@@ -187,8 +218,13 @@ export default function TrainingSessionPage() {
     async function load() {
       const cached = readTrainingSessionCache<SessionResponse>(sessionId)
       if (cached) {
+        const unit = preferredWeightUnit(cached.preferred_weight_unit)
         setData(cached)
-        setDrafts(Object.fromEntries(cached.exercises.map((exercise) => [exercise.id, initialDrafts(exercise, cached.viewer_id, sessionId)])))
+        setWeightUnit(unit)
+        setDrafts(Object.fromEntries(cached.exercises.map((exercise) => [
+          exercise.id,
+          initialDrafts(exercise, cached.viewer_id, sessionId, unit),
+        ])))
         const firstOpen = cached.exercises.findIndex((exercise) => !['completed', 'skipped'].includes(exercise.status))
         setActiveExerciseIndex(firstOpen >= 0 ? firstOpen : 0)
         setLoading(false)
@@ -198,8 +234,13 @@ export default function TrainingSessionPage() {
       try {
         const nextData = await warmTrainingSessionCache<SessionResponse>(sessionId)
         if (!active) return
+        const unit = preferredWeightUnit(nextData.preferred_weight_unit)
         setData(nextData)
-        setDrafts(Object.fromEntries(nextData.exercises.map((exercise) => [exercise.id, initialDrafts(exercise, nextData.viewer_id, sessionId)])))
+        setWeightUnit(unit)
+        setDrafts(Object.fromEntries(nextData.exercises.map((exercise) => [
+          exercise.id,
+          initialDrafts(exercise, nextData.viewer_id, sessionId, unit),
+        ])))
         const firstOpen = nextData.exercises.findIndex((exercise) => !['completed', 'skipped'].includes(exercise.status))
         setActiveExerciseIndex(firstOpen >= 0 ? firstOpen : 0)
       } catch (reason: unknown) {
@@ -244,9 +285,38 @@ export default function TrainingSessionPage() {
     setDrafts((current) => ({
       ...current,
       [executionId]: current[executionId].map((draft, index) => (
-        index === position ? { ...draft, [field]: value, saved: false, pending: false } : draft
+        index === position
+          ? {
+              ...draft,
+              [field]: value,
+              ...(field === 'weight' ? {
+                weightKg: value === '' ? null : weightInputToKg(Number(value), weightUnit),
+              } : {}),
+              saved: false,
+              pending: false,
+            }
+          : draft
       )),
     }))
+  }
+
+  function selectWeightUnit(nextUnit: TrainingWeightUnit) {
+    if (nextUnit === weightUnit) return
+    try {
+      window.localStorage.setItem(WEIGHT_UNIT_STORAGE_KEY, nextUnit)
+    } catch {
+      // A private browser may reject storage; the current session still switches units.
+    }
+    setDrafts((current) => Object.fromEntries(
+      Object.entries(current).map(([executionId, exerciseDrafts]) => [
+        executionId,
+        exerciseDrafts.map((draft) => ({
+          ...draft,
+          weight: kgToWeightInput(draft.weightKg, nextUnit),
+        })),
+      ]),
+    ))
+    setWeightUnit(nextUnit)
   }
 
   function addSet(executionId: string) {
@@ -258,6 +328,7 @@ export default function TrainingSessionPage() {
         [executionId]: [...existing, {
           setIndex: nextIndex,
           weight: '',
+          weightKg: null,
           reps: '',
           rir: '',
           saved: false,
@@ -285,7 +356,7 @@ export default function TrainingSessionPage() {
     return {
       exercise_execution_id: executionId,
       set_index: draft.setIndex,
-      actual_weight_kg: draft.weight === '' ? null : Number(draft.weight),
+      actual_weight_kg: draft.weightKg,
       actual_reps: reps,
       actual_rir: draft.rir === '' ? null : Number(draft.rir),
     }
@@ -513,6 +584,19 @@ export default function TrainingSessionPage() {
             <ExerciseMotion key={exercise.id} name={exerciseName} media={exercise.media} loading="eager" />
           )}
 
+          <div className="mt-4 flex items-center justify-between rounded-xl bg-gray-50 px-3 py-2">
+            <span className="text-xs text-gray-500">重量单位</span>
+            <div className="flex rounded-lg bg-white p-0.5" role="group" aria-label="重量单位">
+              {(['kg', 'lb'] as const).map((unit) => (
+                <button key={unit} type="button" onClick={() => selectWeightUnit(unit)}
+                  aria-pressed={weightUnit === unit}
+                  className={`rounded-md px-3 py-1 text-xs font-semibold ${weightUnit === unit ? 'bg-black text-white' : 'text-gray-500'}`}>
+                  {unit}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="mt-4 space-y-3">
             {exerciseDrafts.map((draft, position) => {
               const key = `${exercise.id}:${draft.setIndex}`
@@ -526,8 +610,8 @@ export default function TrainingSessionPage() {
                   </div>
                   <div className="grid grid-cols-3 gap-2">
                     <label className="text-xs text-gray-500">
-                      重量 kg
-                      <input type="number" min="0" step="0.5" value={draft.weight} disabled={isCompleted || exercise.status === 'skipped'}
+                      重量 {weightUnit}
+                      <input type="number" min="0" step={weightUnit === 'lb' ? '1' : '0.5'} value={draft.weight} disabled={isCompleted || exercise.status === 'skipped'}
                         onChange={(event) => updateDraft(exercise.id, position, 'weight', event.target.value)}
                         className="mt-1 w-full rounded-lg border border-gray-200 px-2 py-2 text-gray-900 outline-none focus:border-gray-500 disabled:bg-gray-50" />
                     </label>
