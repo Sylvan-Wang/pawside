@@ -67,9 +67,20 @@ begin
   if position('exercise_count_threshold_v1' in completion_definition) = 0 then
     raise exception 'Completion policy version exercise_count_threshold_v1 is missing';
   end if;
-  if position('completed_exercise_count < required_exercise_count' in replace(completion_definition, '  ', ' ')) = 0
-     and position('completed_exercise_count < required_exercise_count' in completion_definition) = 0 then
-    raise exception 'Completion does not compare completed_exercise_count against required_exercise_count';
+  if position('completed_count < required_exercise_count' in completion_definition) = 0 then
+    raise exception 'Completion does not compare the completed exercise count against required_exercise_count';
+  end if;
+
+  -- Regression guard for the SQLSTATE 42702 ambiguity fixed by
+  -- 20260925000400: the local variable must not share the column's name.
+  if position('completed_exercise_count = completed_exercise_count' in completion_definition) > 0 then
+    raise exception 'complete_method_session_v2 has an ambiguous variable/column reference again';
+  end if;
+  if position('completed_exercise_count = completed_count' in completion_definition) = 0 then
+    raise exception 'complete_method_session_v2 no longer persists the completed exercise count';
+  end if;
+  if position('''completed_exercise_count'', completed_count' in completion_definition) = 0 then
+    raise exception 'The completed_exercise_count response key was renamed; consumers would break';
   end if;
 
   -- §5 / §8: the legacy 60-minute default must still exist for snapshot-less rows.

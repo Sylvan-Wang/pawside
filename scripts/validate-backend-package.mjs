@@ -28,6 +28,7 @@ const requiredFiles = [
   'supabase/migrations/20260925000100_method_runtime_state_truth.sql',
   'supabase/migrations/20260925000200_training_date_navigation.sql',
   'supabase/migrations/20260925000300_program_day_prescriptions.sql',
+  'supabase/migrations/20260925000400_method_completion_variable_scope_fix.sql',
   'supabase/cutover/README.md',
   'supabase/cutover/20260926000100_drop_prescription_uniqueness.sql',
   'supabase/tests/pawside_backend_contract.sql',

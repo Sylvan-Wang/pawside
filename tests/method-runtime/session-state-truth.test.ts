@@ -5,6 +5,7 @@ const todayRoute = readFileSync(new URL('../../app/api/training/today/route.ts',
 const startMigration = readFileSync(new URL('../../supabase/migrations/20260911000200_method_workout_runtime.sql', import.meta.url), 'utf8')
 const stateTruthMigration = readFileSync(new URL('../../supabase/migrations/20260925000100_method_runtime_state_truth.sql', import.meta.url), 'utf8')
 const navigationMigration = readFileSync(new URL('../../supabase/migrations/20260925000200_training_date_navigation.sql', import.meta.url), 'utf8')
+const scopeFixMigration = readFileSync(new URL('../../supabase/migrations/20260925000400_method_completion_variable_scope_fix.sql', import.meta.url), 'utf8')
 const repairPlan = readFileSync(new URL('../../docs/internal-beta/runtime-history-repair-plan.md', import.meta.url), 'utf8')
 
 describe('Method runtime state truth', () => {
@@ -40,6 +41,28 @@ describe('Method runtime state truth', () => {
     expect(navigationMigration).not.toContain("set status = 'skipped'")
     expect(navigationMigration).not.toContain('incomplete_exercise_count')
     expect(navigationMigration).not.toContain('Every prescribed exercise')
+  })
+
+  it('keeps the effective completion function free of variable/column ambiguity', () => {
+    // 20260925000200 was already applied when `supabase db lint --linked`
+    // (plpgsql_check) reported SQLSTATE 42702 for
+    // `completed_exercise_count = completed_exercise_count`, so the correction is
+    // recorded forward in 20260925000400.
+    // Only executable SQL matters; the file header documents the old line in a comment.
+    const scopeFixSql = scopeFixMigration
+      .split('\n')
+      .filter((line) => !line.trim().startsWith('--'))
+      .join('\n')
+
+    expect(scopeFixMigration).toContain('create or replace function public.complete_method_session_v2(')
+    expect(scopeFixSql).toContain('completed_exercise_count = completed_count')
+    expect(scopeFixSql).toContain('completed_count < required_exercise_count')
+    expect(scopeFixSql).not.toContain('completed_exercise_count = completed_exercise_count')
+    // The response key and stored column must not be renamed.
+    expect(scopeFixSql).toContain("'completed_exercise_count', completed_count")
+    expect(scopeFixSql).toContain("'exercise_count_threshold_v1'")
+    // It must not touch the released completion function.
+    expect(scopeFixSql).not.toContain('function public.complete_method_session(')
   })
 
   it('advances a fully recorded session once and deduplicates retries', () => {
