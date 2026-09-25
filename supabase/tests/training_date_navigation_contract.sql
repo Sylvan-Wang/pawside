@@ -1,8 +1,8 @@
--- Pawside training date navigation contract (pre-cutover state).
+-- Pawside training date navigation contract (post-cutover state).
 --
--- This asserts the state of the schema AFTER supabase/migrations/ and BEFORE
--- supabase/cutover/20260926000100_drop_prescription_uniqueness.sql.
--- Read supabase/cutover/README.md for the cutover sequence.
+-- This asserts the state of the schema AFTER supabase/migrations/ AND AFTER
+-- supabase/cutover/20260926000100_drop_prescription_uniqueness.sql has been
+-- applied. Read supabase/cutover/README.md for the cutover sequence.
 
 begin;
 
@@ -67,18 +67,20 @@ begin
   end if;
 
   -- ---------------------------------------------------------------------
-  -- Pre-cutover invariant: the uniqueness constraint is still present.
+  -- Post-cutover invariant: supabase/cutover/20260926000100 has been applied.
+  -- One session per prescription is no longer enforced, because a supplemental
+  -- execution of an already completed Program Day must be insertable.
   -- ---------------------------------------------------------------------
-  if not exists (
+  if exists (
     select 1 from pg_constraint
     where conrelid = 'public.workout_sessions'::regclass
       and contype = 'u'
       and pg_get_constraintdef(oid) = 'UNIQUE (session_prescription_id)'
   ) then
-    raise exception 'session_prescription_id uniqueness was dropped before the app cutover; run supabase/cutover only after the app that tolerates multiple sessions is deployed';
+    raise exception 'session_prescription_id uniqueness is still present; apply supabase/cutover/20260926000100_drop_prescription_uniqueness.sql';
   end if;
 
-  -- The lookup index that replaces it for query purposes must already exist.
+  -- The lookup index that replaces it for query purposes must exist.
   if not exists (
     select 1 from pg_indexes
     where schemaname = 'public'
