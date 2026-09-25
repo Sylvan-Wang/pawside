@@ -1,5 +1,11 @@
 import { z } from 'zod'
 
+export const startTrainingSessionSchema = z.object({
+  view_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  time_zone: z.string().trim().min(1).max(100),
+  start_request_id: z.string().uuid(),
+})
+
 export const saveSetActualSchema = z.object({
   exercise_execution_id: z.string().uuid(),
   set_index: z.number().int().positive().max(50),
@@ -14,5 +20,6 @@ export const completeTrainingSessionSchema = z.object({
   notes: z.string().trim().max(2000).nullable().optional(),
 })
 
+export type StartTrainingSessionInput = z.infer<typeof startTrainingSessionSchema>
 export type SaveSetActualInput = z.infer<typeof saveSetActualSchema>
 export type CompleteTrainingSessionInput = z.infer<typeof completeTrainingSessionSchema>

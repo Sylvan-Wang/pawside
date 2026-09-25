@@ -208,11 +208,16 @@ export default function HomePage() {
     if (!methodContext) return
     let active = true
 
-    void fetch('/api/training/today', { cache: 'no-store' })
+    const now = new Date()
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+    const query = new URLSearchParams({ date: today, time_zone: timeZone })
+
+    void fetch(`/api/training/today?${query}`, { cache: 'no-store' })
       .then(async (response) => {
         if (!response.ok) return
         const payload = await response.json()
-        if (active) writeTodayTrainingCache(payload.data)
+        if (active) writeTodayTrainingCache(payload.data, payload.data.view_date)
       })
       .catch(() => undefined)
 

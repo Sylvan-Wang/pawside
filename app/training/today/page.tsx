@@ -11,7 +11,7 @@ import {
   writeTodayTrainingCache,
 } from '@/lib/training-navigation-cache'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 interface SetPrescription {
   id: string
@@ -47,8 +47,28 @@ interface WorkoutActual {
 }
 
 interface TodayTrainingPayload {
+  view_date: string
+  current_log_date: string
   prescription: TodayTraining
   workout_actual: WorkoutActual | null
+}
+
+function localDateString(date = new Date()) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+function shiftDate(value: string, days: number) {
+  const date = new Date(`${value}T12:00:00`)
+  date.setDate(date.getDate() + days)
+  return localDateString(date)
+}
+
+function displayDate(value: string) {
+  return new Intl.DateTimeFormat('zh-CN', { month: 'long', day: 'numeric', weekday: 'short' })
+    .format(new Date(`${value}T12:00:00`))
 }
 
 const setTypeNames: Record<string, string> = {
@@ -67,27 +87,51 @@ export default function TodayTrainingPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
   const [starting, setStarting] = useState(false)
+  const [viewDate, setViewDate] = useState('')
+  const [currentLogDate, setCurrentLogDate] = useState('')
+  const startRequestId = useRef<string | null>(null)
 
   useEffect(() => {
+    const requested = new URLSearchParams(window.location.search).get('date')
+    const initialDate = requested && /^\d{4}-\d{2}-\d{2}$/.test(requested) ? requested : localDateString()
+    const frame = window.requestAnimationFrame(() => setViewDate(initialDate))
+    return () => window.cancelAnimationFrame(frame)
+  }, [])
+
+  useEffect(() => {
+    if (!viewDate) return
     let active = true
+    startRequestId.current = null
 
     async function load() {
-      const cached = readTodayTrainingCache<TodayTrainingPayload>()
+      setLoading(true)
+      setError('')
+      setTraining(null)
+      setWorkoutActual(null)
+      const cached = readTodayTrainingCache<TodayTrainingPayload>(viewDate)
       if (cached) {
         setTraining(cached.prescription)
         setWorkoutActual(cached.workout_actual)
+        setCurrentLogDate(cached.current_log_date)
         setLoading(false)
         return
       }
 
       try {
-        const response = await fetch('/api/training/today', { cache: 'no-store' })
+        const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+        const query = new URLSearchParams({ date: viewDate, time_zone: timeZone })
+        const response = await fetch(`/api/training/today?${query}`, { cache: 'no-store' })
         const payload = await response.json()
-        if (!response.ok) throw new Error(payload?.error?.message || '暂时无法读取今天的训练')
+        if (!response.ok) throw new Error(payload?.error?.message || '暂时无法读取所选日期的训练')
         if (active) {
           setTraining(payload.data.prescription)
           setWorkoutActual(payload.data.workout_actual)
-          writeTodayTrainingCache(payload.data as TodayTrainingPayload)
+          setCurrentLogDate(payload.data.current_log_date)
+          writeTodayTrainingCache(payload.data as TodayTrainingPayload, payload.data.view_date)
+          if (payload.data.view_date !== viewDate) {
+            window.history.replaceState(null, '', `/training/today?date=${payload.data.view_date}`)
+            setViewDate(payload.data.view_date)
+          }
         }
       } catch (reason: unknown) {
         if (active) setError(reason instanceof Error ? reason.message : '加载失败')
@@ -98,7 +142,7 @@ export default function TodayTrainingPage() {
 
     void load()
     return () => { active = false }
-  }, [])
+  }, [viewDate])
 
   useEffect(() => {
     if (!workoutActual?.id) return
@@ -110,6 +154,11 @@ export default function TodayTrainingPage() {
       .catch(() => undefined)
   }, [router, workoutActual?.id])
 
+  function navigateDate(nextDate: string) {
+    window.history.replaceState(null, '', `/training/today?date=${nextDate}`)
+    setViewDate(nextDate)
+  }
+
   async function startTraining() {
     if (!training || starting) return
     if (workoutActual?.id) {
@@ -120,7 +169,16 @@ export default function TodayTrainingPage() {
     setStarting(true)
     setError('')
     try {
-      const response = await fetch(`/api/training/${training.id}/start`, { method: 'POST' })
+      startRequestId.current ??= window.crypto.randomUUID()
+      const response = await fetch(`/api/training/${training.id}/start`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          view_date: viewDate,
+          time_zone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+          start_request_id: startRequestId.current,
+        }),
+      })
       const payload = await response.json()
       if (!response.ok) throw new Error(payload?.error?.message || '暂时无法开始训练')
       const sessionId = payload.data.session_id as string
@@ -139,6 +197,22 @@ export default function TodayTrainingPage() {
     <div className="min-h-screen bg-gray-50 pb-10">
       <PageHeader title="今天的训练" back />
       <main className="mx-auto max-w-2xl space-y-4 px-4 py-5">
+        {viewDate && (
+          <nav className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 rounded-2xl bg-white p-3" aria-label="训练日期导航">
+            <button type="button" onClick={() => navigateDate(shiftDate(viewDate, -1))}
+              className="rounded-xl border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700">
+              上一天
+            </button>
+            <div className="text-center">
+              <p className="text-sm font-semibold text-gray-900">{displayDate(viewDate)}</p>
+              <p className="text-xs text-gray-400">{viewDate === currentLogDate ? '今天' : viewDate}</p>
+            </div>
+            <button type="button" onClick={() => navigateDate(shiftDate(viewDate, 1))}
+              className="rounded-xl border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700">
+              下一天
+            </button>
+          </nav>
+        )}
         {loading && <p className="rounded-2xl bg-white p-5 text-sm text-gray-500">正在读取训练要求…</p>}
         {!loading && error && <p className="rounded-2xl bg-white p-5 text-sm text-gray-600">{error}</p>}
 

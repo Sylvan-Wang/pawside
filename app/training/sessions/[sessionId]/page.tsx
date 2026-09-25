@@ -57,6 +57,11 @@ interface TrainingSession {
   id: string
   split_key: 'push' | 'pull' | 'legs'
   status: 'started' | 'completed'
+  view_date: string
+  performed_at: string
+  performed_time_zone: string
+  log_date: string
+  execution_mode: 'canonical' | 'replay'
   started_at: string
   completed_at: string | null
 }
@@ -81,6 +86,8 @@ interface CompletionResult {
   next_split_key: 'push' | 'pull' | 'legs'
   current_cycle_number: number
   cycle_completed: boolean
+  progression_advanced: boolean
+  log_date: string
 }
 
 const splitNames = { push: '推', pull: '拉', legs: '腿' }
@@ -572,11 +579,13 @@ export default function TrainingSessionPage() {
           <section className="rounded-2xl bg-white p-5">
             <h2 className="font-semibold text-gray-900">训练完成</h2>
             <p className="mt-2 text-sm text-gray-600">
-              {completion
-                ? completion.cycle_completed
+              {completion && !completion.progression_advanced
+                ? `补充训练已归入 ${completion.log_date}，不会改变当前训练顺序。`
+                : completion
+                  ? completion.cycle_completed
                   ? `第 ${completion.current_cycle_number - 1} 轮已完成，下一次从推训练开始。`
-                  : `下一次继续${splitNames[completion.next_split_key]}训练。`
-                : '本次实际训练已经保存。'}
+                    : `下一次继续${splitNames[completion.next_split_key]}训练。`
+                  : '本次实际训练已经保存。'}
             </p>
             <button type="button" onClick={() => router.push('/training/today')}
               className="mt-4 w-full rounded-xl bg-black py-3 text-sm font-semibold text-white">

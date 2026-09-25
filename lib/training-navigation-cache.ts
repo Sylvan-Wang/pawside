@@ -1,4 +1,4 @@
-const TODAY_CACHE_KEY = 'pawside:training:today:v1'
+const TODAY_CACHE_PREFIX = 'pawside:training:date:v2:'
 const SESSION_CACHE_PREFIX = 'pawside:training:session:v1:'
 const CACHE_TTL_MS = 60_000
 const pendingSessionLoads = new Map<string, Promise<unknown>>()
@@ -39,18 +39,27 @@ function writeCache<T>(key: string, value: T) {
   }
 }
 
-export function readTodayTrainingCache<T>() {
-  return readCache<T>(TODAY_CACHE_KEY)
+function todayCacheKey(viewDate = 'current') {
+  return TODAY_CACHE_PREFIX + viewDate
 }
 
-export function writeTodayTrainingCache<T>(value: T) {
-  writeCache(TODAY_CACHE_KEY, value)
+export function readTodayTrainingCache<T>(viewDate?: string) {
+  return readCache<T>(todayCacheKey(viewDate))
+}
+
+export function writeTodayTrainingCache<T>(value: T, viewDate?: string) {
+  writeCache(todayCacheKey(viewDate), value)
 }
 
 export function clearTodayTrainingCache() {
   if (typeof window === 'undefined') return
   try {
-    window.sessionStorage.removeItem(TODAY_CACHE_KEY)
+    const keysToRemove: string[] = []
+    for (let index = 0; index < window.sessionStorage.length; index += 1) {
+      const key = window.sessionStorage.key(index)
+      if (key?.startsWith(TODAY_CACHE_PREFIX)) keysToRemove.push(key)
+    }
+    keysToRemove.forEach((key) => window.sessionStorage.removeItem(key))
   } catch {
     // Storage can be unavailable in private or constrained browser contexts.
   }
@@ -104,10 +113,10 @@ export function clearTrainingNavigationCache() {
   sessionCacheGeneration += 1
   pendingSessionLoads.clear()
   try {
-    const keysToRemove = [TODAY_CACHE_KEY]
+    const keysToRemove: string[] = []
     for (let index = 0; index < window.sessionStorage.length; index += 1) {
       const key = window.sessionStorage.key(index)
-      if (key?.startsWith(SESSION_CACHE_PREFIX)) keysToRemove.push(key)
+      if (key?.startsWith(TODAY_CACHE_PREFIX) || key?.startsWith(SESSION_CACHE_PREFIX)) keysToRemove.push(key)
     }
     keysToRemove.forEach((key) => window.sessionStorage.removeItem(key))
   } catch {

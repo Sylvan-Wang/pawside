@@ -26,12 +26,12 @@ begin
   end if;
 
   if not exists (
-    select 1 from pg_constraint
-    where conrelid = 'public.workout_sessions'::regclass
-      and contype = 'u'
-      and pg_get_constraintdef(oid) like '%session_prescription_id%'
+    select 1 from pg_indexes
+    where schemaname = 'public'
+      and tablename = 'workout_sessions'
+      and indexname = 'workout_sessions_prescription_idx'
   ) then
-    raise exception 'one actual per prescription invariant is missing';
+    raise exception 'prescription execution lookup index is missing';
   end if;
 
   if exists (

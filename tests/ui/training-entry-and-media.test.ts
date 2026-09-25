@@ -72,9 +72,9 @@ describe('training entry semantics and exercise media contrast', () => {
       readFile('lib/training-navigation-cache.ts', 'utf8'),
     ])
 
-    expect(home).toContain("fetch('/api/training/today'")
-    expect(home).toContain('writeTodayTrainingCache(payload.data)')
-    expect(today).toContain('readTodayTrainingCache<TodayTrainingPayload>()')
+    expect(home).toContain('fetch(`/api/training/today?${query}`')
+    expect(home).toContain('writeTodayTrainingCache(payload.data, payload.data.view_date)')
+    expect(today).toContain('readTodayTrainingCache<TodayTrainingPayload>(viewDate)')
     expect(today).toContain('warmTrainingSessionCache(workoutActual.id)')
     expect(today).toContain('void warmTrainingSessionCache(sessionId)')
     expect(today).toContain('router.push(sessionUrl)')

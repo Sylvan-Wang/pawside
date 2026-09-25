@@ -35,7 +35,7 @@ export async function GET(
   const [sessionResult, executionResult] = await Promise.all([
     supabase
       .from('workout_sessions')
-      .select('id,session_prescription_id,enrollment_id,cycle_id,split_key,status,log_date,duration_minutes,notes,started_at,completed_at')
+      .select('id,session_prescription_id,enrollment_id,cycle_id,split_key,status,view_date,performed_at,performed_time_zone,log_date,execution_mode,duration_minutes,notes,started_at,completed_at')
       .eq('id', sessionId)
       .eq('user_id', user.id)
       .maybeSingle(),

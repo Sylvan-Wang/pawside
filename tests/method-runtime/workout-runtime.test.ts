@@ -12,7 +12,7 @@ describe('Method workout runtime migration', () => {
     expect(sql).toContain('create table public.workout_sessions')
     expect(sql).toContain('create table public.exercise_executions')
     expect(sql).toContain('create table public.set_executions')
-    expect(sql).toContain('session_prescription_id uuid not null unique')
+    expect(sql).toContain('session_prescription_id uuid not null')
   })
 
   it('locks and advances the official split order transactionally', () => {
