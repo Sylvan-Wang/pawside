@@ -3,6 +3,7 @@
 import PageHeader from '@/components/PageHeader'
 import ExerciseMotion from '@/components/workout/ExerciseMotion'
 import type { ExerciseMedia } from '@/lib/exercise-media'
+import { SESSION_MINUTE_OPTIONS, type SessionMinutes } from '@/lib/training-duration'
 import {
   clearTodayTrainingCache,
   readTodayTrainingCache,
@@ -11,7 +12,7 @@ import {
   writeTodayTrainingCache,
 } from '@/lib/training-navigation-cache'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 interface SetPrescription {
   id: string
@@ -46,7 +47,30 @@ interface WorkoutActual {
   status: 'started' | 'completed'
 }
 
+interface ProgramDay {
+  split_key: 'push' | 'pull' | 'legs'
+  day_index: number
+  name_zh: string
+  status: string
+  completed: boolean
+  started: boolean
+  available: boolean
+  prescription_id: string | null
+}
+
 interface TodayTrainingPayload {
+  program_day: {
+    split_key: 'push' | 'pull' | 'legs'
+    day_index: number
+    name_zh: string
+    cycle_number: number
+    prescription_id: string
+  }
+  days: ProgramDay[]
+  next_split_key: 'push' | 'pull' | 'legs' | null
+  preferred_session_minutes: number
+  current_log_date: string
+  view_date: string
   prescription: TodayTraining
   workout_actual: WorkoutActual | null
 }
@@ -60,34 +84,78 @@ const setTypeNames: Record<string, string> = {
   other: '其他',
 }
 
+function dayStatusLabel(day: ProgramDay) {
+  if (day.completed) return '已完成'
+  if (day.started) return '进行中'
+  if (!day.available) return '未生成'
+  if (day.status === 'started') return '进行中'
+  return '未开始'
+}
+
+function localDateString(date = new Date()) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 export default function TodayTrainingPage() {
   const router = useRouter()
   const [training, setTraining] = useState<TodayTraining | null>(null)
   const [workoutActual, setWorkoutActual] = useState<WorkoutActual | null>(null)
+  const [days, setDays] = useState<ProgramDay[]>([])
+  const [programDay, setProgramDay] = useState<TodayTrainingPayload['program_day'] | null>(null)
+  const [preferredMinutes, setPreferredMinutes] = useState<number | null>(null)
+  const [selectedMinutes, setSelectedMinutes] = useState<SessionMinutes | null>(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
   const [starting, setStarting] = useState(false)
+  // Program Day navigation (PRD §2.1). null means "let the server pick the
+  // recommended Program Day".
+  const [selectedSplit, setSelectedSplit] = useState<string | null>(null)
+  const startRequestId = useRef<string | null>(null)
 
   useEffect(() => {
     let active = true
 
     async function load() {
-      const cached = readTodayTrainingCache<TodayTrainingPayload>()
+      setLoading(true)
+      setError('')
+      setTraining(null)
+      setWorkoutActual(null)
+      startRequestId.current = null
+
+      const cached = selectedSplit
+        ? readTodayTrainingCache<TodayTrainingPayload>(selectedSplit)
+        : null
       if (cached) {
         setTraining(cached.prescription)
         setWorkoutActual(cached.workout_actual)
+        setDays(cached.days ?? [])
+        setProgramDay(cached.program_day)
+        setPreferredMinutes(cached.preferred_session_minutes ?? 60)
+        setSelectedMinutes((current) => current
+          ?? ((cached.preferred_session_minutes ?? 60) as SessionMinutes))
         setLoading(false)
         return
       }
 
       try {
-        const response = await fetch('/api/training/today', { cache: 'no-store' })
+        const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+        const query = new URLSearchParams({ time_zone: timeZone })
+        if (selectedSplit) query.set('split', selectedSplit)
+        const response = await fetch(`/api/training/today?${query}`, { cache: 'no-store' })
         const payload = await response.json()
-        if (!response.ok) throw new Error(payload?.error?.message || '暂时无法读取今天的训练')
+        if (!response.ok) throw new Error(payload?.error?.message || '暂时无法读取训练计划')
         if (active) {
-          setTraining(payload.data.prescription)
-          setWorkoutActual(payload.data.workout_actual)
-          writeTodayTrainingCache(payload.data as TodayTrainingPayload)
+          const data = payload.data as TodayTrainingPayload
+          setTraining(data.prescription)
+          setWorkoutActual(data.workout_actual)
+          setDays(data.days ?? [])
+          setProgramDay(data.program_day)
+          setPreferredMinutes(data.preferred_session_minutes ?? 60)
+          setSelectedMinutes((current) => current ?? ((data.preferred_session_minutes ?? 60) as SessionMinutes))
+          writeTodayTrainingCache(data, data.program_day.split_key)
         }
       } catch (reason: unknown) {
         if (active) setError(reason instanceof Error ? reason.message : '加载失败')
@@ -98,7 +166,7 @@ export default function TodayTrainingPage() {
 
     void load()
     return () => { active = false }
-  }, [])
+  }, [selectedSplit])
 
   useEffect(() => {
     if (!workoutActual?.id) return
@@ -110,6 +178,11 @@ export default function TodayTrainingPage() {
       .catch(() => undefined)
   }, [router, workoutActual?.id])
 
+  function selectDay(split: string) {
+    setSelectedSplit(split)
+    window.history.replaceState(null, '', `/training/today?split=${split}`)
+  }
+
   async function startTraining() {
     if (!training || starting) return
     if (workoutActual?.id) {
@@ -120,7 +193,22 @@ export default function TodayTrainingPage() {
     setStarting(true)
     setError('')
     try {
-      const response = await fetch(`/api/training/${training.id}/start`, { method: 'POST' })
+      startRequestId.current ??= window.crypto.randomUUID()
+      const minutes = selectedMinutes ?? ((preferredMinutes ?? 60) as SessionMinutes)
+      const response = await fetch(`/api/training/${training.id}/start`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          // PRD §1: the Program Day is the plan position; the calendar date is the
+          // date the user is actually training. Actual attribution comes from
+          // performed_at / time_zone on the server.
+          view_date: localDateString(),
+          time_zone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+          start_request_id: startRequestId.current,
+          selected_session_minutes: minutes,
+          selection_source: minutes === preferredMinutes ? 'profile_default' : 'user_override',
+        }),
+      })
       const payload = await response.json()
       if (!response.ok) throw new Error(payload?.error?.message || '暂时无法开始训练')
       const sessionId = payload.data.session_id as string
@@ -137,24 +225,72 @@ export default function TodayTrainingPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-10">
-      <PageHeader title="今天的训练" back />
+      <PageHeader title="训练计划" back />
       <main className="mx-auto max-w-2xl space-y-4 px-4 py-5">
-        {loading && <p className="rounded-2xl bg-white p-5 text-sm text-gray-500">正在读取训练要求…</p>}
+        {days.length > 0 && (
+          <nav className="grid grid-cols-3 gap-2" aria-label="训练日导航">
+            {days.map((day) => {
+              const active = programDay?.split_key === day.split_key
+              return (
+                <button
+                  key={day.split_key}
+                  type="button"
+                  onClick={() => selectDay(day.split_key)}
+                  className={`rounded-2xl border px-3 py-3 text-left transition-colors ${
+                    active ? 'border-black bg-black text-white' : 'border-gray-200 bg-white text-gray-700'
+                  }`}
+                >
+                  <p className="text-xs opacity-70">Day {day.day_index} · {day.name_zh}</p>
+                  <p className="mt-1 text-sm font-semibold">{dayStatusLabel(day)}</p>
+                </button>
+              )
+            })}
+          </nav>
+        )}
+
+        {loading && <p className="rounded-2xl bg-white p-5 text-sm text-gray-500">正在读取训练计划…</p>}
         {!loading && error && <p className="rounded-2xl bg-white p-5 text-sm text-gray-600">{error}</p>}
 
         {training && (
           <>
             <header className="rounded-2xl bg-black p-5 text-white">
-              <p className="text-xs text-white/60">今日处方</p>
-              <h1 className="mt-1 text-xl font-semibold">{training.method_split?.name_zh || training.split_key}</h1>
-              <p className="mt-2 text-sm text-white/70">每个动作均显示固定版本素材与许可证状态。</p>
+              <p className="text-xs text-white/60">
+                Day {programDay?.day_index ?? '-'} · 第 {programDay?.cycle_number ?? '-'} 轮
+              </p>
+              <h1 className="mt-1 text-xl font-semibold">
+                {programDay?.name_zh || training.method_split?.name_zh || training.split_key}
+              </h1>
+
+              {!workoutActual?.id && (
+                <div className="mt-4">
+                  <p className="text-sm text-white/80">今天大概想练多久？</p>
+                  <div className="mt-2 grid grid-cols-4 gap-2">
+                    {SESSION_MINUTE_OPTIONS.map((minutes) => (
+                      <button
+                        key={minutes}
+                        type="button"
+                        onClick={() => setSelectedMinutes(minutes)}
+                        className={`rounded-xl py-2 text-sm font-medium ${
+                          selectedMinutes === minutes
+                            ? 'bg-white text-black'
+                            : 'bg-white/10 text-white'
+                        }`}
+                      >
+                        {minutes}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="mt-2 text-xs text-white/50">实际用时会受休息和器械等待影响。</p>
+                </div>
+              )}
+
               <button
                 type="button"
                 onClick={startTraining}
                 disabled={starting}
                 className="mt-4 w-full rounded-xl bg-white py-3 text-sm font-semibold text-black disabled:opacity-60"
               >
-                {starting ? '正在开始…' : workoutActual?.id ? '继续训练' : '开始今天的训练'}
+                {starting ? '正在开始…' : workoutActual?.id ? '继续训练' : '开始这个训练日'}
               </button>
             </header>
 

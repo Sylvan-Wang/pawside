@@ -1,13 +1,19 @@
 import { apiError } from '@/lib/api/response'
 import { trainingDatabaseError } from '@/lib/api/training-errors'
-import { completeTrainingSessionSchema } from '@/lib/contracts/training-runtime'
+import { updateTrainingDurationSchema } from '@/lib/contracts/training-runtime'
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
 const idSchema = z.string().uuid()
 
-export async function POST(
+/**
+ * Minimum P1 §7: shorten (or lengthen) the duration of an ACTIVE session.
+ * Saved set actuals are never discarded, the session is never recreated, the
+ * Method prescription is never rewritten, and the long-term onboarding
+ * preferred_session_minutes is never modified.
+ */
+export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ sessionId: string }> },
 ) {
@@ -20,27 +26,22 @@ export async function POST(
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   if (authError || !user) return apiError('UNAUTHORIZED', '请先登录', 401)
 
-  let body: unknown = {}
+  let body: unknown
   try {
-    const raw = await request.text()
-    body = raw ? JSON.parse(raw) : {}
+    body = await request.json()
   } catch {
     return apiError('INVALID_JSON', '请求内容不是有效 JSON', 400)
   }
 
-  const parsed = completeTrainingSessionSchema.safeParse(body)
+  const parsed = updateTrainingDurationSchema.safeParse(body)
   if (!parsed.success) {
-    return apiError('VALIDATION_ERROR', '训练完成信息无效', 400, parsed.error.flatten())
+    return apiError('VALIDATION_ERROR', '训练时长无效', 400, parsed.error.flatten())
   }
 
-  // Minimum P1 §9: completion runs on complete_method_session_v2
-  // (exercise_count_threshold_v1). The legacy complete_method_session is left
-  // untouched for the released caller.
-  const { data, error } = await supabase.rpc('complete_method_session_v2', {
+  const { data, error } = await supabase.rpc('update_method_session_duration', {
     p_session_id: sessionId,
-    p_completion_request_id: parsed.data.completion_request_id,
-    p_duration_minutes: parsed.data.duration_minutes ?? null,
-    p_notes: parsed.data.notes ?? null,
+    p_selected_session_minutes: parsed.data.selected_session_minutes,
+    p_selection_source: parsed.data.selection_source,
   })
   if (error) return trainingDatabaseError(error)
 

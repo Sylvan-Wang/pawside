@@ -9,9 +9,15 @@ export function trainingDatabaseError(error: DatabaseErrorLike) {
   if (error.code === '28000') return apiError('UNAUTHORIZED', '请先登录', 401)
   if (error.code === 'P0002') return apiError('NOT_FOUND', '训练记录不存在', 404)
   if (error.code === '22023') {
-    const message = error.message?.includes('At least one completed set')
-      ? '至少完成并保存一组后才能结束训练'
-      : '训练记录参数无效'
+    // Minimum P1 §13.2: never phrase this as outstanding/debt work. Reaching the
+    // threshold is a floor, not an obligation to finish every prescribed exercise.
+    const message = error.message?.includes('Session completion threshold not reached')
+      ? '本次训练还没有达到可以结束的动作数量；已保存的记录都会保留，可以继续做也可以稍后回来'
+      : error.message?.includes('Every prescribed exercise')
+        ? '还有动作未完成；已保存记录会保留，可稍后回来继续训练'
+        : error.message?.includes('At least one completed set')
+          ? '至少完成并保存一组后才能结束训练'
+          : '训练记录参数无效'
     return apiError('VALIDATION_ERROR', message, 400)
   }
   if (error.code === '55000') return apiError('CONFLICT', '当前训练状态不允许此操作', 409)

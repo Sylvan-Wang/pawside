@@ -12,7 +12,7 @@ describe('Method workout runtime migration', () => {
     expect(sql).toContain('create table public.workout_sessions')
     expect(sql).toContain('create table public.exercise_executions')
     expect(sql).toContain('create table public.set_executions')
-    expect(sql).toContain('session_prescription_id uuid not null unique')
+    expect(sql).toContain('session_prescription_id uuid not null')
   })
 
   it('locks and advances the official split order transactionally', () => {
@@ -58,7 +58,15 @@ describe('training runtime input contracts', () => {
   })
 
   it('bounds session completion metadata', () => {
-    expect(completeTrainingSessionSchema.safeParse({ duration_minutes: 60, notes: '状态正常' }).success).toBe(true)
-    expect(completeTrainingSessionSchema.safeParse({ duration_minutes: 0 }).success).toBe(false)
+    expect(completeTrainingSessionSchema.safeParse({
+      completion_request_id: '00000000-0000-4000-8000-000000000002',
+      duration_minutes: 60,
+      notes: '状态正常',
+    }).success).toBe(true)
+    expect(completeTrainingSessionSchema.safeParse({ duration_minutes: 60 }).success).toBe(false)
+    expect(completeTrainingSessionSchema.safeParse({
+      completion_request_id: '00000000-0000-4000-8000-000000000002',
+      duration_minutes: 0,
+    }).success).toBe(false)
   })
 })
