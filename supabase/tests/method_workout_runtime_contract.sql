@@ -25,13 +25,26 @@ begin
     raise exception 'Method runtime functions are incomplete';
   end if;
 
+  -- The released "one actual per prescription" uniqueness invariant was replaced by
+  -- a lookup index when supabase/cutover/20260926000100_drop_prescription_uniqueness.sql
+  -- was applied, because a supplemental execution of an already completed Program
+  -- Day must be insertable. See supabase/cutover/README.md.
   if not exists (
+    select 1 from pg_indexes
+    where schemaname = 'public'
+      and tablename = 'workout_sessions'
+      and indexname = 'workout_sessions_prescription_idx'
+  ) then
+    raise exception 'prescription execution lookup index is missing';
+  end if;
+
+  if exists (
     select 1 from pg_constraint
     where conrelid = 'public.workout_sessions'::regclass
       and contype = 'u'
-      and pg_get_constraintdef(oid) like '%session_prescription_id%'
+      and pg_get_constraintdef(oid) = 'UNIQUE (session_prescription_id)'
   ) then
-    raise exception 'one actual per prescription invariant is missing';
+    raise exception 'session_prescription_id uniqueness was reintroduced; supplemental executions would be rejected';
   end if;
 
   if exists (
