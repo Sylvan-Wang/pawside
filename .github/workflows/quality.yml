@@ -51,6 +51,15 @@ jobs:
           set -euo pipefail
           for contract in supabase/tests/*.sql; do
             echo "::group::$contract"
-            supabase db query --local --file "$contract"
+            if ! output="$(supabase db query --local --file "$contract" 2>&1)"; then
+              printf '%s\n' "$output"
+              message="$(printf '%s' "$output" | tail -c 4000)"
+              message="${message//'%'/'%25'}"
+              message="${message//$'\r'/'%0D'}"
+              message="${message//$'\n'/'%0A'}"
+              echo "::error file=$contract,title=SQL contract failed::$message"
+              exit 1
+            fi
+            printf '%s\n' "$output"
             echo "::endgroup::"
           done
