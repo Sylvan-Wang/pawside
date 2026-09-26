@@ -104,6 +104,9 @@ export default function EditFoodPage() {
             food_name_raw: f.name,
             food_name_resolved: f.name,
             weight_g: Number(f.weight),
+            resolution_source: f.foodId ? 'canonical_db' : 'user_override',
+            source_ref_id: f.foodId ? String(f.foodId) : null,
+            user_confirmed: true,
             per100g: null,
             fallback: {
               calories_kcal: f.calories === '' ? null : Number(f.calories),

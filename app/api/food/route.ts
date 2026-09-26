@@ -53,6 +53,9 @@ export async function POST(req: NextRequest) {
     food_name_raw: food.name,
     food_name_resolved: food.name,
     weight_g: food.weight_g ?? food.weight ?? 0,
+    resolution_source: food.food_id ? 'canonical_db' : 'user_override',
+    source_ref_id: food.food_id ? String(food.food_id) : null,
+    user_confirmed: true,
     per100g: null,
     fallback: food.food_id ? undefined : {
       calories_kcal: food.calories ?? null,

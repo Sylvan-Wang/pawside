@@ -20,6 +20,15 @@ export const nutritionItemSchema = z.object({
   quantity: z.number().nullable().optional(),
   unit: z.string().nullable().optional(),
   is_estimated: z.boolean().optional(),
+  resolution_source: z.enum([
+    'user_memory',
+    'canonical_db',
+    'candidate_cache',
+    'ai_estimate',
+    'user_override',
+  ]),
+  source_ref_id: z.string().nullable().default(null),
+  user_confirmed: z.boolean(),
   // Kept only for display compatibility. Persistence reloads the authoritative
   // reference row by food_id and never trusts these browser-provided numbers.
   per100g: per100gSchema.nullable().default(null),

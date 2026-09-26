@@ -31,6 +31,9 @@ export interface FoodItemInput {
   quantity?: number | null
   unit?: string | null
   is_estimated?: boolean
+  resolution_source: 'user_memory' | 'canonical_db' | 'candidate_cache' | 'ai_estimate' | 'user_override'
+  source_ref_id: string | null
+  user_confirmed: boolean
   /** Reference row used to derive all four macros deterministically. */
   per100g: FoodNutritionPer100g | null
   /** Fallback values when the item was typed without a matched reference row. */
@@ -71,11 +74,20 @@ export interface SaveFoodLogResult {
  * exists the computed value wins and the basis is recorded
  * (`calculation_basis`); otherwise the item is flagged `is_estimated`.
  */
-function deriveItem(item: FoodItemInput, reference: FoodNutritionPer100g | null) {
+export function deriveItemForPersistence(item: FoodItemInput, reference: FoodNutritionPer100g | null) {
   const weight = Number(item.weight_g)
-  const computed = reference ? calculateNutrients(reference, weight) : null
+  const confirmedReference = reference ?? (
+    item.user_confirmed
+      && item.resolution_source === 'user_override'
+      && item.per100g?.basis_type === 'per_100g'
+      ? item.per100g
+      : null
+  )
+  const computed = confirmedReference ? calculateNutrients(confirmedReference, weight) : null
 
   if (computed) {
+    const estimated = item.resolution_source === 'ai_estimate'
+      || item.resolution_source === 'candidate_cache'
     return {
       row: {
         energy_kcal: computed.nutrients.calories_kcal,
@@ -83,14 +95,32 @@ function deriveItem(item: FoodItemInput, reference: FoodNutritionPer100g | null)
         carb_g: computed.nutrients.carbs_g,
         fat_g: computed.nutrients.fat_g,
       },
-      calculationBasis: computed.basis,
-      isEstimated: false,
+      calculationBasis: {
+        ...computed.basis,
+        resolution_source: item.food_id === null ? item.resolution_source : 'canonical_db',
+        source_ref_id: item.source_ref_id ?? (item.food_id === null ? null : String(item.food_id)),
+        user_confirmed: item.user_confirmed,
+      },
+      isEstimated: estimated,
     }
   }
 
-  // No usable reference row: keep whatever the caller supplied, but mark it.
-  // Guardrail §12: absent stays null, it is not coerced to 0.
+  if (!item.user_confirmed) {
+    throw new Error(`“${item.food_name_raw}”还缺少营养信息，请先确认估算或手动填写`)
+  }
+
+  // A confirmed manual/history value is allowed for the user's current log,
+  // but it never becomes a canonical food reference.
   const fallback = item.fallback ?? {}
+  const values = [
+    fallback.calories_kcal,
+    fallback.protein_g,
+    fallback.carbs_g,
+    fallback.fat_g,
+  ]
+  if (values.some(value => value === null || value === undefined || !Number.isFinite(value))) {
+    throw new Error(`“${item.food_name_raw}”还缺少完整营养信息`)
+  }
   return {
     row: {
       energy_kcal: fallback.calories_kcal ?? null,
@@ -99,13 +129,17 @@ function deriveItem(item: FoodItemInput, reference: FoodNutritionPer100g | null)
       fat_g: fallback.fat_g ?? null,
     },
     calculationBasis: {
-      basis_type: 'unresolved',
+      basis_type: 'confirmed_actual',
+      resolution_source: item.resolution_source,
+      source_ref_id: item.source_ref_id,
+      user_confirmed: true,
       per_100g: null,
       weight_g: Number.isFinite(weight) ? weight : null,
       formula: null,
       rounding: 'none',
     },
-    isEstimated: true,
+    isEstimated: item.resolution_source === 'ai_estimate'
+      || item.resolution_source === 'candidate_cache',
   }
 }
 
@@ -161,11 +195,64 @@ async function prepareFoodLog(
     }
   }
 
+  const memoryIds = [...new Set(items.flatMap(item => (
+    item.resolution_source === 'user_memory' && item.source_ref_id
+      ? [item.source_ref_id]
+      : []
+  )))]
+  const candidateIds = [...new Set(items.flatMap(item => (
+    (item.resolution_source === 'candidate_cache' || item.resolution_source === 'ai_estimate')
+      && item.source_ref_id
+      ? [item.source_ref_id]
+      : []
+  )))]
+  const memoryReferences = new Map<string, FoodNutritionPer100g>()
+  const candidateReferences = new Map<string, FoodNutritionPer100g>()
+  const referenceFromResolutionRow = (row: Record<string, unknown>): FoodNutritionPer100g => ({
+    basis_type: 'per_100g',
+    energy_kcal: row.energy_kcal_per_100g == null ? null : Number(row.energy_kcal_per_100g),
+    protein_g: row.protein_g_per_100g == null ? null : Number(row.protein_g_per_100g),
+    carb_g: row.carb_g_per_100g == null ? null : Number(row.carb_g_per_100g),
+    fat_g: row.fat_g_per_100g == null ? null : Number(row.fat_g_per_100g),
+    fiber_g: row.fiber_g_per_100g == null ? null : Number(row.fiber_g_per_100g),
+  })
+
+  if (memoryIds.length > 0) {
+    const { data, error } = await supabase
+      .from('user_food_memory')
+      .select('id,energy_kcal_per_100g,protein_g_per_100g,carb_g_per_100g,fat_g_per_100g,fiber_g_per_100g')
+      .in('id', memoryIds)
+    if (error) throw new Error(error.message)
+    for (const row of data ?? []) {
+      memoryReferences.set(String(row.id), referenceFromResolutionRow(row))
+    }
+  }
+
+  if (candidateIds.length > 0) {
+    const { data, error } = await supabase
+      .from('food_resolution_candidates')
+      .select('id,energy_kcal_per_100g,protein_g_per_100g,carb_g_per_100g,fat_g_per_100g,fiber_g_per_100g,status,confirm_count')
+      .in('id', candidateIds)
+      .neq('status', 'rejected')
+      .gt('confirm_count', 0)
+    if (error) throw new Error(error.message)
+    for (const row of data ?? []) {
+      candidateReferences.set(String(row.id), referenceFromResolutionRow(row))
+    }
+  }
+
   const derived = items.map((item) => ({
     item,
-    ...deriveItem(
+    ...deriveItemForPersistence(
       item,
-      item.food_id === null ? null : references.get(item.food_id) ?? null,
+      item.food_id !== null
+        ? references.get(item.food_id) ?? null
+        : item.resolution_source === 'user_memory' && item.source_ref_id
+          ? memoryReferences.get(item.source_ref_id) ?? null
+          : (item.resolution_source === 'candidate_cache' || item.resolution_source === 'ai_estimate')
+              && item.source_ref_id
+            ? candidateReferences.get(item.source_ref_id) ?? null
+            : null,
     ),
   }))
 
