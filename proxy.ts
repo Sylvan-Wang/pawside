@@ -64,6 +64,9 @@ export async function proxy(request: NextRequest) {
 export const config = {
   // Every API route performs its own authenticated user check. Keeping API
   // requests out of this page redirect proxy removes a duplicate Supabase
-  // getUser round trip from every data request.
-  matcher: ['/((?!api(?:/|$)|_next/static|_next/image|favicon.ico).*)'],
+  // getUser round trip from every data request. PWA metadata and icons must
+  // also remain public so browsers can install Pawside before authentication.
+  matcher: [
+    '/((?!api(?:/|$)|_next/static|_next/image|favicon(?:\\.ico|\\.svg)|icon\\.svg|apple-touch-icon(?:-\\d+x\\d+)?\\.png|manifest\\.webmanifest|robots\\.txt|sitemap\\.xml).*)',
+  ],
 }

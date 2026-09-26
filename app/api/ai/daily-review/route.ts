@@ -42,7 +42,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ ...(cached.content_json as object), cached: true, feedback: cached.feedback })
   }
 
-  return NextResponse.json({ cached: false }, { status: 404 })
+  // A cache miss is a normal read result. Keep 404 for genuinely missing
+  // resources so monitoring and browser diagnostics stay meaningful.
+  return NextResponse.json({ cached: false })
 }
 
 // ─── POST: generate (with cache check) ───────────────────────────────────────

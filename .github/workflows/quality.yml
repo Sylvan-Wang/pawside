@@ -1,0 +1,56 @@
+name: Quality gates
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  app:
+    name: App tests and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder-anon-key
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npx tsc --noEmit
+      - run: npm run lint
+      - run: npm run build
+
+  database:
+    name: Fresh database and SQL contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: supabase/setup-cli@v3
+        with:
+          version: 2.118.0
+      - name: Rebuild schema from migrations
+        run: supabase db start
+      - name: Lint database functions
+        run: supabase db lint --local --level warning
+      - name: Run rollback-only SQL contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          for contract in supabase/tests/*.sql; do
+            echo "::group::$contract"
+            supabase db query --local --file "$contract"
+            echo "::endgroup::"
+          done

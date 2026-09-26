@@ -4,14 +4,17 @@ do $test$
 declare
   target_release_id uuid;
   target_status text;
+  target_release_channel text;
+  target_runtime_gate text;
+  target_activated_at timestamptz;
   split_count integer;
   exercise_count integer;
   default_field_count integer;
   runtime_blocker_count integer;
   strict_blocker_count integer;
 begin
-  select id, status
-  into target_release_id, target_status
+  select id, status, release_channel, runtime_gate_status, activated_at
+  into target_release_id, target_status, target_release_channel, target_runtime_gate, target_activated_at
   from public.method_releases
   where version = '1.2'
     and workbook_checksum_sha256 = '52e762d6867d672e9dffd9f6c890aef8235f4b6280dd0eb6902909cf53baf3cd';
@@ -20,8 +23,29 @@ begin
     raise exception 'Canonical Method release 1.2 is missing';
   end if;
 
-  if target_status <> 'validated' then
-    raise exception 'Release 1.2 must remain validated, found %', target_status;
+  -- Fresh databases stop at the validated internal-beta candidate. Production
+  -- may have activated the exact immutable checksum after the runtime gate
+  -- passed. Both are valid terminal states; production activation is not a
+  -- draft-contract failure.
+  if target_status not in ('validated', 'active') then
+    raise exception 'Release 1.2 must be validated or active, found %', target_status;
+  end if;
+
+  if target_runtime_gate <> 'passed' then
+    raise exception 'Release 1.2 runtime gate must pass, found %', target_runtime_gate;
+  end if;
+
+  if target_status = 'active' and (
+    target_release_channel <> 'internal_beta'
+    or target_activated_at is null
+  ) then
+    raise exception
+      'Active release 1.2 must be an activated internal beta, found channel=% activated_at=%',
+      target_release_channel, target_activated_at;
+  end if;
+
+  if target_status = 'validated' and target_activated_at is not null then
+    raise exception 'Validated release 1.2 must not carry an activation timestamp';
   end if;
 
   select count(*) into split_count

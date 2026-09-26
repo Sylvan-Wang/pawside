@@ -83,6 +83,11 @@ interface TodayTrainingPayload {
   recovery: ActiveSessionRecovery | null
 }
 
+interface TrainingUnavailableState {
+  kind: 'not_enrolled'
+  message: string
+}
+
 const splitNames = { push: '推', pull: '拉', legs: '腿' }
 
 const setTypeNames: Record<string, string> = {
@@ -118,6 +123,7 @@ export default function TodayTrainingPage() {
   const [programDay, setProgramDay] = useState<TodayTrainingPayload['program_day'] | null>(null)
   const [preferredMinutes, setPreferredMinutes] = useState<number | null>(null)
   const [selectedMinutes, setSelectedMinutes] = useState<SessionMinutes | null>(null)
+  const [unavailableState, setUnavailableState] = useState<TrainingUnavailableState | null>(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
   const [starting, setStarting] = useState(false)
@@ -135,6 +141,7 @@ export default function TodayTrainingPage() {
       setTraining(null)
       setWorkoutActual(null)
       setRecovery(null)
+      setUnavailableState(null)
       startRequestId.current = null
 
       const cached = selectedSplit
@@ -161,7 +168,14 @@ export default function TodayTrainingPage() {
         const payload = await response.json()
         if (!response.ok) throw new Error(payload?.error?.message || '暂时无法读取训练计划')
         if (active) {
-          const data = payload.data as TodayTrainingPayload
+          const data = payload.data as TodayTrainingPayload | null
+          if (!data) {
+            setUnavailableState(payload.state ?? {
+              kind: 'not_enrolled',
+              message: '尚未启用训练方法',
+            })
+            return
+          }
           setTraining(data.prescription)
           setWorkoutActual(data.workout_actual)
           setRecovery(data.recovery)
@@ -270,6 +284,19 @@ export default function TodayTrainingPage() {
 
         {loading && <p className="rounded-2xl bg-white p-5 text-sm text-gray-500">正在读取训练计划…</p>}
         {!loading && error && <p className="rounded-2xl bg-white p-5 text-sm text-gray-600">{error}</p>}
+        {!loading && !error && unavailableState && (
+          <section className="rounded-2xl bg-white p-5">
+            <h2 className="text-base font-semibold text-gray-900">还没有启用训练方法</h2>
+            <p className="mt-2 text-sm leading-6 text-gray-500">{unavailableState.message}。启用后即可查看并执行 Push、Pull、Legs 训练日。</p>
+            <button
+              type="button"
+              onClick={() => router.push('/home')}
+              className="mt-4 rounded-xl bg-black px-4 py-2.5 text-sm font-medium text-white"
+            >
+              返回首页启用
+            </button>
+          </section>
+        )}
 
         {training && (
           <>

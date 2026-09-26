@@ -134,7 +134,13 @@ export async function GET(request: Request) {
   if (activeSessionError) return apiError('DATABASE_ERROR', '暂时无法恢复当前训练', 500)
 
   if (!enrollment) {
-    return apiError('NOT_FOUND', '当前没有可执行的训练要求', 404)
+    return NextResponse.json({
+      data: null,
+      state: {
+        kind: 'not_enrolled',
+        message: '尚未启用训练方法',
+      },
+    })
   }
 
   const { data: cycle, error: cycleError } = await supabase

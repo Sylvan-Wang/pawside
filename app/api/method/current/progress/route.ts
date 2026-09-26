@@ -16,7 +16,15 @@ export async function GET() {
     .maybeSingle()
 
   if (enrollmentError) return apiError('DATABASE_ERROR', '暂时无法读取训练进度', 500)
-  if (!enrollment) return apiError('NOT_ENROLLED', '尚未启用训练方法', 404)
+  if (!enrollment) {
+    return NextResponse.json({
+      data: null,
+      state: {
+        kind: 'not_enrolled',
+        message: '尚未启用训练方法',
+      },
+    })
+  }
 
   const [cycleResult, progressionResult] = await Promise.all([
     supabase
