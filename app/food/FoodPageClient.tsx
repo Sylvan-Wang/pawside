@@ -6,6 +6,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import PageHeader from '@/components/PageHeader'
 import { useToast } from '@/components/Toast'
 import { today, invalidateAIReview } from '@/lib/utils'
+import type { FoodHistorySuggestion } from '@/lib/food-history'
 
 const MEAL_TYPES = ['早餐', '午餐', '晚餐', '加餐']
 
@@ -28,6 +29,19 @@ interface FoodItem {
   protein: string
   per100g: NutritionPer100g | null
   autoFilled: boolean
+  historyFilled: boolean
+}
+
+function emptyFood(): FoodItem {
+  return {
+    name: '',
+    weight: '',
+    calories: '',
+    protein: '',
+    per100g: null,
+    autoFilled: false,
+    historyFilled: false,
+  }
 }
 
 function calcNutrition(per100g: NutritionPer100g, weight: string) {
@@ -45,10 +59,11 @@ function calcNutrition(per100g: NutritionPer100g, weight: string) {
 
 // supabase is passed from parent — never call createClient() inside this component
 function FoodRow({
-  food, index, onUpdate, onRemove, canRemove, supabase,
+  food, index, history, onUpdate, onRemove, canRemove, supabase,
 }: {
   food: FoodItem
   index: number
+  history: FoodHistorySuggestion[]
   onUpdate: (patch: Partial<FoodItem>) => void
   onRemove: () => void
   canRemove: boolean
@@ -128,13 +143,18 @@ function FoodRow({
   }, [supabase])
 
   function handleNameChange(val: string) {
-    onUpdate({ name: val, per100g: null, autoFilled: false })
+    onUpdate({ name: val, per100g: null, autoFilled: false, historyFilled: false })
     search(val)
   }
 
   function selectFood(r: SearchResult) {
     const per100g = r.nutrition ?? null
-    const patch: Partial<FoodItem> = { name: r.canonical_name, per100g, autoFilled: false }
+    const patch: Partial<FoodItem> = {
+      name: r.canonical_name,
+      per100g,
+      autoFilled: false,
+      historyFilled: false,
+    }
     if (per100g && food.weight) {
       const calc = calcNutrition(per100g, food.weight)
       if (calc.calories || calc.protein) {
@@ -148,8 +168,21 @@ function FoodRow({
     setResults([])
   }
 
+  function selectHistory(item: FoodHistorySuggestion) {
+    onUpdate({
+      name: item.name,
+      weight: String(item.weight_g),
+      calories: item.calories == null ? '' : String(item.calories),
+      protein: item.protein_g == null ? '' : String(item.protein_g),
+      per100g: null,
+      autoFilled: false,
+      historyFilled: true,
+    })
+    setOpen(false)
+  }
+
   function handleWeightChange(val: string) {
-    const patch: Partial<FoodItem> = { weight: val }
+    const patch: Partial<FoodItem> = { weight: val, historyFilled: false }
     if (food.per100g && val) {
       const calc = calcNutrition(food.per100g, val)
       patch.calories = calc.calories
@@ -206,6 +239,25 @@ function FoodRow({
         )}
       </div>
 
+      {history.length > 0 && (
+        <div>
+          <p className="mb-1.5 text-[11px] text-gray-400">最近常吃 · 点击快速填入</p>
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {history.map(item => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => selectHistory(item)}
+                className="shrink-0 rounded-full border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs text-gray-700"
+              >
+                {item.name} · {item.weight_g}g
+                {item.calories == null ? '' : ` · ${Math.round(item.calories)} kcal`}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-3 gap-2">
         <input
           placeholder="重量(g)"
@@ -218,7 +270,7 @@ function FoodRow({
           placeholder="热量(kcal)"
           type="number"
           value={food.calories}
-          onChange={e => onUpdate({ calories: e.target.value, autoFilled: false })}
+          onChange={e => onUpdate({ calories: e.target.value, autoFilled: false, historyFilled: false })}
           className={`w-full border rounded-lg px-2 py-2 text-sm outline-none ${
             food.autoFilled ? 'border-emerald-300 bg-emerald-50 text-emerald-800' : 'border-gray-200'
           }`}
@@ -227,7 +279,7 @@ function FoodRow({
           placeholder="蛋白质(g)"
           type="number"
           value={food.protein}
-          onChange={e => onUpdate({ protein: e.target.value, autoFilled: false })}
+          onChange={e => onUpdate({ protein: e.target.value, autoFilled: false, historyFilled: false })}
           className={`w-full border rounded-lg px-2 py-2 text-sm outline-none ${
             food.autoFilled ? 'border-emerald-300 bg-emerald-50 text-emerald-800' : 'border-gray-200'
           }`}
@@ -236,6 +288,9 @@ function FoodRow({
 
       {food.autoFilled && (
         <p className="text-xs text-emerald-600">✓ 已自动匹配营养数据</p>
+      )}
+      {food.historyFilled && (
+        <p className="text-xs text-emerald-600">✓ 已按历史记录填入相同分量与营养</p>
       )}
     </div>
   )
@@ -249,13 +304,24 @@ export default function FoodPage() {
 
   const [date, setDate] = useState(today())
   const [mealType, setMealType] = useState('')
-  const [foods, setFoods] = useState<FoodItem[]>([
-    { name: '', weight: '', calories: '', protein: '', per100g: null, autoFilled: false },
-  ])
+  const [foods, setFoods] = useState<FoodItem[]>([emptyFood()])
+  const [history, setHistory] = useState<FoodHistorySuggestion[]>([])
   const [loading, setLoading] = useState(false)
 
+  useEffect(() => {
+    let active = true
+    fetch('/api/food/history?limit=8')
+      .then(async response => {
+        const payload = await response.json()
+        if (!response.ok) throw new Error(payload?.error?.message || '历史食物读取失败')
+        if (active) setHistory(payload.data ?? [])
+      })
+      .catch(reason => console.error('[food history error]', reason))
+    return () => { active = false }
+  }, [])
+
   function addFood() {
-    setFoods(f => [...f, { name: '', weight: '', calories: '', protein: '', per100g: null, autoFilled: false }])
+    setFoods(f => [...f, emptyFood()])
   }
 
   function updateFood(i: number, patch: Partial<FoodItem>) {
@@ -336,6 +402,7 @@ export default function FoodPage() {
                 key={i}
                 food={food}
                 index={i}
+                history={history}
                 supabase={supabase}
                 onUpdate={patch => updateFood(i, patch)}
                 onRemove={() => removeFood(i)}
