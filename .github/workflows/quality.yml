@@ -45,13 +45,25 @@ jobs:
         run: supabase db start
       - name: Lint database functions
         run: supabase db lint --local --level warning
+      - name: Ensure PostgreSQL client is available
+        shell: bash
+        run: |
+          if ! command -v psql >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install --yes postgresql-client
+          fi
       - name: Run rollback-only SQL contracts
         shell: bash
         run: |
           set -euo pipefail
+          database_url="$(supabase status -o json | jq -r '.DB_URL')"
+          if [[ -z "$database_url" || "$database_url" == "null" ]]; then
+            echo "::error title=Local database URL missing::supabase status did not return DB_URL"
+            exit 1
+          fi
           for contract in supabase/tests/*.sql; do
             echo "::group::$contract"
-            if ! output="$(supabase db query --local --file "$contract" 2>&1)"; then
+            if ! output="$(psql "$database_url" -v ON_ERROR_STOP=1 -f "$contract" 2>&1)"; then
               printf '%s\n' "$output"
               message="$(printf '%s' "$output" | tail -c 4000)"
               message="${message//'%'/'%25'}"
