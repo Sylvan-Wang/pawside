@@ -100,6 +100,13 @@ begin
   if position('status <> ''started''' in duration_definition) = 0 then
     raise exception 'Duration change does not restrict itself to active sessions';
   end if;
+  if position('p_selected_session_minutes > target_session.selected_session_minutes' in duration_definition) = 0
+     or position('Duration can only be shortened' in duration_definition) = 0 then
+    raise exception 'Duration change can still lengthen an active session';
+  end if;
+  if position('snapshotted canonical session' in duration_definition) = 0 then
+    raise exception 'Legacy or supplemental sessions can still mutate the Minimum P1 snapshot';
+  end if;
 end;
 $$;
 

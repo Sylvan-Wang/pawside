@@ -47,6 +47,15 @@ begin
     raise exception 'session_prescription_id uniqueness was reintroduced; supplemental executions would be rejected';
   end if;
 
+  if not exists (
+    select 1 from pg_indexes
+    where schemaname = 'public' and tablename = 'workout_sessions'
+      and indexname = 'workout_sessions_one_started_per_user_idx'
+      and indexdef like 'CREATE UNIQUE INDEX%WHERE (status = ''started''::text)'
+  ) then
+    raise exception 'one active workout session per user is not enforced';
+  end if;
+
   if exists (
     select 1
     from (values ('workout_sessions'), ('exercise_executions'), ('set_executions')) as expected(name)

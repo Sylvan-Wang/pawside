@@ -1,13 +1,15 @@
-# Supabase cutover statements (NOT part of `supabase/migrations/`)
+# Supabase historical cutover statements
 
 Files in this directory are **not** picked up by `supabase db push`, `supabase
-migration list`, or `supabase db reset`. They are kept here on purpose.
+migration list`, or `supabase db reset`. They preserve how a production cutover
+was executed; they are no longer required to make a fresh schema converge.
 
 ## Why
 
-`supabase/migrations/` must stay safe to apply on its own. A statement belongs
-here when applying it **alone** would change the behaviour or the read contract
-of the code that is already live.
+A statement belongs here when its original rollout had to be coordinated with
+the code already live. A later idempotent migration may absorb the terminal
+schema state so staging, disaster recovery, and `supabase db reset` stay
+reproducible without replaying an operational cutover manually.
 
 ## Applied cutover
 
@@ -65,12 +67,16 @@ a single row. The constraint itself is dropped only here.
 This is exactly the order that was executed for `sbwevlhzqujrtucppacl` on
 2026-09-25.
 
+`supabase/migrations/20260925000500_training_runtime_truth_hardening.sql`
+now repeats the constraint drop with `IF EXISTS` and creates the lookup index
+idempotently. Existing projects therefore remain unchanged, while a fresh
+database reaches the same post-cutover state from migrations alone.
+
 After the cutover, `supabase/tests/method_workout_runtime_contract.sql` and
-`supabase/tests/training_date_navigation_contract.sql` assert the **post-cutover**
+`supabase/tests/training_date_navigation_contract.sql` assert the terminal
 state (lookup index present, uniqueness constraint absent). A fresh environment
-built from `supabase/migrations/` alone will therefore fail those two contracts
-until this file is applied — that is intentional, and it is what keeps the cutover
-visible instead of silently assumed.
+built from `supabase/migrations/` alone now passes those contracts. This file
+remains the immutable operational record of the original production sequence.
 
 ## Rollback
 

@@ -47,6 +47,13 @@ interface WorkoutActual {
   status: 'started' | 'completed'
 }
 
+interface ActiveSessionRecovery {
+  kind: 'active_session'
+  session_id: string
+  split_key: 'push' | 'pull' | 'legs'
+  session_prescription_id: string
+}
+
 interface ProgramDay {
   split_key: 'push' | 'pull' | 'legs'
   day_index: number
@@ -73,7 +80,10 @@ interface TodayTrainingPayload {
   view_date: string
   prescription: TodayTraining
   workout_actual: WorkoutActual | null
+  recovery: ActiveSessionRecovery | null
 }
+
+const splitNames = { push: '推', pull: '拉', legs: '腿' }
 
 const setTypeNames: Record<string, string> = {
   warmup: '热身',
@@ -103,6 +113,7 @@ export default function TodayTrainingPage() {
   const router = useRouter()
   const [training, setTraining] = useState<TodayTraining | null>(null)
   const [workoutActual, setWorkoutActual] = useState<WorkoutActual | null>(null)
+  const [recovery, setRecovery] = useState<ActiveSessionRecovery | null>(null)
   const [days, setDays] = useState<ProgramDay[]>([])
   const [programDay, setProgramDay] = useState<TodayTrainingPayload['program_day'] | null>(null)
   const [preferredMinutes, setPreferredMinutes] = useState<number | null>(null)
@@ -123,6 +134,7 @@ export default function TodayTrainingPage() {
       setError('')
       setTraining(null)
       setWorkoutActual(null)
+      setRecovery(null)
       startRequestId.current = null
 
       const cached = selectedSplit
@@ -131,6 +143,7 @@ export default function TodayTrainingPage() {
       if (cached) {
         setTraining(cached.prescription)
         setWorkoutActual(cached.workout_actual)
+        setRecovery(cached.recovery)
         setDays(cached.days ?? [])
         setProgramDay(cached.program_day)
         setPreferredMinutes(cached.preferred_session_minutes ?? 60)
@@ -151,6 +164,7 @@ export default function TodayTrainingPage() {
           const data = payload.data as TodayTrainingPayload
           setTraining(data.prescription)
           setWorkoutActual(data.workout_actual)
+          setRecovery(data.recovery)
           setDays(data.days ?? [])
           setProgramDay(data.program_day)
           setPreferredMinutes(data.preferred_session_minutes ?? 60)
@@ -169,14 +183,15 @@ export default function TodayTrainingPage() {
   }, [selectedSplit])
 
   useEffect(() => {
-    if (!workoutActual?.id) return
-    const sessionUrl = `/training/sessions/${workoutActual.id}`
+    const activeSessionId = workoutActual?.id ?? recovery?.session_id
+    if (!activeSessionId) return
+    const sessionUrl = `/training/sessions/${activeSessionId}`
     router.prefetch(sessionUrl)
-    if (readTrainingSessionCache(workoutActual.id)) return
+    if (readTrainingSessionCache(activeSessionId)) return
 
-    void warmTrainingSessionCache(workoutActual.id)
+    void warmTrainingSessionCache(activeSessionId)
       .catch(() => undefined)
-  }, [router, workoutActual?.id])
+  }, [recovery?.session_id, router, workoutActual?.id])
 
   function selectDay(split: string) {
     setSelectedSplit(split)
@@ -185,8 +200,9 @@ export default function TodayTrainingPage() {
 
   async function startTraining() {
     if (!training || starting) return
-    if (workoutActual?.id) {
-      router.push(`/training/sessions/${workoutActual.id}`)
+    const activeSessionId = workoutActual?.id ?? recovery?.session_id
+    if (activeSessionId) {
+      router.push(`/training/sessions/${activeSessionId}`)
       return
     }
 
@@ -210,6 +226,10 @@ export default function TodayTrainingPage() {
         }),
       })
       const payload = await response.json()
+      if (response.status === 409 && payload?.error?.details?.session_id) {
+        router.push(`/training/sessions/${payload.error.details.session_id}`)
+        return
+      }
       if (!response.ok) throw new Error(payload?.error?.message || '暂时无法开始训练')
       const sessionId = payload.data.session_id as string
       clearTodayTrainingCache()
@@ -253,6 +273,11 @@ export default function TodayTrainingPage() {
 
         {training && (
           <>
+            {recovery && !workoutActual && (
+              <aside className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+                当前还有一条{splitNames[recovery.split_key]}训练未完成。你可以继续浏览这个训练日，但开始新训练前需要先处理当前训练。
+              </aside>
+            )}
             <header className="rounded-2xl bg-black p-5 text-white">
               <p className="text-xs text-white/60">
                 Day {programDay?.day_index ?? '-'} · 第 {programDay?.cycle_number ?? '-'} 轮
@@ -261,7 +286,7 @@ export default function TodayTrainingPage() {
                 {programDay?.name_zh || training.method_split?.name_zh || training.split_key}
               </h1>
 
-              {!workoutActual?.id && (
+              {!recovery && (
                 <div className="mt-4">
                   <p className="text-sm text-white/80">今天大概想练多久？</p>
                   <div className="mt-2 grid grid-cols-4 gap-2">
@@ -290,7 +315,11 @@ export default function TodayTrainingPage() {
                 disabled={starting}
                 className="mt-4 w-full rounded-xl bg-white py-3 text-sm font-semibold text-black disabled:opacity-60"
               >
-                {starting ? '正在开始…' : workoutActual?.id ? '继续训练' : '开始这个训练日'}
+                {starting
+                  ? '正在开始…'
+                  : recovery
+                    ? `继续当前${splitNames[recovery.split_key]}训练`
+                    : '开始这个训练日'}
               </button>
             </header>
 

@@ -30,13 +30,10 @@ export type TrainingExecutionMode = 'canonical' | 'replay' | 'supplemental'
  *
  * - A `canonical` session completes the Program Day, so the Minimum P1
  *   `required_exercise_count` snapshot applies.
- * - `replay` and `supplemental` sessions never complete or advance a Program Day
- *   (PRD §11.2, §12). The Minimum P1 PRD does not define a threshold for them, so
- *   instead of inventing one they keep the released "at least one" floor. That is
- *   what stops a supplemental session ("came back for the exercises I skipped")
- *   from becoming an un-completable active session.
- * - A session started before Minimum P1 carries no snapshot and also keeps the
- *   floor, so in-flight sessions are never retroactively made stricter.
+ * - `replay` and `supplemental` sessions, plus snapshot-less legacy sessions,
+ *   use a one-persisted-set gate. This helper retains the numeric floor for
+ *   compatibility; `completionCountUnit()` defines that its unit is `set`, not
+ *   a fully completed exercise.
  */
 export function effectiveRequiredExerciseCount(input: {
   executionMode?: string | null

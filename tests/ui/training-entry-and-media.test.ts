@@ -75,7 +75,7 @@ describe('training entry semantics and exercise media contrast', () => {
     expect(home).toContain('fetch(`/api/training/today?${query}`')
     expect(home).toContain('writeTodayTrainingCache(payload.data, splitKey)')
     expect(today).toContain('readTodayTrainingCache<TodayTrainingPayload>(selectedSplit)')
-    expect(today).toContain('warmTrainingSessionCache(workoutActual.id)')
+    expect(today).toContain('warmTrainingSessionCache(activeSessionId)')
     expect(today).toContain('void warmTrainingSessionCache(sessionId)')
     expect(today).toContain('router.push(sessionUrl)')
     expect(session).toContain('readTrainingSessionCache<SessionResponse>(sessionId)')

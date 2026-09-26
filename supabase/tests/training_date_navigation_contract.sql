@@ -97,6 +97,19 @@ begin
      or has_function_privilege('anon', 'public.start_method_session_v2(uuid,date,text,uuid,smallint,text)', 'EXECUTE') then
     raise exception 'Date-aware start grants are unsafe';
   end if;
+  if to_regprocedure('public.start_method_session_v3(uuid,date,text,uuid,smallint,text)') is null
+     or not has_function_privilege('authenticated', 'public.start_method_session_v3(uuid,date,text,uuid,smallint,text)', 'EXECUTE')
+     or has_function_privilege('anon', 'public.start_method_session_v3(uuid,date,text,uuid,smallint,text)', 'EXECUTE') then
+    raise exception 'Serialized active-session start wrapper is missing or unsafe';
+  end if;
+  if not exists (
+    select 1 from pg_indexes
+    where schemaname = 'public' and tablename = 'workout_sessions'
+      and indexname = 'workout_sessions_one_started_per_user_idx'
+      and indexdef like 'CREATE UNIQUE INDEX%WHERE (status = ''started''::text)'
+  ) then
+    raise exception 'One-active-session database invariant is missing';
+  end if;
 end;
 $$;
 

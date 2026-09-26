@@ -29,9 +29,10 @@ export async function POST(
   const parsed = startTrainingSessionSchema.safeParse(body)
   if (!parsed.success) return apiError('VALIDATION_ERROR', '训练日期或时区无效', 400, parsed.error.flatten())
 
-  // Minimum P1 §8: the server re-validates the duration and falls back to the
-  // onboarding preference (then 60) inside start_method_session_v2 when omitted.
-  const { data, error } = await supabase.rpc('start_method_session_v2', {
+  // v3 serializes starts per user and returns the existing active session when
+  // another Program Day is already in progress. The v2 writer remains the
+  // implementation of the immutable prescription snapshot.
+  const { data, error } = await supabase.rpc('start_method_session_v3', {
     p_prescription_id: prescriptionId,
     p_view_date: parsed.data.view_date,
     p_time_zone: parsed.data.time_zone,
@@ -40,6 +41,17 @@ export async function POST(
     p_selection_source: parsed.data.selection_source ?? null,
   })
   if (error) return trainingDatabaseError(error)
+  const result = data as {
+    active_session_conflict?: boolean
+    active_session_id?: string
+    active_split_key?: string
+  } | null
+  if (result?.active_session_conflict) {
+    return apiError('CONFLICT', '已有未完成训练，请先继续当前训练', 409, {
+      session_id: result.active_session_id,
+      split_key: result.active_split_key,
+    })
+  }
 
   return NextResponse.json({ data })
 }

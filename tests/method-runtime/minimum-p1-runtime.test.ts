@@ -15,6 +15,10 @@ const stateTruthMigration = readFileSync(
   new URL('../../supabase/migrations/20260925000100_method_runtime_state_truth.sql', import.meta.url),
   'utf8',
 )
+const hardeningMigration = readFileSync(
+  new URL('../../supabase/migrations/20260925000500_training_runtime_truth_hardening.sql', import.meta.url),
+  'utf8',
+)
 const startRoute = readFileSync(
   new URL('../../app/api/training/[prescriptionId]/start/route.ts', import.meta.url),
   'utf8',
@@ -93,6 +97,7 @@ describe('Minimum P1 API wiring', () => {
       selected_session_minutes: 75,
     }).success).toBe(false)
     expect(startRoute).toContain('p_selected_session_minutes')
+    expect(startRoute).toContain("rpc('start_method_session_v3'")
     expect(navigationMigration).toContain('coalesce(preferred_minutes, 60)')
   })
 
@@ -107,7 +112,8 @@ describe('Minimum P1 API wiring', () => {
     }).success).toBe(false)
     expect(durationRoute).toContain('export async function PATCH')
     expect(durationRoute).toContain("rpc('update_method_session_duration'")
-    expect(navigationMigration).toContain('create or replace function public.update_method_session_duration(')
+    expect(hardeningMigration).toContain('create or replace function public.update_method_session_duration(')
+    expect(hardeningMigration).toContain('Duration can only be shortened')
   })
 
   it('routes completion and the session read through the v2 runtime truth', () => {
@@ -207,8 +213,11 @@ describe('Minimum P1 session completion eligibility', () => {
   })
 
   it('is mirrored by the SQL gate', () => {
-    expect(navigationMigration).toContain('when non_advancing then least(1, total_exercise_count)')
-    expect(navigationMigration).toContain("target_session.execution_mode in ('replay', 'supplemental')")
+    expect(hardeningMigration).toContain("target_session.execution_mode in ('replay', 'supplemental')")
+    expect(hardeningMigration).toContain("then 'supplemental_actual_v1'")
+    expect(hardeningMigration).toContain('completed_set_count < 1')
+    expect(hardeningMigration).toContain('At least one persisted set actual is required')
+    expect(hardeningMigration).toContain('completion_count_unit')
   })
 })
 

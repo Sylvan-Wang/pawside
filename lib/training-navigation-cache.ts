@@ -1,5 +1,5 @@
 const TODAY_CACHE_PREFIX = 'pawside:training:date:v2:'
-const SESSION_CACHE_PREFIX = 'pawside:training:session:v1:'
+const SESSION_CACHE_PREFIX = 'pawside:training:session:v2:'
 const CACHE_TTL_MS = 60_000
 const pendingSessionLoads = new Map<string, Promise<unknown>>()
 let sessionCacheGeneration = 0

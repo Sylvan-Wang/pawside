@@ -8,7 +8,7 @@ import { z } from 'zod'
 const idSchema = z.string().uuid()
 
 /**
- * Minimum P1 §7: shorten (or lengthen) the duration of an ACTIVE session.
+ * Minimum P1 §7: shorten the duration of an ACTIVE canonical session.
  * Saved set actuals are never discarded, the session is never recreated, the
  * Method prescription is never rewritten, and the long-term onboarding
  * preferred_session_minutes is never modified.

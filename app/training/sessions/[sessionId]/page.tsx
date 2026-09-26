@@ -18,6 +18,7 @@ import {
   removePendingSetActualByKey,
 } from '@/lib/training-offline-queue'
 import type { SaveSetActualInput } from '@/lib/contracts/training-runtime'
+import { prescribedSetsAreComplete, type CompletionCountUnit } from '@/lib/training-completion'
 import { SESSION_MINUTE_OPTIONS, type SessionMinutes } from '@/lib/training-duration'
 import {
   kgToWeightInput,
@@ -85,6 +86,9 @@ interface SessionProgress {
   original_exercise_count: number
   required_exercise_count: number
   completed_exercise_count: number
+  required_count: number
+  completed_count: number
+  completion_count_unit: CompletionCountUnit
   selected_session_minutes: number | null
   selection_source: string | null
   completion_policy_version: string | null
@@ -215,13 +219,7 @@ function initialDrafts(
       }), exercise, userId, sessionId, weightUnit)
   }
 
-  return restorePendingDrafts(
-    [{ setIndex: 1, weight: '', weightKg: null, reps: '', rir: '', saved: false, isExtra: true, pending: false }],
-    exercise,
-    userId,
-    sessionId,
-    weightUnit,
-  )
+  return restorePendingDrafts([], exercise, userId, sessionId, weightUnit)
 }
 
 /**
@@ -235,13 +233,15 @@ function countFullyCompletedExercises(
   drafts: Record<string, SetDraft[]>,
 ) {
   return exercises.filter((item) => {
-    const prescribed = item.sets.filter((set) => !set.is_extra)
-    if (prescribed.length === 0) return true
     const itemDrafts = drafts[item.id] ?? []
-    return prescribed.every((set) => {
-      const draft = itemDrafts.find((candidate) => candidate.setIndex === set.set_index)
-      return draft ? draft.saved : set.status === 'completed'
-    })
+    return prescribedSetsAreComplete(
+      item.sets,
+      (set) => !set.is_extra,
+      (set) => {
+        const draft = itemDrafts.find((candidate) => candidate.setIndex === set.set_index)
+        return draft ? draft.saved : set.status === 'completed'
+      },
+    )
   }).length
 }
 
@@ -548,7 +548,7 @@ export default function TrainingSessionPage() {
   }
 
   /**
-   * Minimum P1 §7: shorten (or lengthen) the threshold of an ACTIVE session.
+   * Minimum P1 §7: shorten the threshold of an ACTIVE canonical session.
    * No session is recreated, no set actual is discarded, and the Method
    * prescription and long-term preference are untouched.
    */
@@ -580,6 +580,7 @@ export default function TrainingSessionPage() {
           selected_session_minutes: payload.data.selected_session_minutes,
           selection_source: payload.data.selection_source,
           required_exercise_count: payload.data.required_exercise_count,
+          required_count: payload.data.required_exercise_count,
         },
       } : current)
       clearTrainingSessionCache(sessionId)
@@ -609,19 +610,28 @@ export default function TrainingSessionPage() {
   const savedSetCount = exerciseDrafts.filter((draft) => draft.saved).length
   const isLastExercise = activeExerciseIndex === data.exercises.length - 1
   const exerciseFullyCompleted = (() => {
-    const prescribed = exercise.sets.filter((set) => !set.is_extra)
-    if (prescribed.length === 0) return true
-    return prescribed.every((set) => {
-      const draft = exerciseDrafts.find((candidate) => candidate.setIndex === set.set_index)
-      return draft ? draft.saved : set.status === 'completed'
-    })
+    return prescribedSetsAreComplete(
+      exercise.sets,
+      (set) => !set.is_extra,
+      (set) => {
+        const draft = exerciseDrafts.find((candidate) => candidate.setIndex === set.set_index)
+        return draft ? draft.saved : set.status === 'completed'
+      },
+    )
   })()
 
   // Minimum P1 §13.2: exercise-count progress, derived from the same rule the
   // server enforces so the CTA never disagrees with the completion gate.
   const requiredExerciseCount = data.progress.required_exercise_count
   const completedExerciseCount = countFullyCompletedExercises(data.exercises, drafts)
-  const canComplete = !isCompleted && completedExerciseCount >= requiredExerciseCount
+  const completionUnit = data.progress.completion_count_unit
+  const requiredCount = data.progress.required_count
+  const completedCount = completionUnit === 'set'
+    ? Object.values(drafts).flat().filter((draft) => draft.saved).length
+    : completedExerciseCount
+  const canComplete = !isCompleted && completedCount >= requiredCount
+  const canShortenDuration = completionUnit === 'exercise'
+    && data.progress.selected_session_minutes != null
 
   return (
     <div className="min-h-screen bg-gray-50 pb-10">
@@ -643,18 +653,22 @@ export default function TrainingSessionPage() {
                   ? '本次训练已完成'
                   : canComplete
                     ? '今天的训练已达成'
-                    : `完成任意 ${requiredExerciseCount} 个动作，就可以结束今天的训练`}
+                    : completionUnit === 'set'
+                      ? '至少保存 1 组真实训练记录，就可以结束本次训练'
+                      : `完成任意 ${requiredExerciseCount} 个动作，就可以结束今天的训练`}
               </span>
-              <span className="shrink-0 tabular-nums">{completedExerciseCount} / {requiredExerciseCount}</span>
+              <span className="shrink-0 tabular-nums">{completedCount} / {requiredCount}</span>
             </div>
-            {!isCompleted && (
+            {!isCompleted && canShortenDuration && (
               <div className="mt-3">
                 <p className="text-xs text-white/60">
                   本次训练时长 {data.progress.selected_session_minutes ?? '-'} 分钟
                   {data.progress.selection_source === 'mid_session_change' ? ' · 训练中已调整' : ''}
                 </p>
                 <div className="mt-1.5 grid grid-cols-4 gap-1.5" role="group" aria-label="调整本次训练时长">
-                  {SESSION_MINUTE_OPTIONS.map((minutes) => (
+                  {SESSION_MINUTE_OPTIONS
+                    .filter((minutes) => minutes <= (data.progress.selected_session_minutes ?? minutes))
+                    .map((minutes) => (
                     <button
                       key={minutes}
                       type="button"
@@ -668,7 +682,7 @@ export default function TrainingSessionPage() {
                     >
                       {minutes}
                     </button>
-                  ))}
+                    ))}
                 </div>
               </div>
             )}
@@ -749,6 +763,11 @@ export default function TrainingSessionPage() {
           </div>
 
           <div className="mt-4 space-y-3">
+            {exerciseDrafts.length === 0 && (
+              <p className="rounded-xl bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-800">
+                该动作暂缺可执行的原始组模板，因此不会自动计入完成动作数。你仍可按实际训练记录额外组。
+              </p>
+            )}
             {exerciseDrafts.map((draft, position) => {
               const key = `${exercise.id}:${draft.setIndex}`
               return (
@@ -842,7 +861,9 @@ export default function TrainingSessionPage() {
               </>
             ) : (
               <p className="text-xs leading-5 text-gray-500">
-                完整完成任意 {requiredExerciseCount} 个动作即可结束这个训练日（当前 {completedExerciseCount} / {requiredExerciseCount}）。
+                {completionUnit === 'set'
+                  ? `至少保存 1 组真实训练记录即可结束本次训练（当前 ${completedCount} / ${requiredCount}）。`
+                  : `完整完成任意 ${requiredExerciseCount} 个动作即可结束这个训练日（当前 ${completedExerciseCount} / ${requiredExerciseCount}）。`}
                 已保存的记录都会保留，随时可以离开，稍后继续。
               </p>
             )}

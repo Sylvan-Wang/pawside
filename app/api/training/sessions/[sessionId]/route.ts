@@ -1,6 +1,7 @@
 import { apiError } from '@/lib/api/response'
 import { buildWorkoutGuideMedia, type ExerciseMediaMapping } from '@/lib/exercise-media'
 import { createClient } from '@/lib/supabase/server'
+import { completionCountUnit, prescribedSetsAreComplete } from '@/lib/training-completion'
 import { effectiveRequiredExerciseCount } from '@/lib/training-duration'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
@@ -31,13 +32,15 @@ interface RawExecution {
  * when every prescribed set of that exercise is completed. Extra sets performed
  * beyond the prescription never count against the user.
  *
- * This mirrors public.complete_method_session_v2 exactly. An exercise with no
- * prescribed set is vacuously satisfied, matching the SQL rule.
+ * An exercise without an executable original set template never counts. That
+ * remains a Method/runtime-gate issue rather than free completion credit.
  */
 function exerciseIsFullyCompleted(sets: RawSet[]) {
-  const prescribed = sets.filter((set) => set.is_extra !== true)
-  if (prescribed.length === 0) return true
-  return prescribed.every((set) => set.status === 'completed')
+  return prescribedSetsAreComplete(
+    sets,
+    (set) => set.is_extra !== true,
+    (set) => set.status === 'completed',
+  )
 }
 
 export async function GET(
@@ -128,6 +131,23 @@ export async function GET(
     selectedSessionMinutes,
   })
   const completedExerciseCount = executions.filter((execution) => execution.fully_completed).length
+  const completedSetCount = executions.reduce(
+    (count, execution) => count + execution.sets.filter((set) => set.status === 'completed').length,
+    0,
+  )
+  const countUnit = completionCountUnit({
+    executionMode: session.execution_mode,
+    selectedSessionMinutes,
+    snapshotRequiredExerciseCount: session.required_exercise_count,
+  })
+  const requiredCount = countUnit === 'set' ? 1 : requiredExerciseCount
+  const completedCount = countUnit === 'set' ? completedSetCount : completedExerciseCount
+  const effectivePolicyVersion = session.completion_policy_version
+    ?? (session.execution_mode === 'replay' || session.execution_mode === 'supplemental'
+      ? 'supplemental_actual_v1'
+      : countUnit === 'set'
+        ? 'legacy_one_completed_set_v1'
+        : 'exercise_count_threshold_v1')
 
   return NextResponse.json({
     data: {
@@ -139,12 +159,15 @@ export async function GET(
         original_exercise_count: originalExerciseCount,
         required_exercise_count: requiredExerciseCount,
         completed_exercise_count: completedExerciseCount,
+        required_count: requiredCount,
+        completed_count: completedCount,
+        completion_count_unit: countUnit,
         selected_session_minutes: selectedSessionMinutes,
         selection_source: session.selection_source ?? null,
-        completion_policy_version: session.completion_policy_version ?? null,
+        completion_policy_version: effectivePolicyVersion,
         can_complete: session.status === 'started'
-          && completedExerciseCount >= requiredExerciseCount,
-        program_day_completed: session.status === 'completed',
+          && completedCount >= requiredCount,
+        program_day_completed: session.status === 'completed' && session.execution_mode === 'canonical',
       },
     },
   })

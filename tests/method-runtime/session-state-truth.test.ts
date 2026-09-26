@@ -6,12 +6,16 @@ const startMigration = readFileSync(new URL('../../supabase/migrations/202609110
 const stateTruthMigration = readFileSync(new URL('../../supabase/migrations/20260925000100_method_runtime_state_truth.sql', import.meta.url), 'utf8')
 const navigationMigration = readFileSync(new URL('../../supabase/migrations/20260925000200_training_date_navigation.sql', import.meta.url), 'utf8')
 const scopeFixMigration = readFileSync(new URL('../../supabase/migrations/20260925000400_method_completion_variable_scope_fix.sql', import.meta.url), 'utf8')
+const hardeningMigration = readFileSync(new URL('../../supabase/migrations/20260925000500_training_runtime_truth_hardening.sql', import.meta.url), 'utf8')
 const repairPlan = readFileSync(new URL('../../docs/internal-beta/runtime-history-repair-plan.md', import.meta.url), 'utf8')
 
 describe('Method runtime state truth', () => {
   it('keeps viewing read-only and restores an unfinished actual before a newer prescription', () => {
     expect(todayRoute).toContain(".eq('status', 'started')")
-    expect(todayRoute).toContain("recovery: activeSession ? { kind: 'active_session'")
+    expect(todayRoute).toContain("kind: 'active_session'")
+    expect(todayRoute).toContain('session_prescription_id: activeSession.session_prescription_id')
+    expect(todayRoute).toContain('workout_actual: targetWorkoutActual')
+    expect(todayRoute).toContain('targetPrescription.id')
     expect(todayRoute).not.toContain("rpc('start_method_session'")
     expect(todayRoute).not.toContain("rpc('complete_method_session")
   })
@@ -63,6 +67,14 @@ describe('Method runtime state truth', () => {
     expect(scopeFixSql).toContain("'exercise_count_threshold_v1'")
     // It must not touch the released completion function.
     expect(scopeFixSql).not.toContain('function public.complete_method_session(')
+  })
+
+  it('keeps the terminal completion gate aligned with persisted set truth', () => {
+    expect(hardeningMigration).toContain('exists (')
+    expect(hardeningMigration).toContain('from public.set_prescriptions set_plan')
+    expect(hardeningMigration).toContain("set_actual.id is null or set_actual.status <> 'completed'")
+    expect(hardeningMigration).toContain('completed_exercise_count = completed_count')
+    expect(hardeningMigration).not.toContain('completed_exercise_count = completed_exercise_count')
   })
 
   it('advances a fully recorded session once and deduplicates retries', () => {

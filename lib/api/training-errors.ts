@@ -13,6 +13,12 @@ export function trainingDatabaseError(error: DatabaseErrorLike) {
     // threshold is a floor, not an obligation to finish every prescribed exercise.
     const message = error.message?.includes('Session completion threshold not reached')
       ? '本次训练还没有达到可以结束的动作数量；已保存的记录都会保留，可以继续做也可以稍后回来'
+      : error.message?.includes('At least one persisted set actual is required')
+        ? '至少完成并保存一组真实训练记录后才能结束本次训练'
+        : error.message?.includes('Duration can only be shortened')
+          ? '训练中只能缩短本次时长，不能增加时长'
+          : error.message?.includes('Duration adaptation requires a snapshotted canonical session')
+            ? '这条历史或补充训练不支持修改时长，已保存记录不会受到影响'
       : error.message?.includes('Every prescribed exercise')
         ? '还有动作未完成；已保存记录会保留，可稍后回来继续训练'
         : error.message?.includes('At least one completed set')

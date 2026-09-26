@@ -215,14 +215,11 @@ export async function GET(request: Request) {
   const targetPrescription = bySplit.get(targetSplit)
   if (!targetPrescription) return apiError('NOT_FOUND', '该训练日还没有可执行的处方', 404)
 
-  // A started session keeps pointing at its own prescription.
-  const prescriptionId = activeSession?.session_prescription_id ?? targetPrescription.id
-
   const { data: prescription, error } = await supabase
     .from('session_prescriptions')
     .select(TODAY_PRESCRIPTION_SELECT)
     .eq('user_id', user.id)
-    .eq('id', prescriptionId)
+    .eq('id', targetPrescription.id)
     .maybeSingle()
   if (error) return apiError('DATABASE_ERROR', '暂时无法读取训练要求', 500)
   if (!prescription) return apiError('NOT_FOUND', '该训练日还没有可执行的处方', 404)
@@ -239,6 +236,9 @@ export async function GET(request: Request) {
       media: mapping ? buildWorkoutGuideMedia(mapping) : null,
     }
   })
+  const targetWorkoutActual = activeSession?.session_prescription_id === targetPrescription.id
+    ? activeSession
+    : null
 
   const days = PROGRAM_DAY_ORDER.map((split, index) => {
     const row = bySplit.get(split)
@@ -272,9 +272,14 @@ export async function GET(request: Request) {
       preferred_session_minutes: capability?.preferred_session_minutes ?? 60,
       current_log_date: currentLogDate,
       view_date: requestedDate,
-      recovery: activeSession ? { kind: 'active_session', session_id: activeSession.id } : null,
+      recovery: activeSession ? {
+        kind: 'active_session',
+        session_id: activeSession.id,
+        split_key: activeSession.split_key,
+        session_prescription_id: activeSession.session_prescription_id,
+      } : null,
       prescription: { ...prescription, exercises },
-      workout_actual: activeSession,
+      workout_actual: targetWorkoutActual,
     },
   })
 }
