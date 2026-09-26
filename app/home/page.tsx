@@ -4,16 +4,35 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import BottomNav from '@/components/BottomNav'
-import { today, getWeekStart } from '@/lib/utils'
+import { getWeekStartKey, shiftDateKey, today } from '@/lib/utils'
 import { writeTodayTrainingCache } from '@/lib/training-navigation-cache'
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis } from 'recharts'
 
 interface Profile {
   goal: string
-  weekly_workout_target: number
-  daily_calorie_target: number
+  weekly_workout_target: number | null
+  daily_calorie_target: number | null
   weight_kg: number
   onboarding_completed: boolean
+}
+
+/**
+ * Product §26: Home is "today's console". It renders the daily nutrition row
+ * from the same deterministic source the Daily Log uses, so Home and the Log can
+ * never disagree (Guardrail §5).
+ */
+interface DashboardNutritionRow {
+  key: string
+  label: string
+  consumed: number | null
+  target: number | null
+  remaining: number | null
+  unit: string
+}
+
+interface RecoveryPromptState {
+  should_prompt: boolean
+  checkin: { checkin_date: string } | null
 }
 
 interface MethodContext {
@@ -31,6 +50,12 @@ interface MethodAvailability {
 
 const splitNames = { push: '推', pull: '拉', legs: '腿' } as const
 
+/** Display-only rounding. Persisted values stay unrounded (AI Patch §31). */
+function round(value: number, digits: number): number {
+  const factor = 10 ** digits
+  return Math.round(value * factor) / factor
+}
+
 export default function HomePage() {
   const router = useRouter()
   const supabase = createClient()
@@ -43,13 +68,21 @@ export default function HomePage() {
   const [methodMessage, setMethodMessage] = useState('官方训练方法仍在规则校验中。')
   const [setupNotice, setSetupNotice] = useState('')
   const [todayWorkouts, setTodayWorkouts] = useState<{ type: string; duration_minutes: number }[]>([])
-  const [todayFoods, setTodayFoods] = useState<{ meal_type: string; foods: { calories?: number }[] }[]>([])
+  const [todayMealCount, setTodayMealCount] = useState(0)
   const [streak, setStreak] = useState(0)
   const [weeklyDone, setWeeklyDone] = useState(0)
   const [weightData, setWeightData] = useState<{ date: string; weight: number }[]>([])
   const [currentWeight, setCurrentWeight] = useState<number | null>(null)
   const [aiSummary, setAiSummary] = useState<string | null>(null)
   const [aiSummaryLoading, setAiSummaryLoading] = useState(false)
+  const [nutritionRows, setNutritionRows] = useState<DashboardNutritionRow[]>([])
+  const [nutritionLoading, setNutritionLoading] = useState(true)
+  const [recoveryPrompt, setRecoveryPrompt] = useState<RecoveryPromptState | null>(null)
+  const [recoveryOpen, setRecoveryOpen] = useState(false)
+  const [recoverySleep, setRecoverySleep] = useState<number | null>(null)
+  const [recoveryPostWorkout, setRecoveryPostWorkout] = useState<number | null>(null)
+  const [recoverySaving, setRecoverySaving] = useState(false)
+  const [hasEverTrained, setHasEverTrained] = useState(false)
 
   const load = useCallback(async () => {
     // getSession reads from localStorage — no network call
@@ -58,27 +91,26 @@ export default function HomePage() {
     if (!user) { router.push('/auth'); return }
 
     const todayStr = today()
-    const weekStart = getWeekStart(new Date()).toISOString().split('T')[0]
+    const weekStart = getWeekStartKey(todayStr)
     // 查近 60 天用于计算 streak
-    const sixtyDaysAgo = new Date()
-    sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60)
-    const streakFrom = sixtyDaysAgo.toISOString().split('T')[0]
+    const streakFrom = shiftDateKey(todayStr, -60)
 
-    const [profileRes, workoutRes, foodRes, weekWorkoutRes, metricsRes, streakWRes, streakFRes] = await Promise.all([
+    const [profileRes, workoutRes, weekWorkoutRes, metricsRes, streakWRes, streakFRes] = await Promise.all([
       supabase.from('user_profiles').select('goal,weekly_workout_target,daily_calorie_target,weight_kg,onboarding_completed').eq('id', user.id).single(),
       supabase.from('workout_logs').select('type,duration_minutes').eq('user_id', user.id).eq('date', todayStr),
-      supabase.from('food_logs').select('meal_type,foods').eq('user_id', user.id).eq('date', todayStr),
       supabase.from('workout_logs').select('date').eq('user_id', user.id).gte('date', weekStart),
       supabase.from('body_metrics').select('date,weight_kg').eq('user_id', user.id).order('date', { ascending: false }).limit(14),
       supabase.from('workout_logs').select('date').eq('user_id', user.id).gte('date', streakFrom),
-      supabase.from('food_logs').select('date').eq('user_id', user.id).gte('date', streakFrom),
+      supabase.from('user_food_logs').select('log_date').eq('user_id', user.id).gte('log_date', streakFrom),
     ])
 
     const p = profileRes.data
     setProfile(p)
     setTodayWorkouts(workoutRes.data || [])
-    setTodayFoods(foodRes.data || [])
     setWeeklyDone((weekWorkoutRes.data || []).length)
+    // Product §7: with no prior training, the recovery question is optional, so
+    // Home needs to know whether to ask it at all.
+    setHasEverTrained((streakWRes.data || []).length > 0)
 
     const metrics = metricsRes.data || []
     const withWeight = metrics.filter(m => m.weight_kg).reverse()
@@ -88,19 +120,17 @@ export default function HomePage() {
     // Streak：本地计算，从今天往前数连续有记录的天数
     const activeDates = new Set<string>([
       ...(streakWRes.data || []).map((r: { date: string }) => r.date),
-      ...(streakFRes.data || []).map((r: { date: string }) => r.date),
+      ...(streakFRes.data || []).map((r: { log_date: string }) => r.log_date),
     ])
     let s = 0
-    const d = new Date()
     for (let i = 0; i < 61; i++) {
-      const ds = d.toISOString().split('T')[0]
+      const ds = shiftDateKey(todayStr, -i)
       if (activeDates.has(ds)) {
         s++
       } else if (i > 0) {
         // 今天可以还没有记录，不算断
         break
       }
-      d.setDate(d.getDate() - 1)
     }
     setStreak(s)
     setProfileLoading(false)
@@ -169,7 +199,7 @@ export default function HomePage() {
   // Load AI summary — sessionStorage cache so revisiting /home is instant
   const loadAiSummary = useCallback(async () => {
     const dateKey = today()
-    const cacheKey = `ai_summary_${dateKey}`
+    const cacheKey = `ai_summary_v3_${dateKey}`
 
     // Check sessionStorage first (same session, same day)
     if (typeof window !== 'undefined') {
@@ -182,7 +212,10 @@ export default function HomePage() {
       const res = await fetch('/api/ai/daily-review', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ date: dateKey }),
+        body: JSON.stringify({
+          date: dateKey,
+          time_zone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        }),
       })
       if (res.ok) {
         const data = await res.json()
@@ -200,6 +233,80 @@ export default function HomePage() {
   useEffect(() => { void Promise.resolve().then(load) }, [load])
   useEffect(() => { void Promise.resolve().then(loadMethod) }, [loadMethod])
   useEffect(() => { void Promise.resolve().then(loadAiSummary) }, [loadAiSummary])
+
+  /**
+   * Product §26: Home renders today's nutrition from the shared deterministic
+   * source, and Product §7 offers the Recovery Check-in once per local day.
+   *
+   * Real data only — the previous card showed a meal count. Nothing here
+   * substitutes a default for an unset target (Product §27).
+   */
+  const loadTodayFacts = useCallback(async () => {
+    const dateKey = today()
+    setNutritionLoading(true)
+    try {
+      const [dailyResponse, recoveryResponse] = await Promise.all([
+        fetch(`/api/daily-log?date=${dateKey}&today=${dateKey}&preload=1`, { cache: 'no-store' }),
+        fetch(`/api/recovery/checkin?date=${dateKey}`, { cache: 'no-store' }),
+      ])
+
+      if (dailyResponse.ok) {
+        const payload = await dailyResponse.json()
+        setNutritionRows(payload?.data?.dashboard_nutrition ?? [])
+        setTodayMealCount(Number(payload?.data?.log?.summary?.meal_count ?? 0))
+      }
+
+      if (recoveryResponse.ok) {
+        const payload = await recoveryResponse.json()
+        setRecoveryPrompt({
+          should_prompt: Boolean(payload?.data?.should_prompt),
+          checkin: payload?.data?.checkin ?? null,
+        })
+      }
+    } catch (reason) {
+      console.error('[home] failed to load today facts', reason)
+    } finally {
+      setNutritionLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { void Promise.resolve().then(loadTodayFacts) }, [loadTodayFacts])
+
+  async function submitRecoveryCheckin(skipped = false) {
+    const dateKey = today()
+    setRecoverySaving(true)
+    try {
+      const response = await fetch('/api/recovery/checkin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          date: dateKey,
+          sleep_quality: skipped ? null : recoverySleep,
+          post_workout_recovery: skipped ? null : recoveryPostWorkout,
+          skipped,
+        }),
+      })
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null)
+        throw new Error(payload?.error?.message || '保存失败')
+      }
+      // Product §21: a recovery answer is part of the day's facts, so the
+      // displayed daily summary must not keep showing the pre-answer state.
+      sessionStorage.removeItem(`ai_review_${dateKey}`)
+      sessionStorage.removeItem(`ai_summary_${dateKey}`)
+      sessionStorage.removeItem(`ai_review_v3_${dateKey}`)
+      sessionStorage.removeItem(`ai_summary_v3_${dateKey}`)
+      setRecoveryOpen(false)
+      setRecoveryPrompt({ should_prompt: false, checkin: { checkin_date: dateKey } })
+      await loadTodayFacts()
+      await loadAiSummary()
+    } catch (reason) {
+      console.error('[home] recovery check-in failed', reason)
+    } finally {
+      setRecoverySaving(false)
+    }
+  }
+
   useEffect(() => {
     router.prefetch('/training/today')
     router.prefetch('/training/method')
@@ -234,8 +341,11 @@ export default function HomePage() {
     return () => window.cancelAnimationFrame(frame)
   }, [])
 
-  const weekTarget = profile?.weekly_workout_target || 3
-  const weekPct = Math.min(100, Math.round((weeklyDone / weekTarget) * 100))
+  // Product §4 / Guardrail §2.2: an unset weekly target must not become a fake 3.
+  const weekTarget = profile?.weekly_workout_target ?? null
+  const weekPct = weekTarget === null
+    ? null
+    : Math.min(100, Math.round((weeklyDone / weekTarget) * 100))
   const entryLoading = profileLoading || methodLoading
   const methodAvailable = methodAvailability?.status === 'available'
   const methodNeedsSetup = !profile?.onboarding_completed
@@ -355,23 +465,156 @@ export default function HomePage() {
           </div>
           <div className="bg-white rounded-2xl p-4">
             <p className="text-xs text-gray-400 mb-1">今日饮食进度</p>
-            <p className={`text-sm font-semibold ${todayFoods.length > 0 ? 'text-black' : 'text-gray-400'}`}>
-              {todayFoods.length > 0 ? `已记录 ${todayFoods.length} 餐` : '未记录'}
+            <p className={`text-sm font-semibold ${todayMealCount > 0 ? 'text-black' : 'text-gray-400'}`}>
+              {todayMealCount > 0 ? `已记录 ${todayMealCount} 餐` : '未记录'}
             </p>
           </div>
           <div className="bg-white rounded-2xl p-4">
             <p className="text-xs text-gray-400 mb-1">本周完成度</p>
             <p className="text-sm font-semibold">{weeklyDone} / {weekTarget} 次</p>
             <div className="mt-2 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-              <div className="h-full bg-black rounded-full transition-all" style={{ width: `${weekPct}%` }} />
+              <div className="h-full bg-black rounded-full transition-all" style={{ width: `${weekPct ?? 0}%` }} />
             </div>
-            <p className="text-xs text-gray-400 mt-1">{weekPct}%</p>
+            {/* Product §27: no fabricated target — prompt to set one instead. */}
+            {weekPct === null
+              ? <button onClick={() => router.push('/settings')} className="text-xs text-gray-400 mt-1 underline">
+                设置每周训练目标
+              </button>
+              : <p className="text-xs text-gray-400 mt-1">{weekPct}%</p>
+            }
           </div>
           <div className="bg-white rounded-2xl p-4">
             <p className="text-xs text-gray-400 mb-1">连续打卡</p>
             <p className="text-sm font-semibold">{streak} 天</p>
           </div>
         </div>
+
+        {/* Today nutrition — Product §26 / §16.2 Daily Dashboard nutrition row */}
+        <div className="bg-white rounded-2xl p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold">今日营养</h2>
+            <button onClick={() => router.push(`/history/${today()}`)}
+              className="text-xs text-gray-400 underline">展开</button>
+          </div>
+
+          {nutritionLoading ? (
+            <p className="text-sm text-gray-400">读取中…</p>
+          ) : nutritionRows.length === 0 ? (
+            <p className="text-sm text-gray-400">暂无数据</p>
+          ) : (
+            <div className="space-y-2">
+              {nutritionRows.map((row) => {
+                const digits = row.unit === 'kcal' ? 0 : 1
+                if (row.consumed === null) {
+                  return (
+                    <div key={row.key} className="flex items-baseline justify-between">
+                      <span className="text-xs text-gray-500">{row.label}</span>
+                      <span className="text-sm text-gray-400">资料不完整</span>
+                    </div>
+                  )
+                }
+                const consumed = round(row.consumed, digits)
+                if (row.target === null) {
+                  // Product §27: show consumed; never a fabricated target.
+                  return (
+                    <div key={row.key} className="flex items-baseline justify-between">
+                      <span className="text-xs text-gray-500">{row.label}</span>
+                      <span className="text-sm text-gray-700">
+                        {consumed} {row.unit}
+                        <span className="ml-2 text-xs text-gray-400">未设目标</span>
+                      </span>
+                    </div>
+                  )
+                }
+                // Product §4.2: over-target stays visible as "已超出", not clamped.
+                const over = (row.remaining ?? 0) < 0
+                return (
+                  <div key={row.key} className="flex items-baseline justify-between">
+                    <span className="text-xs text-gray-500">{row.label}</span>
+                    <span className="text-sm text-gray-700">
+                      {consumed}
+                      <span className="text-gray-400"> / {round(row.target, digits)} {row.unit}</span>
+                      {over && (
+                        <span className="ml-2 text-xs text-amber-600">
+                          已超出 {round(Math.abs(row.remaining ?? 0), digits)}
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                )
+              })}
+              {nutritionRows.every((row) => row.target === null) && (
+                <button onClick={() => router.push('/settings')}
+                  className="mt-1 text-xs text-black underline">
+                  设置每日热量目标
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Recovery Check-in prompt — Product §7: max once per local day */}
+        {recoveryPrompt?.should_prompt && !recoveryOpen && (
+          <div className="bg-white rounded-2xl p-4">
+            <h2 className="text-sm font-semibold">今天状态怎么样？</h2>
+            <p className="mt-1 text-xs leading-5 text-gray-400">
+              每天最多问一次，可以跳过，不影响记录训练或饮食。
+            </p>
+            <button onClick={() => setRecoveryOpen(true)}
+              className="mt-3 w-full rounded-xl bg-black py-2.5 text-sm font-medium text-white">
+              记录今天的状态
+            </button>
+          </div>
+        )}
+
+        {recoveryOpen && (
+          <div className="bg-white rounded-2xl p-4">
+            <h2 className="text-sm font-semibold">今天状态怎么样？</h2>
+
+            <p className="mt-3 text-xs text-gray-500">昨晚睡得好吗？</p>
+            <div className="mt-1.5 flex gap-1.5">
+              {[1, 2, 3, 4, 5].map((value) => (
+                <button key={value} type="button" onClick={() => setRecoverySleep(value)}
+                  className={recoverySleep === value
+                    ? 'flex-1 rounded-lg border border-black bg-black py-2 text-xs text-white'
+                    : 'flex-1 rounded-lg border border-gray-200 py-2 text-xs text-gray-600'}>
+                  {value}
+                </button>
+              ))}
+            </div>
+
+            {/* Product §7: with no training history the recovery question is optional. */}
+            {hasEverTrained && (
+              <>
+                <p className="mt-3 text-xs text-gray-500">上一次训练后恢复得怎么样？</p>
+                <div className="mt-1.5 flex gap-1.5">
+                  {[1, 2, 3, 4, 5].map((value) => (
+                    <button key={value} type="button" onClick={() => setRecoveryPostWorkout(value)}
+                      className={recoveryPostWorkout === value
+                        ? 'flex-1 rounded-lg border border-black bg-black py-2 text-xs text-white'
+                        : 'flex-1 rounded-lg border border-gray-200 py-2 text-xs text-gray-600'}>
+                      {value}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+
+            <div className="mt-3 flex gap-2">
+              <button onClick={() => submitRecoveryCheckin(false)} disabled={recoverySaving}
+                className="flex-1 rounded-xl bg-black py-2.5 text-sm font-medium text-white disabled:opacity-50">
+                {recoverySaving ? '保存中…' : '完成'}
+              </button>
+              <button onClick={() => submitRecoveryCheckin(true)} disabled={recoverySaving}
+                className="rounded-xl border border-gray-200 px-4 py-2.5 text-sm text-gray-600 disabled:opacity-50">
+                跳过
+              </button>
+            </div>
+            <p className="mt-2 text-xs text-gray-400">
+              这只是你的主观感受，不会自动改变训练安排。
+            </p>
+          </div>
+        )}
 
         {/* Today AI summary */}
         <div className="bg-white rounded-2xl p-4">

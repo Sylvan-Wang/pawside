@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import PageHeader from '@/components/PageHeader'
 import { useToast } from '@/components/Toast'
-import { today, invalidateAIReview } from '@/lib/utils'
+import { today, invalidateDayDerivedCache } from '@/lib/utils'
 
 const WORKOUT_TYPES = ['胸', '背', '腿', '肩', '手臂', '有氧', '拉伸', '其他']
 
@@ -71,7 +71,7 @@ export default function WorkoutPage() {
         exercises: exData.length > 0 ? exData : null,
       })
       if (error) throw error
-      await invalidateAIReview(supabase, user.id, date)
+      await invalidateDayDerivedCache(supabase, user.id, date)
       show('保存成功')
       setTimeout(() => router.push('/home'), 1200)
     } catch (err: unknown) {

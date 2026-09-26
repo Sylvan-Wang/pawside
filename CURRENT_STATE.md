@@ -290,21 +290,18 @@ Home 页面直接并行请求：Profile、今日 workout、今日 food、本周 
 
 ### 10.1 当前实现
 
-- `lib/ai-rules.ts` 对 legacy workout/food/profile/body 做规则预处理。
-- `lib/ai-client.ts` 调 OpenAI `gpt-4o-mini` 或 DeepSeek `deepseek-chat`；无 key/调用失败时返回 null。
-- `/api/ai/daily-review` 先读 cache，再预处理，再调用 AI；失败后使用 `generateDailySummary()` rule fallback。
-- 输出只做最低限度 shape 检查：summary string、insights/actions array；没有 Zod、字段枚举/长度完整校验。
-- cache 存入 `ai_generated_content`，带 `prompt_version`；代码未保存完整 input snapshot、model response evidence 或 rule version snapshot。
-- Review 输入没有 prescription、method、progression、recovery、fat/carb、结构化 calculation basis。
+- `lib/ai-rules.ts` 仅保留 legacy 兼容预处理，当前 Daily Review 生产 caller 不再依赖它，也不再用 `weight × 31` 生成目标。
+- `lib/evidence/composer.ts` 通过 OpenAI structured output 调用已配置模型；无 key、上游失败或 guardrail 拒绝时返回 `ai: null`，事实层继续可用。
+- `/api/ai/daily-review` 读取统一 Daily Log，生成 MetricFacts 与规则信号后进入 Evidence Composer；AI 不可用时只返回确定性事实状态，不再生成 rule fallback 建议。
+- 四个 AI surface 使用独立 strict JSON schema；用户可见数字必须 trace 到 MetricFact，判断信号必须绑定 Evidence Registry 或受管规则 authority。
+- 仅缓存 Composer 成功结果；结果包含 prompt/model/evidence registry/input snapshot provenance，评分写入 session/meal/day/week scoped `ai_feedback`。
+- Daily Review 输入含 canonical 四宏量、训练日事实、身体记录和主观恢复；recovery 只作背景，不修改 Method 处方。
 
-### 10.2 当前失效链
+### 10.2 Cache 失效边界
 
-- Workout/Food 页面和对应编辑/删除路径会删除当日 `daily_review_ai` cache。
-- Body 页面保存后不 invalidates Review。
-- `/api/workout`、`/api/food`、`/api/body-metrics` 写入后不 invalidates Review。
-- 修改日志日期时只 invalidates 新日期，旧日期 cache 可能继续存在。
-- `daily_summary` cache 没有对应 invalidation。
-- `sessionStorage` 的 Home/History AI cache 不随数据库 stale 状态自动清理。
+- Workout、canonical/legacy Food adapter、Body、Recovery、Settings 与 Method Session 完成路径都会失效当日 `daily_review_ai` 与 `daily_summary`。
+- 修改日志日期时同时失效旧日期和新日期；客户端同时清除 legacy 与 v3 `sessionStorage` keys。
+- 缓存删除失败会以 `cache_invalidation` 状态返回，不再伪装为已成功失效；数据库写入本身仍保持成功。
 - Weekly 页面每次重算，因此没有 stale cache，但逻辑与 `/api/weekly` 重复。
 
 ## 11. 当前真实功能能力

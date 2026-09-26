@@ -6,8 +6,13 @@ import type {
   PushupCapacity,
   TrainingExperience,
 } from '@/lib/contracts/onboarding'
+import {
+  dailyCalorieTargetBounds,
+  weeklyWorkoutTargetBounds,
+} from '@/lib/contracts/onboarding'
+import { computeMacroTargets } from '@/lib/nutrition/macro-targets'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 const goals = [
   { value: 'lose_fat', label: '减脂' },
@@ -43,6 +48,13 @@ const equipmentOptions: Array<{ value: EquipmentAccess; label: string; note: str
 
 const sessionOptions: PreferredSessionMinutes[] = [30, 45, 60, 90]
 
+/**
+ * Quick-pick values for the weekly training target. Source: Product Patch §3.1
+ * (weekly training target is a Target-layer input) and §2 Layer 1.
+ * These are affordances, not a rule — the contract bound is what validates.
+ */
+const WEEKLY_TARGET_OPTIONS = [2, 3, 4, 5] as const
+
 export default function OnboardingPage() {
   const router = useRouter()
   const [form, setForm] = useState({
@@ -50,6 +62,13 @@ export default function OnboardingPage() {
     gender: '' as typeof genders[number]['value'] | '',
     height_cm: '',
     weight_kg: '',
+    /**
+     * Product Patch §4: the user sets the calorie target; the three macro
+     * recommendations are derived, never hand-filled (Product Patch §4.1).
+     * Held as strings so "not set" stays distinguishable from 0 (Guardrail §12).
+     */
+    daily_calorie_target: '',
+    weekly_workout_target: '',
     training_experience: '' as TrainingExperience | '',
     pushup_capacity: '' as PushupCapacity | '',
     equipment_access: '' as EquipmentAccess | '',
@@ -84,6 +103,12 @@ export default function OnboardingPage() {
           weight_kg: Number.isFinite(weightKg) && weightKg > 0
             ? String(unit === 'lb' ? Number((weightKg / LB_TO_KG).toFixed(1)) : weightKg)
             : current.weight_kg,
+          daily_calorie_target: profile?.daily_calorie_target == null
+            ? current.daily_calorie_target
+            : String(profile.daily_calorie_target),
+          weekly_workout_target: profile?.weekly_workout_target == null
+            ? current.weekly_workout_target
+            : String(profile.weekly_workout_target),
           training_experience: capability?.training_experience || current.training_experience,
           pushup_capacity: capability?.pushup_capacity || current.pushup_capacity,
           equipment_access: capability?.equipment_access || current.equipment_access,
@@ -104,6 +129,31 @@ export default function OnboardingPage() {
     setForm((current) => ({ ...current, [key]: value }))
   }
 
+  /** Body weight in kg, resolved from current input (same conversion used on submit). */
+  const weightKgForTargets = useMemo(() => {
+    const raw = Number(form.weight_kg)
+    if (!Number.isFinite(raw) || raw <= 0) return null
+    return weightUnit === 'lb' ? raw * LB_TO_KG : raw
+  }, [form.weight_kg, weightUnit])
+
+  const calorieTargetForPreview = useMemo(() => {
+    if (form.daily_calorie_target.trim() === '') return null
+    const parsed = Number(form.daily_calorie_target)
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : null
+  }, [form.daily_calorie_target])
+
+  /**
+   * Derived macro recommendation. Single deterministic source
+   * (`lib/nutrition/macro-targets.ts`) — never recomputed here (Guardrail §5).
+   */
+  const macroPreview = useMemo(
+    () => computeMacroTargets({
+      dailyCalorieTargetKcal: calorieTargetForPreview as number | null,
+      weightKg: weightKgForTargets as number | null,
+    }),
+    [calorieTargetForPreview, weightKgForTargets],
+  )
+
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
     setError('')
@@ -114,6 +164,42 @@ export default function OnboardingPage() {
     }
     if (!form.training_experience || !form.pushup_capacity || !form.equipment_access) {
       return setError('请完成轻量能力画像')
+    }
+
+    // Target layer (Product Patch §4). Blank is allowed and stays null, but an
+    // out-of-range value must be corrected rather than silently coerced (§2.2).
+    const calorieTarget = form.daily_calorie_target.trim() === ''
+      ? null
+      : Number(form.daily_calorie_target)
+    if (
+      calorieTarget !== null &&
+      (!Number.isFinite(calorieTarget) ||
+        calorieTarget < dailyCalorieTargetBounds.min ||
+        calorieTarget > dailyCalorieTargetBounds.max)
+    ) {
+      return setError(
+        `每日热量目标须在 ${dailyCalorieTargetBounds.min}–${dailyCalorieTargetBounds.max} kcal 之间`,
+      )
+    }
+
+    const weeklyTarget = form.weekly_workout_target.trim() === ''
+      ? null
+      : Number(form.weekly_workout_target)
+    if (
+      weeklyTarget !== null &&
+      (!Number.isFinite(weeklyTarget) ||
+        weeklyTarget < weeklyWorkoutTargetBounds.min ||
+        weeklyTarget > weeklyWorkoutTargetBounds.max)
+    ) {
+      return setError(
+        `每周训练目标须在 ${weeklyWorkoutTargetBounds.min}–${weeklyWorkoutTargetBounds.max} 次之间`,
+      )
+    }
+
+    // Source: AI Patch §12.2 — an incompatible calorie target must surface as
+    // `needs_review` instead of being forced into a macro split.
+    if (calorieTarget !== null && macroPreview.status === 'needs_review') {
+      return setError('当前热量目标过低，无法生成合理的三大营养素参考，请调整热量目标')
     }
 
     setLoading(true)
@@ -129,6 +215,9 @@ export default function OnboardingPage() {
           height_cm: Number(form.height_cm),
           reference_weight_kg: weightKg,
           weight_unit: weightUnit,
+          daily_calorie_target: calorieTarget,
+          weekly_workout_target: weeklyTarget,
+          time_zone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
           capability_profile: {
             training_experience: form.training_experience,
             pushup_capacity: form.pushup_capacity,
@@ -268,6 +357,110 @@ export default function OnboardingPage() {
         <section className="rounded-2xl bg-white p-4">
           <div className="mb-4">
             <p className="text-xs text-gray-400">02</p>
+            <h2 className="mt-1 font-semibold text-gray-900">目标设置</h2>
+            <p className="mt-1 text-xs leading-5 text-gray-400">
+              热量目标由你自己决定。蛋白质、碳水和脂肪是系统参考值，不是强制限制。
+            </p>
+          </div>
+
+          <div>
+            <label htmlFor="calorie-target" className="mb-1 block text-sm font-medium text-gray-700">
+              每日热量目标（kcal）
+            </label>
+            <input
+              id="calorie-target"
+              type="number"
+              inputMode="numeric"
+              value={form.daily_calorie_target}
+              onChange={(event) => set('daily_calorie_target', event.target.value)}
+              className="w-full rounded-xl border border-gray-200 px-3 py-3 text-sm outline-none focus:border-gray-400"
+              placeholder="例如 1800"
+              min={dailyCalorieTargetBounds.min}
+              max={dailyCalorieTargetBounds.max}
+            />
+            <p className="mt-1 text-xs leading-5 text-gray-400">留空表示暂不设置，之后可在设置中补充。</p>
+          </div>
+
+          <div className="mt-5">
+            <label className="mb-2 block text-sm font-medium text-gray-700">每周训练目标</label>
+            <div className="flex flex-wrap gap-2">
+              {WEEKLY_TARGET_OPTIONS.map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => set('weekly_workout_target', String(option))}
+                  className={form.weekly_workout_target === String(option)
+                    ? 'rounded-xl border border-black bg-black px-4 py-2.5 text-sm text-white'
+                    : 'rounded-xl border border-gray-200 px-4 py-2.5 text-sm text-gray-600'
+                  }
+                >
+                  {option} 次
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => set('weekly_workout_target', '')}
+                className={form.weekly_workout_target === ''
+                  ? 'rounded-xl border border-black bg-black px-4 py-2.5 text-sm text-white'
+                  : 'rounded-xl border border-gray-200 px-4 py-2.5 text-sm text-gray-600'
+                }
+              >
+                暂不设置
+              </button>
+            </div>
+          </div>
+
+          {/* Derived recommendation. Product Patch §4.1 / AC-P02: labelled 系统建议. */}
+          {calorieTargetForPreview !== null && (
+            <div className="mt-5 rounded-xl bg-gray-50 p-3">
+              <p className="text-xs text-gray-400">每日营养参考</p>
+
+              <div className="mt-2 space-y-1.5">
+                <div className="flex items-baseline justify-between">
+                  <span className="text-sm text-gray-700">热量</span>
+                  <span className="text-sm text-gray-900">
+                    {Math.round(calorieTargetForPreview)} kcal
+                    <span className="ml-2 text-xs text-gray-400">你的目标</span>
+                  </span>
+                </div>
+
+                {macroPreview.status === 'ok' && macroPreview.recommended ? (
+                  <>
+                    {([
+                      ['蛋白质', macroPreview.recommended.protein_g],
+                      ['碳水', macroPreview.recommended.carb_g],
+                      ['脂肪', macroPreview.recommended.fat_g],
+                    ] as const).map(([label, value]) => (
+                      <div key={label} className="flex items-baseline justify-between">
+                        <span className="text-sm text-gray-700">{label}</span>
+                        <span className="text-sm text-gray-900">
+                          {value} g
+                          <span className="ml-2 text-xs text-gray-400">系统建议</span>
+                        </span>
+                      </div>
+                    ))}
+                  </>
+                ) : (
+                  <p className="text-xs leading-5 text-gray-500">
+                    {macroPreview.calculationBasis.reason === 'missing_weight'
+                      ? '填写体重后即可生成三大营养素参考。'
+                      : '当前热量目标无法生成合理的三大营养素参考，请调整热量目标或先填写体重。'}
+                  </p>
+                )}
+              </div>
+
+              {macroPreview.status === 'ok' && (
+                <p className="mt-2 text-xs leading-5 text-gray-400">
+                  Pawside 参考运动营养研究，为你生成上述参考值；它不是医学标准，也不代替你的判断。
+                </p>
+              )}
+            </div>
+          )}
+        </section>
+
+        <section className="rounded-2xl bg-white p-4">
+          <div className="mb-4">
+            <p className="text-xs text-gray-400">03</p>
             <h2 className="mt-1 font-semibold text-gray-900">轻量能力画像</h2>
             <p className="mt-1 text-xs leading-5 text-gray-400">
               不做考试，也不会把俯卧撑次数直接换算成卧推重量。

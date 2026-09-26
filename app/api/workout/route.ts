@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { invalidateDayDerivedCache } from '@/lib/utils'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(req: NextRequest) {
@@ -9,7 +10,7 @@ export async function POST(req: NextRequest) {
   const body = await req.json()
   const { date, type, duration_minutes, notes, exercises } = body
 
-  if (!type || !duration_minutes || duration_minutes <= 0) {
+  if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date) || !type || !duration_minutes || duration_minutes <= 0) {
     return NextResponse.json({ error: '请填写必要信息' }, { status: 400 })
   }
 
@@ -18,7 +19,12 @@ export async function POST(req: NextRequest) {
   })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ success: true, message: '保存成功' })
+  const cacheInvalidation = await invalidateDayDerivedCache(supabase, user.id, date)
+  return NextResponse.json({
+    success: true,
+    message: '保存成功',
+    cache_invalidation: cacheInvalidation,
+  })
 }
 
 export async function GET(req: NextRequest) {

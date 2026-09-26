@@ -1,6 +1,8 @@
 import { apiError } from '@/lib/api/response'
 import { parseOnboardingInput } from '@/lib/contracts/onboarding'
+import { buildNutritionTargetSnapshot } from '@/lib/nutrition/targets'
 import { createClient } from '@/lib/supabase/server'
+import { today } from '@/lib/utils'
 import { NextRequest, NextResponse } from 'next/server'
 
 interface Phase2OnboardingResult {
@@ -26,7 +28,10 @@ export async function GET() {
   const [profileResult, capabilityResult] = await Promise.all([
     supabase
       .from('user_profiles')
-      .select('goal,gender,height_cm,weight_kg,weight_unit,onboarding_completed,onboarding_version')
+      .select(
+        'goal,gender,height_cm,weight_kg,reference_weight_kg,weight_unit,onboarding_completed,' +
+        'onboarding_version,daily_calorie_target,weekly_workout_target',
+      )
       .eq('id', user.id)
       .maybeSingle(),
     supabase
@@ -73,7 +78,14 @@ export async function POST(request: NextRequest) {
   }
 
   const capability = parsed.data.capability_profile
-  const { data, error } = await supabase.rpc('complete_phase2_onboarding', {
+  const targetSnapshot = buildNutritionTargetSnapshot({
+    dailyCalorieTargetKcal: parsed.data.daily_calorie_target,
+    weightKg: parsed.data.reference_weight_kg,
+  })
+  // Source: Product Patch §4 — the calorie target is the one nutrition target the
+  // user sets; both target params accept null, which must persist as "not set"
+  // rather than being coerced to a default (Guardrail §2.2 / §12).
+  const { data, error } = await supabase.rpc('complete_phase2_onboarding_v3', {
     p_goal: parsed.data.goal,
     p_gender: parsed.data.gender,
     p_height_cm: parsed.data.height_cm,
@@ -84,6 +96,16 @@ export async function POST(request: NextRequest) {
     p_equipment_access: capability.equipment_access,
     p_preferred_session_minutes: capability.preferred_session_minutes,
     p_join_method: parsed.data.join_method,
+    p_daily_calorie_target: parsed.data.daily_calorie_target,
+    p_weekly_workout_target: parsed.data.weekly_workout_target,
+    p_target_effective_date: today(parsed.data.time_zone),
+    p_protein_target_g: targetSnapshot.target.protein_g,
+    p_carb_target_g: targetSnapshot.target.carbs_g,
+    p_fat_target_g: targetSnapshot.target.fat_g,
+    p_target_source: targetSnapshot.source,
+    p_macro_target_status: targetSnapshot.macroTargetStatus,
+    p_target_calculation_basis: targetSnapshot.calculationBasis,
+    p_target_evidence_ref_ids: targetSnapshot.evidenceRefIds,
   })
 
   if (error || !data) {

@@ -21,8 +21,25 @@ describe('food history quick add', () => {
     ], 8)
 
     expect(result).toEqual([
-      { id: 'newer:0', name: '鸡胸肉', weight_g: 150, calories: 248, protein_g: 46.5 },
-      { id: 'newer:1', name: '鸡胸肉', weight_g: 100, calories: 165, protein_g: 31 },
+      { id: 'newer:0', name: '鸡胸肉', weight_g: 150, calories: 248, protein_g: 46.5, carbs_g: null, fat_g: null },
+      { id: 'newer:1', name: '鸡胸肉', weight_g: 100, calories: 165, protein_g: 31, carbs_g: null, fat_g: null },
+    ])
+  })
+
+  it('carries all four macros when the history row has them', () => {
+    // Four-macro persistence arrived with the canonical nutrition write path;
+    // legacy rows written earlier legitimately have null carbs/fat.
+    const result = buildFoodHistorySuggestions([
+      {
+        id: 'current',
+        foods: [
+          { name: '米饭', weight_g: 200, calories: 228, protein_g: 5, carbs_g: 51.2, fat_g: 0.4 },
+        ],
+      },
+    ], 8)
+
+    expect(result).toEqual([
+      { id: 'current:0', name: '米饭', weight_g: 200, calories: 228, protein_g: 5, carbs_g: 51.2, fat_g: 0.4 },
     ])
   })
 
@@ -37,7 +54,7 @@ describe('food history quick add', () => {
         ],
       },
     ], 8)).toEqual([
-      { id: 'legacy:0', name: '牛奶', weight_g: 250, calories: 150, protein_g: null },
+      { id: 'legacy:0', name: '牛奶', weight_g: 250, calories: 150, protein_g: null, carbs_g: null, fat_g: null },
     ])
   })
 

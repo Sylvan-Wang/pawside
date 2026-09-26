@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import PageHeader from '@/components/PageHeader'
@@ -40,6 +40,7 @@ export default function BodyMetricsPage() {
   const [customs, setCustoms] = useState<CustomMetric[]>([])
   const [notes, setNotes] = useState('')
   const [loading, setLoading] = useState(false)
+  const saveRequestId = useRef<string | null>(null)
 
   function n(v: string) { return v ? Number(v) : null }
 
@@ -53,9 +54,6 @@ export default function BodyMetricsPage() {
 
     setLoading(true)
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('未登录')
-
       const customObj: Record<string, number> = {}
       customs.filter(c => c.name && c.value).forEach(c => { customObj[c.name] = Number(c.value) })
 
@@ -63,26 +61,42 @@ export default function BodyMetricsPage() {
       const weightKg = weight
         ? weightUnit === 'lb' ? Number(weight) * LB_TO_KG : Number(weight)
         : null
+      saveRequestId.current ??= crypto.randomUUID()
 
-      const { error } = await supabase.from('body_metrics').insert({
-        user_id: user.id,
-        date,
-        weight_kg: weightKg,
-        body_fat_pct: n(bodyFat),
-        muscle_mass: n(muscleMass),
-        chest_cm: n(girth.chest_cm),
-        waist_cm: n(girth.waist_cm),
-        hip_cm: n(girth.hip_cm),
-        left_arm_cm: n(girth.left_arm_cm),
-        right_arm_cm: n(girth.right_arm_cm),
-        left_thigh_cm: n(girth.left_thigh_cm),
-        right_thigh_cm: n(girth.right_thigh_cm),
-        left_calf_cm: n(girth.left_calf_cm),
-        right_calf_cm: n(girth.right_calf_cm),
-        custom_metrics: Object.keys(customObj).length > 0 ? customObj : null,
-        notes: notes || null,
+      const response = await fetch('/api/body-metrics', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          request_id: saveRequestId.current,
+          time_zone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+          metric: {
+            date,
+            weight_kg: weightKg,
+            body_fat_pct: n(bodyFat),
+            muscle_mass: n(muscleMass),
+            chest_cm: n(girth.chest_cm),
+            waist_cm: n(girth.waist_cm),
+            hip_cm: n(girth.hip_cm),
+            left_arm_cm: n(girth.left_arm_cm),
+            right_arm_cm: n(girth.right_arm_cm),
+            left_thigh_cm: n(girth.left_thigh_cm),
+            right_thigh_cm: n(girth.right_thigh_cm),
+            left_calf_cm: n(girth.left_calf_cm),
+            right_calf_cm: n(girth.right_calf_cm),
+            custom_metrics: Object.keys(customObj).length > 0 ? customObj : null,
+            notes: notes || null,
+          },
+        }),
       })
-      if (error) throw error
+      const payload = await response.json()
+      if (!response.ok) throw new Error(payload?.error || '保存失败')
+      for (const affectedDate of payload.affected_dates ?? [date]) {
+        sessionStorage.removeItem(`ai_review_${affectedDate}`)
+        sessionStorage.removeItem(`ai_summary_${affectedDate}`)
+        sessionStorage.removeItem(`ai_review_v3_${affectedDate}`)
+        sessionStorage.removeItem(`ai_summary_v3_${affectedDate}`)
+      }
+      saveRequestId.current = null
       show('保存成功')
       setTimeout(() => router.push('/home'), 1200)
     } catch (err: unknown) {

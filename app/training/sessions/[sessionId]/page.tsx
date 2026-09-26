@@ -128,6 +128,32 @@ interface CompletionResult {
   selected_session_minutes?: number | null
   execution_mode?: string
   log_date: string
+  workout_log_id?: string | null
+}
+
+interface SessionFeedbackView {
+  workoutLogId: string
+  facts: {
+    duration_minutes: number | null
+    completed_exercise_count: number
+    completed_set_count: number | null
+    total_volume_kg: number | null
+    record_completeness: string
+  }
+  signals: Array<{ signal_key: string; text: string; authority: string }>
+  ai: null | {
+    summary: string
+    observations: Array<{ text: string }>
+    next_actions: Array<{ text: string }>
+    data_quality_tip: string | null
+  }
+  provenance: null | {
+    prompt_version: string
+    model: string
+    input_snapshot_id: string
+    evidence_registry_version: string
+  }
+  rating: 'liked' | 'disliked' | null
 }
 
 const splitNames = { push: '推', pull: '拉', legs: '腿' }
@@ -260,6 +286,8 @@ export default function TrainingSessionPage() {
   const [exerciseActionId, setExerciseActionId] = useState('')
   const [error, setError] = useState('')
   const [completion, setCompletion] = useState<CompletionResult | null>(null)
+  const [sessionFeedback, setSessionFeedback] = useState<SessionFeedbackView | null>(null)
+  const [feedbackSaving, setFeedbackSaving] = useState(false)
   const completionRequestId = useRef<string | null>(null)
 
   useEffect(() => {
@@ -534,16 +562,88 @@ export default function TrainingSessionPage() {
       const payload = await response.json()
       if (!response.ok) throw new Error(payload?.error?.message || '暂时无法完成训练')
       setCompletion(payload.data)
+      if (payload.data?.log_date) {
+        sessionStorage.removeItem(`ai_review_${payload.data.log_date}`)
+        sessionStorage.removeItem(`ai_summary_${payload.data.log_date}`)
+        sessionStorage.removeItem(`ai_review_v3_${payload.data.log_date}`)
+        sessionStorage.removeItem(`ai_summary_v3_${payload.data.log_date}`)
+      }
       clearTrainingSessionCache(sessionId)
       clearTodayTrainingCache()
       setData((current) => current ? {
         ...current,
         session: { ...current.session, status: 'completed', completed_at: new Date().toISOString() },
       } : current)
+
+      const workoutLogId = payload.data?.workout_log_id
+      if (workoutLogId) {
+        try {
+          const factsResponse = await fetch(`/api/workout/session-feedback?workout_log_id=${encodeURIComponent(workoutLogId)}`)
+          const factsPayload = await factsResponse.json()
+          if (factsResponse.ok) {
+            const base: SessionFeedbackView = {
+              workoutLogId,
+              facts: factsPayload.data.facts,
+              signals: factsPayload.data.signals ?? [],
+              ai: null,
+              provenance: null,
+              rating: factsPayload.data.feedback?.rating ?? null,
+            }
+            setSessionFeedback(base)
+
+            const aiResponse = await fetch('/api/ai/compose', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ surface: 'workout_session_feedback', workout_log_id: workoutLogId }),
+            })
+            const aiPayload = await aiResponse.json()
+            if (aiResponse.ok && aiPayload?.data?.ai) {
+              setSessionFeedback(current => current ? {
+                ...current,
+                ai: aiPayload.data.ai,
+                provenance: {
+                  prompt_version: aiPayload.data.prompt_version,
+                  model: aiPayload.data.model,
+                  input_snapshot_id: aiPayload.data.input_snapshot_id,
+                  evidence_registry_version: aiPayload.data.evidence_registry_version,
+                },
+              } : current)
+            }
+          }
+        } catch {
+          // Session completion is already durable; feedback is non-blocking.
+        }
+      }
     } catch (reason: unknown) {
       setError(reason instanceof Error ? reason.message : '暂时无法完成训练')
     } finally {
       setFinishing(false)
+    }
+  }
+
+  async function rateSessionFeedback(rating: 'liked' | 'disliked') {
+    if (!sessionFeedback?.provenance || feedbackSaving) return
+    const next = sessionFeedback.rating === rating ? null : rating
+    setFeedbackSaving(true)
+    try {
+      const response = await fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          content_type: 'workout_session_feedback',
+          scope: 'session',
+          scope_id: sessionFeedback.workoutLogId,
+          rating: next,
+          ...sessionFeedback.provenance,
+          output_json: sessionFeedback.ai,
+        }),
+      })
+      if (!response.ok) throw new Error('反馈保存失败')
+      setSessionFeedback(current => current ? { ...current, rating: next } : current)
+    } catch (reason: unknown) {
+      setError(reason instanceof Error ? reason.message : '反馈保存失败')
+    } finally {
+      setFeedbackSaving(false)
     }
   }
 
@@ -841,6 +941,40 @@ export default function TrainingSessionPage() {
                     : `下一次继续${splitNames[completion.next_split_key]}训练。`
                   : '本次实际训练已经保存。'}
             </p>
+            {sessionFeedback && (
+              <div className="mt-4 space-y-3 rounded-xl bg-gray-50 p-3" aria-live="polite">
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <p>完成动作 <span className="font-semibold">{sessionFeedback.facts.completed_exercise_count}</span></p>
+                  <p>完成组数 <span className="font-semibold">{sessionFeedback.facts.completed_set_count ?? '未完整记录'}</span></p>
+                  <p>训练时长 <span className="font-semibold">{sessionFeedback.facts.duration_minutes == null ? '未记录' : `${sessionFeedback.facts.duration_minutes} 分钟`}</span></p>
+                  <p>训练容量 <span className="font-semibold">{sessionFeedback.facts.total_volume_kg == null ? '无法计算' : `${Math.round(sessionFeedback.facts.total_volume_kg * 10) / 10} kg`}</span></p>
+                </div>
+                {sessionFeedback.signals.map((signal) => (
+                  <div key={signal.signal_key} className="rounded-lg bg-white px-3 py-2 text-xs">
+                    <p>{signal.text}</p>
+                    <p className="mt-1 text-[11px] text-gray-400">依据：{signal.authority}</p>
+                  </div>
+                ))}
+                {sessionFeedback.ai && (
+                  <div className="border-t border-gray-200 pt-3">
+                    <p className="text-sm font-medium">{sessionFeedback.ai.summary}</p>
+                    {sessionFeedback.ai.observations.map((item, index) => (
+                      <p key={index} className="mt-1 text-xs leading-5 text-gray-600">· {item.text}</p>
+                    ))}
+                    {sessionFeedback.ai.next_actions.map((item, index) => (
+                      <p key={index} className="mt-1 text-xs leading-5 text-gray-700">→ {item.text}</p>
+                    ))}
+                    <div className="mt-3 flex items-center gap-2 text-xs text-gray-400">
+                      <span>这次反馈有帮助吗？</span>
+                      <button type="button" disabled={feedbackSaving} onClick={() => rateSessionFeedback('liked')}
+                        className={sessionFeedback.rating === 'liked' ? 'opacity-100' : 'opacity-40'}>👍</button>
+                      <button type="button" disabled={feedbackSaving} onClick={() => rateSessionFeedback('disliked')}
+                        className={sessionFeedback.rating === 'disliked' ? 'opacity-100' : 'opacity-40'}>👎</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
             <button type="button" onClick={() => router.push('/training/today')}
               className="mt-4 w-full rounded-xl bg-black py-3 text-sm font-semibold text-white">
               查看训练计划

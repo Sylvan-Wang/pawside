@@ -1,24 +1,29 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import PageHeader from '@/components/PageHeader'
 import { useToast } from '@/components/Toast'
-import { invalidateAIReview } from '@/lib/utils'
 
-const MEAL_TYPES = ['早餐', '午餐', '晚餐', '加餐']
+const MEAL_TYPES = [
+  { value: 'breakfast', label: '早餐' },
+  { value: 'lunch', label: '午餐' },
+  { value: 'dinner', label: '晚餐' },
+  { value: 'snack', label: '加餐' },
+] as const
 
 interface FoodItem {
   name: string
   weight: string
   calories: string
   protein: string
+  carbs: string
+  fat: string
+  foodId: number | null
 }
 
 export default function EditFoodPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
-  const supabase = createClient()
   const { show, ToastEl } = useToast()
 
   const [date, setDate] = useState('')
@@ -26,32 +31,53 @@ export default function EditFoodPage() {
   const [foods, setFoods] = useState<FoodItem[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [updatedAt, setUpdatedAt] = useState<string | null>(null)
+  const [requestId] = useState(() => crypto.randomUUID())
 
   useEffect(() => {
     async function loadData() {
-      const { data, error } = await supabase.from('food_logs').select('*').eq('id', id).single()
-      if (error || !data) { router.back(); return }
+      const response = await fetch(`/api/nutrition/food-log/${id}`)
+      const payload = await response.json()
+      if (!response.ok || !payload?.data) { router.back(); return }
+      const data = payload.data
       setDate(data.date)
       setMealType(data.meal_type)
+      setUpdatedAt(data.updated_at)
       setFoods(
-        (data.foods || []).map((f: { name: string; weight?: number; weight_g?: number; calories?: number; protein_g?: number }) => ({
-          name: f.name || '',
-          weight: (f.weight_g ?? f.weight) != null ? String(f.weight_g ?? f.weight) : '',
-          calories: f.calories != null ? String(f.calories) : '',
-          protein: f.protein_g != null ? String(f.protein_g) : '',
+        (data.items || []).map((f: {
+          food_id: number | null
+          food_name_raw: string
+          food_name_resolved: string | null
+          weight_g: number | null
+          energy_kcal: number | null
+          protein_g: number | null
+          carb_g: number | null
+          fat_g: number | null
+        }) => ({
+          name: f.food_name_resolved || f.food_name_raw || '',
+          weight: f.weight_g == null ? '' : String(f.weight_g),
+          calories: f.energy_kcal == null ? '' : String(f.energy_kcal),
+          protein: f.protein_g == null ? '' : String(f.protein_g),
+          carbs: f.carb_g == null ? '' : String(f.carb_g),
+          fat: f.fat_g == null ? '' : String(f.fat_g),
+          foodId: f.food_id,
         }))
       )
       setLoading(false)
     }
     loadData()
-  }, [id, router, supabase])
+  }, [id, router])
 
   function addFood() {
-    setFoods(f => [...f, { name: '', weight: '', calories: '', protein: '' }])
+    setFoods(f => [...f, {
+      name: '', weight: '', calories: '', protein: '', carbs: '', fat: '', foodId: null,
+    }])
   }
 
   function updateFood(i: number, key: keyof FoodItem, val: string) {
-    setFoods(f => f.map((item, idx) => idx === i ? { ...item, [key]: val } : item))
+    setFoods(f => f.map((item, idx) => idx === i
+      ? { ...item, [key]: val, ...(key === 'name' ? { foodId: null } : {}) }
+      : item))
   }
 
   function removeFood(i: number) {
@@ -65,21 +91,40 @@ export default function EditFoodPage() {
     if (valid.length === 0) return show('至少填写一个食物的名称和重量', 'error')
     setSaving(true)
     try {
-      const foodData = valid.map(f => ({
-        name: f.name,
-        weight_g: Number(f.weight),
-        calories: f.calories ? Number(f.calories) : undefined,
-        protein_g: f.protein ? Number(f.protein) : undefined,
-      }))
-      const { error } = await supabase.from('food_logs').update({
-        date,
-        meal_type: mealType,
-        foods: foodData,
-        updated_at: new Date().toISOString(),
-      }).eq('id', id)
-      if (error) throw error
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) await invalidateAIReview(supabase, user.id, date)
+      const response = await fetch(`/api/nutrition/food-log/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          request_id: requestId,
+          date,
+          meal_type: mealType,
+          expected_updated_at: updatedAt,
+          items: valid.map(f => ({
+            food_id: f.foodId,
+            food_name_raw: f.name,
+            food_name_resolved: f.name,
+            weight_g: Number(f.weight),
+            per100g: null,
+            fallback: {
+              calories_kcal: f.calories === '' ? null : Number(f.calories),
+              protein_g: f.protein === '' ? null : Number(f.protein),
+              carbs_g: f.carbs === '' ? null : Number(f.carbs),
+              fat_g: f.fat === '' ? null : Number(f.fat),
+            },
+          })),
+        }),
+      })
+      const payload = await response.json()
+      if (!response.ok) throw new Error(payload?.error?.message || '保存失败')
+
+      if (typeof window !== 'undefined') {
+        for (const affectedDate of payload.data?.affected_dates ?? [date]) {
+          sessionStorage.removeItem(`ai_review_${affectedDate}`)
+          sessionStorage.removeItem(`ai_summary_${affectedDate}`)
+          sessionStorage.removeItem(`ai_review_v3_${affectedDate}`)
+          sessionStorage.removeItem(`ai_summary_v3_${affectedDate}`)
+        }
+      }
       show('保存成功')
       setTimeout(() => router.back(), 1200)
     } catch (err: unknown) {
@@ -111,10 +156,10 @@ export default function EditFoodPage() {
           <label className="block text-sm font-medium text-gray-700 mb-2">餐别</label>
           <div className="flex gap-2">
             {MEAL_TYPES.map(m => (
-              <button key={m} onClick={() => setMealType(m)}
+              <button key={m.value} onClick={() => setMealType(m.value)}
                 className={`flex-1 py-2 rounded-xl text-sm border transition-colors
-                  ${mealType === m ? 'bg-black text-white border-black' : 'border-gray-200 text-gray-600'}`}>
-                {m}
+                  ${mealType === m.value ? 'bg-black text-white border-black' : 'border-gray-200 text-gray-600'}`}>
+                {m.label}
               </button>
             ))}
           </div>
@@ -136,12 +181,16 @@ export default function EditFoodPage() {
                 </div>
                 <input placeholder="食物名称" value={food.name} onChange={e => updateFood(i, 'name', e.target.value)}
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none" />
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   <input placeholder="重量(g)" type="number" value={food.weight} onChange={e => updateFood(i, 'weight', e.target.value)}
                     className="w-full border border-gray-200 rounded-lg px-2 py-2 text-sm outline-none" />
                   <input placeholder="热量(kcal)" type="number" value={food.calories} onChange={e => updateFood(i, 'calories', e.target.value)}
                     className="w-full border border-gray-200 rounded-lg px-2 py-2 text-sm outline-none" />
                   <input placeholder="蛋白质(g)" type="number" value={food.protein} onChange={e => updateFood(i, 'protein', e.target.value)}
+                    className="w-full border border-gray-200 rounded-lg px-2 py-2 text-sm outline-none" />
+                  <input placeholder="碳水(g)" type="number" value={food.carbs} onChange={e => updateFood(i, 'carbs', e.target.value)}
+                    className="w-full border border-gray-200 rounded-lg px-2 py-2 text-sm outline-none" />
+                  <input placeholder="脂肪(g)" type="number" value={food.fat} onChange={e => updateFood(i, 'fat', e.target.value)}
                     className="w-full border border-gray-200 rounded-lg px-2 py-2 text-sm outline-none" />
                 </div>
               </div>

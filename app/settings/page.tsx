@@ -5,7 +5,33 @@ import { createClient } from '@/lib/supabase/client'
 import BottomNav from '@/components/BottomNav'
 import PageHeader from '@/components/PageHeader'
 import { useToast } from '@/components/Toast'
+import {
+  dailyCalorieTargetBounds,
+  weeklyWorkoutTargetBounds,
+} from '@/lib/contracts/onboarding'
 import { clearTrainingNavigationCache } from '@/lib/training-navigation-cache'
+
+const LB_TO_KG = 0.453592
+
+const goalOptions = [
+  { value: 'lose_fat', label: '减脂' },
+  { value: 'gain_muscle', label: '增肌' },
+  { value: 'maintain', label: '保持' },
+] as const
+
+const genderOptions = [
+  { value: 'male', label: '男' },
+  { value: 'female', label: '女' },
+  { value: 'other', label: '其他' },
+] as const
+
+function canonicalGoal(value: string | null): string {
+  return ({ '减脂': 'lose_fat', '增肌': 'gain_muscle', '保持': 'maintain' } as Record<string, string>)[value ?? ''] ?? value ?? ''
+}
+
+function canonicalGender(value: string | null): string {
+  return ({ '男': 'male', '女': 'female' } as Record<string, string>)[value ?? ''] ?? value ?? ''
+}
 
 interface Profile {
   email: string
@@ -13,8 +39,8 @@ interface Profile {
   height_cm: number
   weight_kg: number
   goal: string
-  weekly_workout_target: number
-  daily_calorie_target: number
+  weekly_workout_target: number | null
+  daily_calorie_target: number | null
 }
 
 export default function SettingsPage() {
@@ -35,10 +61,12 @@ export default function SettingsPage() {
     if (data) {
       setProfile(data)
       setForm({
-        gender: data.gender || '',
+        gender: canonicalGender(data.gender),
         height_cm: String(data.height_cm || ''),
-        weight_kg: String(data.weight_kg || ''),
-        goal: data.goal || '',
+        weight_kg: data.weight_kg == null
+          ? ''
+          : String(data.weight_unit === 'lb' ? Number(data.weight_kg) / LB_TO_KG : data.weight_kg),
+        goal: canonicalGoal(data.goal),
         weekly_workout_target: String(data.weekly_workout_target || ''),
         daily_calorie_target: String(data.daily_calorie_target || ''),
       })
@@ -53,17 +81,73 @@ export default function SettingsPage() {
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('未登录')
-      const { error } = await supabase.from('user_profiles').update({
-        gender: form.gender || null,
-        height_cm: form.height_cm ? Number(form.height_cm) : null,
-        weight_kg: form.weight_kg ? Number(form.weight_kg) : null,
-        goal: form.goal || null,
-        weekly_workout_target: Number(form.weekly_workout_target) || 3,
-        daily_calorie_target: Number(form.daily_calorie_target) || 2000,
-        weight_unit: weightUnit,
-        updated_at: new Date().toISOString(),
-      }).eq('id', user.id)
-      if (error) throw error
+
+      /*
+       * Target layer (Product Patch §4 / §3.1).
+       *
+       * Previously these two were written as:
+       *     Number(form.x) || 3        // weekly
+       *     Number(form.x) || 2000     // calories
+       * which fabricated a target whenever the field was blank, making
+       * "user has not set a target" unrepresentable (Phase 0 baseline §3.2).
+       * Blank now persists as NULL, and out-of-range input is rejected rather
+       * than silently clamped (Guardrail §2.2).
+       *
+       * Bounds are tamper guards, not health thresholds: AI Patch §14 /
+       * E-NUT-SAFE-001 establish there is no universal calorie floor here.
+       */
+      const weeklyTarget = form.weekly_workout_target.trim() === ''
+        ? null
+        : Number(form.weekly_workout_target)
+      if (
+        weeklyTarget !== null &&
+        (!Number.isInteger(weeklyTarget) ||
+          weeklyTarget < weeklyWorkoutTargetBounds.min ||
+          weeklyTarget > weeklyWorkoutTargetBounds.max)
+      ) {
+        throw new Error(
+          `每周训练目标须为 ${weeklyWorkoutTargetBounds.min}–${weeklyWorkoutTargetBounds.max} 之间的整数`,
+        )
+      }
+
+      const calorieTarget = form.daily_calorie_target.trim() === ''
+        ? null
+        : Number(form.daily_calorie_target)
+      if (
+        calorieTarget !== null &&
+        (!Number.isInteger(calorieTarget) ||
+          calorieTarget < dailyCalorieTargetBounds.min ||
+          calorieTarget > dailyCalorieTargetBounds.max)
+      ) {
+        throw new Error(
+          `每日热量目标须为 ${dailyCalorieTargetBounds.min}–${dailyCalorieTargetBounds.max} 之间的整数`,
+        )
+      }
+
+      const displayWeight = Number(form.weight_kg)
+      const weightKg = weightUnit === 'lb' ? displayWeight * LB_TO_KG : displayWeight
+      const response = await fetch('/api/settings/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          gender: form.gender,
+          height_cm: Number(form.height_cm),
+          weight_kg: weightKg,
+          goal: form.goal,
+          weekly_workout_target: weeklyTarget,
+          daily_calorie_target: calorieTarget,
+          weight_unit: weightUnit,
+          time_zone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+        }),
+      })
+      const payload = await response.json()
+      if (!response.ok) throw new Error(payload?.error?.message || '保存失败')
+      for (const affectedDate of payload?.data?.affected_dates ?? []) {
+        sessionStorage.removeItem(`ai_review_${affectedDate}`)
+        sessionStorage.removeItem(`ai_summary_${affectedDate}`)
+        sessionStorage.removeItem(`ai_review_v3_${affectedDate}`)
+        sessionStorage.removeItem(`ai_summary_v3_${affectedDate}`)
+      }
       show('设置完成')
     } catch (err: unknown) {
       show(err instanceof Error ? err.message : '保存失败', 'error')
@@ -122,9 +206,6 @@ export default function SettingsPage() {
     router.refresh()
   }
 
-  const goalOptions = ['减脂', '增肌', '保持']
-  const genderOptions = ['男', '女']
-
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       {ToastEl}
@@ -141,9 +222,9 @@ export default function SettingsPage() {
               <label className="block text-xs text-gray-500 mb-1">性别</label>
               <div className="flex gap-2">
                 {genderOptions.map(g => (
-                  <button key={g} onClick={() => setForm(f => ({ ...f, gender: g }))}
-                    className={`flex-1 py-2 rounded-xl text-sm border ${form.gender === g ? 'bg-black text-white border-black' : 'border-gray-200 text-gray-600'}`}>
-                    {g}
+                  <button key={g.value} onClick={() => setForm(f => ({ ...f, gender: g.value }))}
+                    className={`flex-1 py-2 rounded-xl text-sm border ${form.gender === g.value ? 'bg-black text-white border-black' : 'border-gray-200 text-gray-600'}`}>
+                    {g.label}
                   </button>
                 ))}
               </div>
@@ -182,9 +263,9 @@ export default function SettingsPage() {
               <label className="block text-xs text-gray-500 mb-1">目标</label>
               <div className="flex gap-2">
                 {goalOptions.map(g => (
-                  <button key={g} onClick={() => setForm(f => ({ ...f, goal: g }))}
-                    className={`flex-1 py-2 rounded-xl text-sm border ${form.goal === g ? 'bg-black text-white border-black' : 'border-gray-200 text-gray-600'}`}>
-                    {g}
+                  <button key={g.value} onClick={() => setForm(f => ({ ...f, goal: g.value }))}
+                    className={`flex-1 py-2 rounded-xl text-sm border ${form.goal === g.value ? 'bg-black text-white border-black' : 'border-gray-200 text-gray-600'}`}>
+                    {g.label}
                   </button>
                 ))}
               </div>

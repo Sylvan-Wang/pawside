@@ -1,8 +1,56 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 
+/** Cache content types that depend on a day's facts. */
+export const DAY_CACHE_CONTENT_TYPES = ['daily_review_ai', 'daily_summary'] as const
+
+/** Client-side cache keys that go stale when a day's facts change. */
+export function dayCacheKeys(date: string): string[] {
+  return [
+    `ai_review_${date}`,
+    `ai_summary_${date}`,
+    `ai_review_v3_${date}`,
+    `ai_summary_v3_${date}`,
+  ]
+}
+
 /**
- * Deletes the cached AI daily review for a given date so it regenerates next time.
- * Call after any create/update/delete on workout_logs, food_logs, or body_metrics.
+ * Drops every cached artifact derived from a day's facts.
+ *
+ * Call after any create/update/delete on workout_logs, food_logs,
+ * body_metrics, recovery, or the nutrition targets.
+ *
+ * Product §21 requires that a mutation makes the day's Log stale rather than
+ * leaving the pre-save result on screen. Two independent caches have to be
+ * cleared, and previously only the DB one was:
+ *   - `ai_generated_content` (both `daily_review_ai` and `daily_summary`)
+ *   - `sessionStorage` (`ai_review_<date>`, `ai_summary_<date>`)
+ */
+export async function invalidateDayDerivedCache(
+  supabase: SupabaseClient,
+  userId: string,
+  date: string,
+) {
+  const { error } = await supabase
+    .from('ai_generated_content')
+    .delete()
+    .eq('user_id', userId)
+    .eq('target_date', date)
+    .in('content_type', [...DAY_CACHE_CONTENT_TYPES])
+
+  if (typeof window !== 'undefined') {
+    for (const key of dayCacheKeys(date)) window.sessionStorage.removeItem(key)
+  }
+
+  return {
+    ok: !error,
+    error: error?.message ?? null,
+  }
+}
+
+/**
+ * @deprecated Use {@link invalidateDayDerivedCache}, which also clears the rule
+ * `daily_summary` cache and the client-side sessionStorage keys. Retained so
+ * existing callers keep compiling during the migration.
  */
 export async function invalidateAIReview(
   supabase: SupabaseClient,
@@ -26,45 +74,68 @@ export function getWeekStart(date: Date): Date {
   return d
 }
 
+/** Formats a Date with local calendar parts; never shifts it through UTC. */
+export function formatLocalDateKey(date: Date): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+/** Formats an instant as a calendar date in an explicit IANA timezone. */
+export function dateKeyInTimeZone(date: Date, timeZone: string): string {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date)
+  const value = (type: 'year' | 'month' | 'day') =>
+    parts.find((part) => part.type === type)?.value
+  const year = value('year')
+  const month = value('month')
+  const day = value('day')
+  if (!year || !month || !day) throw new Error('无法解析用户时区日期')
+  return `${year}-${month}-${day}`
+}
+
+/** Calendar arithmetic on YYYY-MM-DD without host-timezone conversions. */
+export function shiftDateKey(dateKey: string, days: number): string {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) throw new Error('无效日期')
+  const [year, month, day] = dateKey.split('-').map(Number)
+  const date = new Date(Date.UTC(year, month - 1, day))
+  date.setUTCDate(date.getUTCDate() + days)
+  return [
+    date.getUTCFullYear(),
+    String(date.getUTCMonth() + 1).padStart(2, '0'),
+    String(date.getUTCDate()).padStart(2, '0'),
+  ].join('-')
+}
+
+/** Monday date key for a local/user-timezone calendar week. */
+export function getWeekStartKey(
+  value: Date | string = new Date(),
+  timeZone?: string,
+): string {
+  const dateKey = typeof value === 'string'
+    ? value
+    : timeZone
+      ? dateKeyInTimeZone(value, timeZone)
+      : formatLocalDateKey(value)
+  const [year, month, day] = dateKey.split('-').map(Number)
+  const weekday = new Date(Date.UTC(year, month - 1, day)).getUTCDay()
+  const offset = weekday === 0 ? -6 : 1 - weekday
+  return shiftDateKey(dateKey, offset)
+}
+
 export function formatDate(date: Date | string): string {
   const d = new Date(date)
   return d.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' })
 }
 
-export function today(): string {
-  return new Date().toISOString().split('T')[0]
-}
-
-export function generateDailySummary(
-  workouts: { duration_minutes: number; type: string }[],
-  foods: { meal_type: string; foods: { calories?: number }[] }[],
-  profile: { daily_calorie_target: number } | null
-) {
-  const workoutStatus = workouts.length > 0
-    ? `今天已完成 ${workouts.length} 次训练 👍`
-    : '今天还没有训练记录'
-
-  const totalCalories = foods.reduce((sum, f) =>
-    sum + f.foods.reduce((s, food) => s + (food.calories || 0), 0), 0)
-  const target = profile?.daily_calorie_target || 2000
-  let foodStatus = ''
-  if (foods.length === 0) {
-    foodStatus = '今天还没有饮食记录'
-  } else if (totalCalories > 0 && totalCalories < target * 0.6) {
-    foodStatus = `今日摄入 ${totalCalories} kcal，建议补充蛋白质摄入`
-  } else if (totalCalories > target * 1.2) {
-    foodStatus = `今日摄入 ${totalCalories} kcal，注意控制热量`
-  } else {
-    foodStatus = `今日已记录 ${foods.length} 餐饮食`
-  }
-
-  const suggestion = workouts.length === 0 && foods.length === 0
-    ? '今天还没有记录，快去完成第一条吧～'
-    : workouts.length === 0
-    ? '今天还可以安排轻量活动'
-    : '保持节奏，继续加油！'
-
-  return { workout_status: workoutStatus, food_status: foodStatus, suggestion }
+export function today(timeZone?: string): string {
+  const now = new Date()
+  return timeZone ? dateKeyInTimeZone(now, timeZone) : formatLocalDateKey(now)
 }
 
 export function generateWeeklySummary(
@@ -73,10 +144,19 @@ export function generateWeeklySummary(
   foodLogCount: number,
   avgCalories: number | null,
   weightChange: number | null,
-  target: number
+  target: number | null
 ) {
   const lines: string[] = []
-  if (workoutCount >= target) {
+  if (target === null) {
+    /*
+     * Product §4 / Guardrail §2.2: an unset weekly target is NOT 3. The old
+     * `|| 3` fallback turned "user never set a goal" into a fake 3/3 comparison
+     * (Phase 0 baseline §3.2). Report the raw count and prompt to set a target.
+     */
+    lines.push(workoutCount > 0
+      ? `本周完成了 ${workoutCount} 次训练`
+      : '本周暂无训练记录，下周加油！')
+  } else if (workoutCount >= target) {
     lines.push(`本周你完成了 ${workoutCount} 次训练，达成目标 👍`)
   } else if (workoutCount > 0) {
     lines.push(`本周完成了 ${workoutCount} 次训练，距目标还差 ${target - workoutCount} 次`)

@@ -2,6 +2,7 @@ import { apiError } from '@/lib/api/response'
 import { trainingDatabaseError } from '@/lib/api/training-errors'
 import { completeTrainingSessionSchema } from '@/lib/contracts/training-runtime'
 import { createClient } from '@/lib/supabase/server'
+import { invalidateDayDerivedCache } from '@/lib/utils'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
@@ -44,5 +45,21 @@ export async function POST(
   })
   if (error) return trainingDatabaseError(error)
 
-  return NextResponse.json({ data })
+  const result = data as Record<string, unknown> & { log_date?: string } | null
+  const { data: workoutLog, error: workoutLogError } = await supabase
+    .from('workout_logs')
+    .select('id')
+    .eq('user_id', user.id)
+    .eq('method_workout_session_id', sessionId)
+    .maybeSingle()
+  if (workoutLogError) return trainingDatabaseError(workoutLogError)
+
+  const invalidation = result?.log_date
+    ? await invalidateDayDerivedCache(supabase, user.id, result.log_date)
+    : { ok: false, error: 'completion did not return log_date' }
+
+  return NextResponse.json({
+    data: result ? { ...result, workout_log_id: workoutLog?.id ?? null } : null,
+    cache_invalidation: invalidation,
+  })
 }

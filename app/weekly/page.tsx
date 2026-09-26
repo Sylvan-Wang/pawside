@@ -1,192 +1,363 @@
 'use client'
-import { useEffect, useState, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
-import BottomNav from '@/components/BottomNav'
-import PageHeader from '@/components/PageHeader'
-import { getWeekStart, generateWeeklySummary } from '@/lib/utils'
-import { BarChart, Bar, XAxis, ResponsiveContainer, Tooltip, LineChart, Line } from 'recharts'
 
-interface WeeklyData {
-  workoutCount: number
-  totalDuration: number
-  foodLogCount: number
-  avgCalories: number
-  weightChange: number | null
-  workoutByDay: { day: string; count: number; duration: number }[]
-  calorieByDay: { day: string; calories: number }[]
-  weightByDay: { day: string; weight: number }[]
-  summaryText: string
-  weekTarget: number
+import PageHeader from '@/components/PageHeader'
+import BottomNav from '@/components/BottomNav'
+import { getWeekStartKey, shiftDateKey, today } from '@/lib/utils'
+import { useRouter } from 'next/navigation'
+import { useCallback, useEffect, useState } from 'react'
+import {
+  Bar,
+  BarChart,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+} from 'recharts'
+
+/**
+ * Weekly Log (Product §22–§24).
+ *
+ * Reads /api/weekly-log, which classifies every trend deterministically
+ * (AI Patch §29.1). This page renders those classifications and never computes a
+ * trend itself, and it shows the honest "not enough data" state instead of
+ * filling the dashboard (Product §27 / AC-P15).
+ *
+ * Product §23.1: muscle-group volume and Method adherence are reported as
+ * unavailable rather than faked.
+ */
+
+interface TrendResult {
+  direction: 'increasing' | 'decreasing' | 'stable' | 'volatile' | 'insufficient'
+  point_count: number
+  mean: number | null
+  change: number | null
 }
 
-const DAYS = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
+interface SeriesPoint {
+  date: string
+  value: number | null
+}
+
+interface WeeklyAggregate {
+  week_start: string
+  week_end: string
+  training: {
+    workout_count: number
+    total_duration_minutes: number
+    types: string[]
+    total_completed_sets: number | null
+    total_volume_kg: number | null
+    duration_trend: TrendResult
+    unavailable_metrics: string[]
+  }
+  nutrition: {
+    days_logged: number
+    calories: { series: SeriesPoint[]; trend: TrendResult }
+    protein: { series: SeriesPoint[]; trend: TrendResult }
+    carbs: { series: SeriesPoint[]; trend: TrendResult }
+    fat: { series: SeriesPoint[]; trend: TrendResult }
+    days_below_reference: number | null
+    days_above_reference: number | null
+    target: {
+      calories_kcal: number | null
+      protein_g: number | null
+      carbs_g: number | null
+      fat_g: number | null
+    }
+  }
+  body: {
+    weight_series: SeriesPoint[]
+    weight_rolling_7d: SeriesPoint[]
+    weight_trend: TrendResult
+  }
+  recovery: {
+    average_sleep: number | null
+    average_post_workout_recovery: number | null
+    answered_days: number
+    total_days: number
+  }
+  days: Array<{
+    date: string
+    workout_count: number
+    duration_minutes: number
+    nutrition_logged: boolean
+    calories_kcal: number | null
+    weight_kg: number | null
+  }>
+}
+
+/** Descriptive, non-clinical trend wording. Mirrors lib/nutrition/trend.ts. */
+const TREND_TEXT: Record<TrendResult['direction'], string> = {
+  increasing: '上升',
+  decreasing: '下降',
+  stable: '基本稳定',
+  volatile: '波动较大',
+  insufficient: '数据不足',
+}
+
+const TREND_CLASS: Record<TrendResult['direction'], string> = {
+  increasing: 'text-gray-900',
+  decreasing: 'text-gray-900',
+  stable: 'text-gray-500',
+  volatile: 'text-amber-600',
+  insufficient: 'text-gray-400',
+}
+
+function round(value: number, digits = 0): number {
+  const factor = 10 ** digits
+  return Math.round(value * factor) / factor
+}
+
+function dayLabel(date: string): string {
+  return date.slice(5)
+}
 
 export default function WeeklyPage() {
   const router = useRouter()
-  const supabase = createClient()
   const [weekOffset, setWeekOffset] = useState(0)
-  const [data, setData] = useState<WeeklyData | null>(null)
+  const [data, setData] = useState<WeeklyAggregate | null>(null)
   const [loading, setLoading] = useState(true)
 
   const load = useCallback(async (offset: number) => {
     setLoading(true)
-    const { data: { session } } = await supabase.auth.getSession()
-    const user = session?.user
-    if (!user) { router.push('/auth'); return }
+    try {
+      const ws = shiftDateKey(getWeekStartKey(today()), -offset * 7)
 
-    const weekStart = getWeekStart(new Date())
-    weekStart.setDate(weekStart.getDate() - offset * 7)
-    const weekEnd = new Date(weekStart)
-    weekEnd.setDate(weekEnd.getDate() + 6)
-
-    const ws = weekStart.toISOString().split('T')[0]
-    const we = weekEnd.toISOString().split('T')[0]
-
-    const [wRes, fRes, mRes, profileRes] = await Promise.all([
-      supabase.from('workout_logs').select('date,duration_minutes,type').eq('user_id', user.id).gte('date', ws).lte('date', we),
-      supabase.from('food_logs').select('date,foods').eq('user_id', user.id).gte('date', ws).lte('date', we),
-      supabase.from('body_metrics').select('date,weight_kg').eq('user_id', user.id).gte('date', ws).lte('date', we).order('date'),
-      supabase.from('user_profiles').select('weekly_workout_target').eq('id', user.id).single(),
-    ])
-
-    const workouts = wRes.data || []
-    const foods = fRes.data || []
-    const metrics = mRes.data || []
-    const weekTarget = profileRes.data?.weekly_workout_target || 3
-
-    const workoutCount = workouts.length
-    const totalDuration = workouts.reduce((s, w) => s + w.duration_minutes, 0)
-    const foodLogCount = foods.length
-    const allCalories = foods.flatMap(f => (f.foods as { calories?: number }[]).map(x => x.calories || 0))
-    const avgCalories = allCalories.length > 0 ? Math.round(allCalories.reduce((a, b) => a + b, 0) / 7) : 0
-
-    const withWeight = metrics.filter(m => m.weight_kg)
-    const weightChange = withWeight.length >= 2
-      ? Number((withWeight[withWeight.length - 1].weight_kg - withWeight[0].weight_kg).toFixed(1))
-      : null
-
-    // By day
-    const workoutByDay = DAYS.map((day, i) => {
-      const date = new Date(weekStart)
-      date.setDate(date.getDate() + i)
-      const ds = date.toISOString().split('T')[0]
-      const dayWorkouts = workouts.filter(w => w.date === ds)
-      return { day, count: dayWorkouts.length, duration: dayWorkouts.reduce((s, w) => s + w.duration_minutes, 0) }
-    })
-
-    const calorieByDay = DAYS.map((day, i) => {
-      const date = new Date(weekStart)
-      date.setDate(date.getDate() + i)
-      const ds = date.toISOString().split('T')[0]
-      const dayFoods = foods.filter(f => f.date === ds)
-      const cal = dayFoods.flatMap(f => (f.foods as { calories?: number }[]).map(x => x.calories || 0)).reduce((a, b) => a + b, 0)
-      return { day, calories: cal }
-    })
-
-    const weightByDay = metrics.filter(m => m.weight_kg).map(m => ({
-      day: m.date.slice(5),
-      weight: m.weight_kg,
-    }))
-
-    const summaryText = generateWeeklySummary(workoutCount, totalDuration, foodLogCount, avgCalories, weightChange, weekTarget)
-
-    setData({ workoutCount, totalDuration, foodLogCount, avgCalories, weightChange, workoutByDay, calorieByDay, weightByDay, summaryText, weekTarget })
-    setLoading(false)
-  }, [router, supabase])
+      const response = await fetch(`/api/weekly-log?week_start=${ws}`, { cache: 'no-store' })
+      if (response.status === 401) { router.push('/auth'); return }
+      if (!response.ok) throw new Error('读取失败')
+      const payload = await response.json()
+      setData(payload.data)
+    } catch (reason) {
+      console.error('[weekly] load failed', reason)
+      setData(null)
+    } finally {
+      setLoading(false)
+    }
+  }, [router])
 
   useEffect(() => { void Promise.resolve().then(() => load(weekOffset)) }, [load, weekOffset])
 
-  const weekStart = getWeekStart(new Date())
-  weekStart.setDate(weekStart.getDate() - weekOffset * 7)
-  const weekLabel = weekOffset === 0 ? '本周' : weekOffset === 1 ? '上周' : `${weekStart.toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' })} 那周`
+  const weekLabel = weekOffset === 0
+    ? '本周'
+    : weekOffset === 1
+      ? '上周'
+      : data
+        ? `${data.week_start.slice(5)} 那周`
+        : `${weekOffset} 周前`
+
+  const weightSeries = (data?.body.weight_rolling_7d ?? []).map((point) => ({
+    day: dayLabel(point.date),
+    weight: point.value,
+  }))
+  const calorieSeries = (data?.nutrition.calories.series ?? []).map((point) => ({
+    day: dayLabel(point.date),
+    calories: point.value,
+  }))
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      <PageHeader title="每周报告" />
+      <PageHeader title="周报" back />
 
-      {/* Week switcher */}
-      <div className="bg-white px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-        <button onClick={() => setWeekOffset(w => w + 1)} className="text-gray-400 text-xl px-2">←</button>
-        <p className="text-sm font-medium">{weekLabel}</p>
-        <button onClick={() => setWeekOffset(w => Math.max(0, w - 1))} disabled={weekOffset === 0}
-          className="text-gray-400 text-xl px-2 disabled:opacity-30">→</button>
-      </div>
+      <div className="px-4 py-4 space-y-4">
+        {/* Week navigation */}
+        <div className="flex items-center justify-between bg-white rounded-2xl px-4 py-3">
+          <button onClick={() => setWeekOffset((value) => value + 1)}
+            className="text-sm text-gray-500">← 上一周</button>
+          <p className="text-sm font-semibold">{weekLabel}</p>
+          <button onClick={() => setWeekOffset((value) => Math.max(0, value - 1))}
+            disabled={weekOffset === 0}
+            className="text-sm text-gray-500 disabled:opacity-30">下一周 →</button>
+        </div>
 
-      {loading ? (
-        <p className="text-center text-sm text-gray-400 py-12">加载中…</p>
-      ) : !data || (data.workoutCount === 0 && data.foodLogCount === 0) ? (
-        <div className="text-center py-12"><p className="text-gray-400 text-sm">本周暂无数据</p></div>
-      ) : (
-        <div className="px-4 py-4 space-y-4">
-          {/* Summary */}
-          <div className="bg-white rounded-2xl p-4">
-            <p className="text-sm text-gray-700 leading-relaxed">{data.summaryText}</p>
-          </div>
+        {loading && <p className="text-center text-sm text-gray-400 py-8">加载中…</p>}
 
-          {/* Metrics */}
-          <div className="grid grid-cols-2 gap-3">
-            {[
-              { label: '本周训练次数', value: `${data.workoutCount} 次` },
-              { label: '本周总时长', value: `${data.totalDuration} 分钟` },
-              { label: '饮食记录次数', value: `${data.foodLogCount} 次` },
-              { label: '平均热量', value: data.avgCalories > 0 ? `${data.avgCalories} kcal` : '—' },
-            ].map(({ label, value }) => (
-              <div key={label} className="bg-white rounded-2xl p-4">
-                <p className="text-xs text-gray-400 mb-1">{label}</p>
-                <p className="text-base font-semibold">{value}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Workout trend */}
-          <div className="bg-white rounded-2xl p-4">
-            <p className="text-sm font-semibold mb-3">本周训练趋势</p>
-            <ResponsiveContainer width="100%" height={100}>
-              <BarChart data={data.workoutByDay}>
-                <XAxis dataKey="day" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
-                <Tooltip formatter={(v: number) => [`${v} 分钟`, '']} contentStyle={{ fontSize: 11, border: 'none', background: '#f5f5f5', borderRadius: 8 }} />
-                <Bar dataKey="duration" fill="#000" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Calorie trend */}
-          {data.calorieByDay.some(d => d.calories > 0) && (
+        {!loading && data && (
+          <>
+            {/* Hero summary */}
             <div className="bg-white rounded-2xl p-4">
-              <p className="text-sm font-semibold mb-3">热量趋势</p>
-              <ResponsiveContainer width="100%" height={100}>
-                <BarChart data={data.calorieByDay}>
-                  <XAxis dataKey="day" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
-                  <Tooltip formatter={(v: number) => [`${v} kcal`, '']} contentStyle={{ fontSize: 11, border: 'none', background: '#f5f5f5', borderRadius: 8 }} />
-                  <Bar dataKey="calories" fill="#888" radius={[4, 4, 0, 0]} />
+              <h2 className="text-sm font-semibold mb-3">本周概览</h2>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <p className="text-xs text-gray-400">训练次数</p>
+                  <p className="text-sm font-semibold">{data.training.workout_count} 次</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400">总时长</p>
+                  <p className="text-sm font-semibold">{data.training.total_duration_minutes} 分钟</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400">记录饮食天数</p>
+                  <p className="text-sm font-semibold">{data.nutrition.days_logged} / 7 天</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400">训练时长趋势</p>
+                  <p className={`text-sm font-semibold ${TREND_CLASS[data.training.duration_trend.direction]}`}>
+                    {TREND_TEXT[data.training.duration_trend.direction]}
+                  </p>
+                </div>
+              </div>
+              {data.training.types.length > 0 && (
+                <p className="mt-3 text-xs text-gray-400">训练类型：{data.training.types.join('、')}</p>
+              )}
+            </div>
+
+            {/* Training trend */}
+            <div className="bg-white rounded-2xl p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-sm font-semibold">训练趋势</h2>
+                <span className="text-xs text-gray-400">按天时长</span>
+              </div>
+              {/* Product §23.1: report unavailable metrics instead of faking them. */}
+              {data.training.unavailable_metrics.length > 0 && (
+                <p className="mb-2 text-xs leading-5 text-gray-400">
+                  肌群训练量与计划依从性暂不可计算，需要可靠的动作—肌群映射与规则支持。
+                </p>
+              )}
+              <ResponsiveContainer width="100%" height={90}>
+                <BarChart data={data.days.map((day) => ({
+                  day: dayLabel(day.date),
+                  minutes: day.duration_minutes,
+                }))}>
+                  <XAxis dataKey="day" hide />
+                  <Tooltip
+                    formatter={(value: number) => [`${value} 分钟`, '']}
+                    labelFormatter={() => ''}
+                    contentStyle={{ fontSize: 11, border: 'none', background: '#f5f5f5', borderRadius: 8 }}
+                  />
+                  <Bar dataKey="minutes" fill="#888" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
-            </div>
-          )}
-
-          {/* Weight change */}
-          {data.weightByDay.length >= 2 && (
-            <div className="bg-white rounded-2xl p-4">
-              <div className="flex justify-between items-center mb-3">
-                <p className="text-sm font-semibold">体重变化</p>
-                {data.weightChange !== null && (
-                  <p className={`text-sm font-medium ${data.weightChange < 0 ? 'text-green-600' : data.weightChange > 0 ? 'text-red-500' : 'text-gray-400'}`}>
-                    {data.weightChange > 0 ? '+' : ''}{data.weightChange} kg
-                  </p>
-                )}
+              <div className="mt-2 flex justify-between text-xs text-gray-400">
+                <span>完成组数 {data.training.total_completed_sets ?? '—'}</span>
+                <span>
+                  总容量 {data.training.total_volume_kg === null
+                    ? '—'
+                    : `${round(data.training.total_volume_kg)} kg`}
+                </span>
               </div>
-              <ResponsiveContainer width="100%" height={80}>
-                <LineChart data={data.weightByDay}>
-                  <XAxis dataKey="day" hide />
-                  <Tooltip formatter={(v: number) => [`${v} kg`, '']} contentStyle={{ fontSize: 11, border: 'none', background: '#f5f5f5', borderRadius: 8 }} />
-                  <Line type="monotone" dataKey="weight" stroke="#000" strokeWidth={2} dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
             </div>
-          )}
-        </div>
-      )}
+
+            {/* Nutrition trend — all four macros (Product §23.2) */}
+            <div className="bg-white rounded-2xl p-4">
+              <h2 className="text-sm font-semibold mb-3">营养趋势</h2>
+
+              {calorieSeries.some((point) => point.calories !== null) ? (
+                <ResponsiveContainer width="100%" height={90}>
+                  <BarChart data={calorieSeries}>
+                    <XAxis dataKey="day" hide />
+                    <Tooltip
+                      formatter={(value: number) => [`${round(value)} kcal`, '']}
+                      labelFormatter={() => ''}
+                      contentStyle={{ fontSize: 11, border: 'none', background: '#f5f5f5', borderRadius: 8 }}
+                    />
+                    <Bar dataKey="calories" fill="#888" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="text-xs text-gray-400">本周还没有饮食记录</p>
+              )}
+
+              <div className="mt-3 space-y-1.5">
+                {([
+                  ['热量', 'calories', data.nutrition.calories.trend, 'kcal', data.nutrition.target.calories_kcal],
+                  ['蛋白质', 'protein', data.nutrition.protein.trend, 'g', data.nutrition.target.protein_g],
+                  ['碳水', 'carbs', data.nutrition.carbs.trend, 'g', data.nutrition.target.carbs_g],
+                  ['脂肪', 'fat', data.nutrition.fat.trend, 'g', data.nutrition.target.fat_g],
+                ] as const).map(([label, key, trend, unit, target]) => (
+                  <div key={key} className="flex items-baseline justify-between">
+                    <span className="text-xs text-gray-500">{label}</span>
+                    <span className="text-xs text-gray-600">
+                      {trend.mean === null
+                        ? '—'
+                        : `日均 ${round(trend.mean, unit === 'kcal' ? 0 : 1)} ${unit}`}
+                      {target === null
+                        ? <span className="ml-2 text-gray-400">未设目标</span>
+                        : <span className="ml-2 text-gray-400">目标 {target} {unit}</span>}
+                      <span className={`ml-2 ${TREND_CLASS[trend.direction]}`}>
+                        {TREND_TEXT[trend.direction]}
+                      </span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+              {/* Product §23.2: reference-day counts need the Evidence engine. */}
+              <p className="mt-2 text-xs text-gray-400">
+                低于 / 高于参考范围的天数需要 Evidence Registry 支持，暂不展示。
+              </p>
+            </div>
+
+            {/* Body trend */}
+            <div className="bg-white rounded-2xl p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-sm font-semibold">体重趋势</h2>
+                <span className={`text-xs ${TREND_CLASS[data.body.weight_trend.direction]}`}>
+                  {TREND_TEXT[data.body.weight_trend.direction]}
+                </span>
+              </div>
+              {weightSeries.filter((point) => point.weight !== null).length >= 2 ? (
+                <ResponsiveContainer width="100%" height={90}>
+                  <LineChart data={weightSeries}>
+                    <XAxis dataKey="day" hide />
+                    <Tooltip
+                      formatter={(value: number) => [`${round(value, 1)} kg`, '']}
+                      labelFormatter={() => ''}
+                      contentStyle={{ fontSize: 11, border: 'none', background: '#f5f5f5', borderRadius: 8 }}
+                    />
+                    <Line type="monotone" dataKey="weight" stroke="#000" strokeWidth={2} dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="text-xs text-gray-400">本周体重数据不足（需要至少 3 次记录才能判断趋势）</p>
+              )}
+              <p className="mt-2 text-xs text-gray-400">
+                使用 7 日滚动均值，避免单日波动被当成趋势。
+              </p>
+            </div>
+
+            {/* Recovery trend — Product §23.4, no composite score */}
+            <div className="bg-white rounded-2xl p-4">
+              <h2 className="text-sm font-semibold mb-3">恢复趋势</h2>
+              {data.recovery.answered_days === 0 ? (
+                <p className="text-xs text-gray-400">本周未记录主观恢复</p>
+              ) : (
+                <div className="space-y-1.5">
+                  <div className="flex justify-between">
+                    <span className="text-xs text-gray-500">平均睡眠感受</span>
+                    <span className="text-xs text-gray-700">
+                      {data.recovery.average_sleep === null ? '—' : `${data.recovery.average_sleep} / 5`}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-xs text-gray-500">平均训练后恢复</span>
+                    <span className="text-xs text-gray-700">
+                      {data.recovery.average_post_workout_recovery === null
+                        ? '—'
+                        : `${data.recovery.average_post_workout_recovery} / 5`}
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-400">
+                    已回答 {data.recovery.answered_days} / {data.recovery.total_days} 天 · 仅为主观自评
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Weekly Review — AI later; Product §24 slots */}
+            <div className="bg-white rounded-2xl p-4">
+              <h2 className="text-sm font-semibold mb-2">本周复盘</h2>
+              <p className="text-xs leading-5 text-gray-400">
+                趋势判断由规则引擎给出，文字复盘将在 AI Composer 阶段接入。
+              </p>
+            </div>
+          </>
+        )}
+
+        {!loading && !data && (
+          <p className="text-center text-sm text-gray-400 py-8">暂时无法读取周记录</p>
+        )}
+      </div>
 
       <BottomNav />
     </div>

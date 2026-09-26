@@ -4,7 +4,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import PageHeader from '@/components/PageHeader'
 import { useToast } from '@/components/Toast'
-import { invalidateAIReview } from '@/lib/utils'
+import { invalidateDayDerivedCache } from '@/lib/utils'
 interface WorkoutLog {
   id: string
   type: string
@@ -27,6 +27,7 @@ interface AIReview {
   tone: string
   cached: boolean
   feedback?: string | null
+  input_snapshot_id?: string | null
 }
 
 interface BodyMetric {
@@ -70,7 +71,7 @@ export default function HistoryDetailPage() {
 
   // Trigger AI review — sessionStorage cache per date so revisiting is instant
   const triggerAIReview = useCallback(async (forceRefresh = false) => {
-    const cacheKey = `ai_review_${date}`
+    const cacheKey = `ai_review_v3_${date}`
 
     if (!forceRefresh && typeof window !== 'undefined') {
       const cached = sessionStorage.getItem(cacheKey)
@@ -85,7 +86,10 @@ export default function HistoryDetailPage() {
       const res = await fetch('/api/ai/daily-review', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ date }),
+        body: JSON.stringify({
+          date,
+          time_zone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        }),
       })
       if (!res.ok) throw new Error('failed')
       const data = await res.json()
@@ -114,7 +118,11 @@ export default function HistoryDetailPage() {
     if (type === 'workout') {
       ;({ error } = await supabase.from('workout_logs').delete().eq('id', id))
     } else if (type === 'food') {
-      ;({ error } = await supabase.from('food_logs').delete().eq('id', id))
+      const response = await fetch(`/api/nutrition/food-log/${id}`, { method: 'DELETE' })
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null)
+        error = { message: payload?.error?.message || '删除失败' }
+      }
     } else if (type === 'metric') {
       ;({ error } = await supabase.from('body_metrics').delete().eq('id', id))
     }
@@ -123,9 +131,12 @@ export default function HistoryDetailPage() {
       show('删除失败', 'error')
     } else {
       const { data: { user } } = await supabase.auth.getUser()
-      if (user) await invalidateAIReview(supabase, user.id, date)
+      if (user) await invalidateDayDerivedCache(supabase, user.id, date)
       // Clear sessionStorage so next visit regenerates
-      if (typeof window !== 'undefined') sessionStorage.removeItem(`ai_review_${date}`)
+      if (typeof window !== 'undefined') {
+        sessionStorage.removeItem(`ai_review_${date}`)
+        sessionStorage.removeItem(`ai_review_v3_${date}`)
+      }
       show('操作成功')
       load()
       setAiReview(null)
@@ -138,11 +149,15 @@ export default function HistoryDetailPage() {
     const next = aiReview.feedback === feedback ? null : feedback
     setAiReview(r => r ? { ...r, feedback: next } : r)
     setFeedbackSaving(true)
-    await fetch('/api/ai/daily-review', {
+    const response = await fetch('/api/ai/daily-review', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ date, feedback: next }),
     })
+    if (!response.ok) {
+      setAiReview(r => r ? { ...r, feedback: aiReview.feedback ?? null } : r)
+      show('当前复盘缺少可追溯信息，暂不能评价', 'error')
+    }
     setFeedbackSaving(false)
   }
 
@@ -285,7 +300,7 @@ export default function HistoryDetailPage() {
         <div className="bg-white rounded-2xl p-4">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-semibold">AI 今日复盘</h2>
-            {aiReview && !aiLoading && (
+            {aiReview?.input_snapshot_id && !aiLoading && (
               <div className="flex gap-1.5">
                 <button onClick={() => handleFeedback('liked')}
                   className={`text-base px-1.5 py-0.5 rounded-lg transition-colors ${aiReview.feedback === 'liked' ? 'bg-green-50' : 'opacity-40'}`}>

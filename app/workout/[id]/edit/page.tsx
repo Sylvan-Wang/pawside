@@ -4,7 +4,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import PageHeader from '@/components/PageHeader'
 import { useToast } from '@/components/Toast'
-import { invalidateAIReview } from '@/lib/utils'
+import { invalidateDayDerivedCache } from '@/lib/utils'
 
 const WORKOUT_TYPES = ['胸', '背', '腿', '肩', '手臂', '有氧', '拉伸', '其他']
 
@@ -28,12 +28,14 @@ export default function EditWorkoutPage() {
   const [exercises, setExercises] = useState<Exercise[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [originalDate, setOriginalDate] = useState('')
 
   useEffect(() => {
     async function loadData() {
       const { data, error } = await supabase.from('workout_logs').select('*').eq('id', id).single()
       if (error || !data) { router.back(); return }
       setDate(data.date)
+      setOriginalDate(data.date)
       setType(data.type)
       setDuration(String(data.duration_minutes))
       setNotes(data.notes || '')
@@ -83,7 +85,13 @@ export default function EditWorkoutPage() {
       }).eq('id', id)
       if (error) throw error
       const { data: { user } } = await supabase.auth.getUser()
-      if (user) await invalidateAIReview(supabase, user.id, date)
+      if (user) {
+        await Promise.all(
+          [...new Set([originalDate, date])]
+            .filter(Boolean)
+            .map((affectedDate) => invalidateDayDerivedCache(supabase, user.id, affectedDate)),
+        )
+      }
       show('保存成功')
       setTimeout(() => router.back(), 1200)
     } catch (err: unknown) {

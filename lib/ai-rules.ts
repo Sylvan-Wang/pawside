@@ -36,7 +36,7 @@ export interface UserProfile {
   height_cm: number
   weight_kg: number    // onboarding weight, fallback
   weekly_workout_target: number
-  daily_calorie_target: number
+  daily_calorie_target: number | null
 }
 
 export interface BodyMetric {
@@ -49,24 +49,24 @@ export interface BodyMetric {
 type CalorieFlag =
   | 'severely_low' | 'very_low' | 'normal_input_range' | 'severely_high'
   | 'too_low_for_goal' | 'on_target' | 'slightly_high_for_goal' | 'high_for_goal'
-  | 'slightly_high_but_acceptable' | 'no_food_logged'
-
-function estimateMaintenance(weight_kg: number): number {
-  return Math.round(weight_kg * 31)
-}
+  | 'slightly_high_but_acceptable' | 'no_food_logged' | 'no_target'
 
 export function evaluateCalories(
   totalCalories: number,
   profile: UserProfile,
-  currentWeight: number,
+  _currentWeight: number,
 ): CalorieFlag {
+  // Kept in the legacy signature for compatibility only; it must never become
+  // an implicit calorie-target input again.
+  void _currentWeight
   if (totalCalories === 0) return 'no_food_logged'
+  // Legacy compatibility only: never recreate the removed weight × 31 target.
+  // Without an explicit user target there is no authorised comparison.
+  if (profile.daily_calorie_target === null || profile.daily_calorie_target <= 0) {
+    return 'no_target'
+  }
 
-  // Input anomaly detection first
-  if (totalCalories < 800) return 'severely_low'
-  if (totalCalories > 5000) return 'severely_high'
-
-  const target = profile.daily_calorie_target || estimateMaintenance(currentWeight)
+  const target = profile.daily_calorie_target
   const ratio = totalCalories / target
   const goal = profile.goal
 
@@ -148,7 +148,7 @@ export interface PreprocessedData {
     height_cm: number
     weight_kg: number
     weekly_workout_target: number
-    daily_calorie_target: number
+    daily_calorie_target: number | null
   }
   daily_workout_summary: {
     count: number

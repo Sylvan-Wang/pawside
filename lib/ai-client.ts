@@ -148,7 +148,7 @@ function extractOutputText(payload: unknown): string | null {
   return parts?.length ? parts.join('') : null
 }
 
-async function callStructuredOutput<T>(
+export async function callStructuredOutput<T>(
   instructions: string,
   input: string,
   schemaName: string,

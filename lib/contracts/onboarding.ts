@@ -22,6 +22,31 @@ export const equipmentAccessOptions = [
 ] as const
 export const preferredSessionMinutesOptions = [30, 45, 60, 90] as const
 
+/**
+ * Source: Product Patch §4 — the user sets the daily calorie target themselves.
+ * The bound is a tamper guard, not a safety threshold: AI Patch §14 /
+ * E-NUT-SAFE-001 establish that this product has no universal calorie floor,
+ * so no lower "danger" limit may be encoded here.
+ */
+export const dailyCalorieTargetBounds = { min: 500, max: 20000 } as const
+
+/**
+ * Source: Product Patch §3.1 / §2 Layer 1 — weekly training target is a Target
+ * layer input. Bounds are a tamper guard only; they are not an adherence rule.
+ */
+export const weeklyWorkoutTargetBounds = { min: 1, max: 21 } as const
+
+/**
+ * Hard ceiling used by the SQL contract for `daily_calorie_target`.
+ *
+ * The SQL function uses `numeric(10,2)`, which allows values far beyond any
+ * plausible calorie target. The database guard is therefore a tamper ceiling,
+ * not a product or safety threshold: AI Patch §14 / E-NUT-SAFE-001 establish
+ * that Pawside has no universal calorie floor, so no lower "danger" bound is
+ * encoded here. Keep in sync with `dailyCalorieTargetBounds.max`.
+ */
+export const DAILY_CALORIE_TARGET_SQL_CEILING = 20000
+
 export type OnboardingGoal = (typeof onboardingGoals)[number]
 export type OnboardingGender = (typeof onboardingGenders)[number]
 export type OnboardingWeightUnit = (typeof onboardingWeightUnits)[number]
@@ -43,13 +68,52 @@ export interface OnboardingInput {
   height_cm: number
   reference_weight_kg: number
   weight_unit: OnboardingWeightUnit
+  /**
+   * Product Patch §4: the only nutrition target the user must set themselves.
+   * `null` is a legitimate, representable state — Product Patch §27 requires the
+   * UI to show consumed without a fabricated target, and baseline §3.2 requires
+   * missing target to stay `null` rather than defaulting to a number.
+   */
+  daily_calorie_target: number | null
+  weekly_workout_target: number | null
   capability_profile: CapabilityProfileInput | null
   join_method: boolean
+  time_zone: string
 }
 
 type ValidationResult =
   | { success: true; data: OnboardingInput }
   | { success: false; issues: string[] }
+
+/**
+ * Parses a Target-layer numeric field that may legitimately be absent.
+ *
+ * Distinct states (Guardrail §12):
+ *   absent / null / ''      -> null  (not recorded, never coerced to a default)
+ *   non-numeric junk        -> issue (rejected)
+ *   outside bounds          -> issue (includes 0 and negatives)
+ *   valid number            -> number
+ *
+ * Source: Product Patch §4 (user sets calories), §27 (target may be unset).
+ */
+function parseOptionalTarget(
+  value: unknown,
+  bounds: { min: number; max: number },
+  fieldName: string,
+  issues: string[],
+): number | null {
+  if (value === undefined || value === null || value === '') return null
+
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    issues.push(`${fieldName} 必须是数字，或留空表示未设置`)
+    return null
+  }
+  if (value < bounds.min || value > bounds.max) {
+    issues.push(`${fieldName} 必须在 ${bounds.min} 到 ${bounds.max} 之间`)
+    return null
+  }
+  return value
+}
 
 export function parseOnboardingInput(value: unknown): ValidationResult {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
@@ -84,8 +148,35 @@ export function parseOnboardingInput(value: unknown): ValidationResult {
   if (!onboardingWeightUnits.includes(input.weight_unit as OnboardingWeightUnit)) {
     issues.push('weight_unit 必须是 kg 或 lb')
   }
+
+  /**
+   * Target layer fields. Both accept `null` / omitted to mean "not set", which
+   * must remain distinct from `0` (Guardrail §12). We never substitute a default
+   * here — see Guardrail §2.2 and baseline §3.2.
+   */
+  const dailyCalorieTarget = parseOptionalTarget(
+    input.daily_calorie_target,
+    dailyCalorieTargetBounds,
+    'daily_calorie_target',
+    issues,
+  )
+  const weeklyWorkoutTarget = parseOptionalTarget(
+    input.weekly_workout_target,
+    weeklyWorkoutTargetBounds,
+    'weekly_workout_target',
+    issues,
+  )
   if (input.join_method !== undefined && typeof input.join_method !== 'boolean') {
     issues.push('join_method 必须是布尔值')
+  }
+
+  const timeZone = typeof input.time_zone === 'string' && input.time_zone.trim()
+    ? input.time_zone.trim()
+    : 'UTC'
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone }).format()
+  } catch {
+    issues.push('time_zone 必须是有效的 IANA 时区')
   }
 
   let capabilityProfile: CapabilityProfileInput | null = null
@@ -138,8 +229,11 @@ export function parseOnboardingInput(value: unknown): ValidationResult {
       height_cm: input.height_cm as number,
       reference_weight_kg: input.reference_weight_kg as number,
       weight_unit: input.weight_unit as OnboardingWeightUnit,
+      daily_calorie_target: dailyCalorieTarget,
+      weekly_workout_target: weeklyWorkoutTarget,
       capability_profile: capabilityProfile,
       join_method: input.join_method === true,
+      time_zone: timeZone,
     },
   }
 }

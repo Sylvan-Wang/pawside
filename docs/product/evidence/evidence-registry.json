@@ -1,0 +1,317 @@
+{
+  "schemaVersion": 1,
+  "registryVersion": "evidence_v0",
+  "note": "Pawside Evidence Registry. Every explainable judgement must resolve to an item here (AI Patch §3, §4, §35). A metric with no applicable item resolves to not_assessable — code must never invent a threshold (Guardrail §1.1, §4). External sources enter the product ONLY through this file.",
+  "evidenceLevels": {
+    "A": "Guideline threshold (national / WHO)",
+    "B": "Professional consensus (ACSM, IOC, ISSN)",
+    "C": "Research-derived range",
+    "D": "Pawside heuristic derived from A/B/C"
+  },
+  "items": [
+    {
+      "evidence_id": "E-BODY-001",
+      "metric_key": "body.bmi",
+      "population": "chinese_adults",
+      "formula": "weight_kg / (height_m ^ 2)",
+      "reference_type": "range",
+      "reference_value": { "low": 18.5, "high": 23.9, "overweight_from": 24.0, "obese_from": 28.0 },
+      "evidence_level": "A",
+      "source_org": "国家卫生健康委",
+      "source_title": "居民体重管理核心知识（2024年版）",
+      "source_year": 2024,
+      "source_url": "https://www.nhc.gov.cn/ylyjs/gzdt/202407/9ec6136773bc41048a39f275fcc37b44.shtml",
+      "allowed_claims": ["根据我国成年人 BMI 参考范围……"],
+      "forbidden_claims": [
+        "BMI 直接代表体脂率",
+        "BMI 直接代表肌肉量",
+        "BMI 代表个人训练状态"
+      ],
+      "applicability_notes": ["高肌肉量训练者必须提示 BMI 局限"],
+      "version": "1"
+    },
+    {
+      "evidence_id": "E-BODY-002",
+      "metric_key": "body.weight_trend",
+      "population": "general",
+      "reference_type": "no_universal_threshold",
+      "evidence_level": null,
+      "source_org": "Pawside",
+      "source_title": "Weight trend interpretation policy",
+      "source_year": 2026,
+      "source_url": "",
+      "allowed_claims": ["体重趋势呈上升/下降/稳定/波动", "数据还不够，继续记录后再判断趋势"],
+      "forbidden_claims": [
+        "单日体重变化等于减脂成功",
+        "某个体重趋势构成医学结论"
+      ],
+      "applicability_notes": [
+        "单日体重变化不用于评价减脂质量（AI Patch §21）",
+        "必须使用 7 日滚动均值或多周趋势"
+      ],
+      "version": "1"
+    },
+    {
+      "evidence_id": "E-ACT-001",
+      "metric_key": "activity.weekly_aerobic",
+      "population": "adults_18_64",
+      "reference_type": "range",
+      "reference_value": { "moderate_min_per_week": [150, 300], "vigorous_min_per_week": [75, 150] },
+      "evidence_level": "A",
+      "source_org": "WHO",
+      "source_title": "Physical activity fact sheet",
+      "source_year": 2024,
+      "source_url": "https://www.who.int/europe/news-room/fact-sheets/item/physical-activity",
+      "allowed_claims": ["低于一般成年人建议范围"],
+      "forbidden_claims": ["用户已达到 WHO 有氧活动指南"],
+      "applicability_notes": [
+        "当前 Workout Log 没有 aerobic_intensity 映射，因此不得声称达到该指南（AI Patch §6.1 / AC-AI05）",
+        "weekly_logged_training_minutes 只是记录事实，不是 moderate-equivalent minutes"
+      ],
+      "version": "1"
+    },
+    {
+      "evidence_id": "E-RT-001",
+      "metric_key": "training.strength_frequency",
+      "population": "adults",
+      "reference_type": "minimum",
+      "reference_value": { "days_per_week": 2 },
+      "evidence_level": "A",
+      "source_org": "WHO",
+      "source_title": "Physical activity fact sheet — muscle strengthening",
+      "source_year": 2024,
+      "source_url": "https://www.who.int/europe/news-room/fact-sheets/item/physical-activity",
+      "allowed_claims": ["低于一般成年人力量训练建议频率"],
+      "forbidden_claims": ["所有主要肌群已被覆盖"],
+      "applicability_notes": [
+        "只知道训练次数不足以确认主要肌群覆盖，必须有 muscle-group coverage（AI Patch §7）"
+      ],
+      "version": "1"
+    },
+    {
+      "evidence_id": "E-RT-002",
+      "metric_key": "training.hypertrophy_volume",
+      "population": "resistance_trained_adults",
+      "goal": "gain_muscle",
+      "reference_type": "target",
+      "reference_value": { "sets_per_muscle_per_week": 10 },
+      "evidence_level": "B",
+      "source_org": "ACSM",
+      "source_title": "Resistance Training Position Stand",
+      "source_year": 2026,
+      "source_url": "https://acsm.org/resistance-training-guidelines-update-2026/",
+      "allowed_claims": ["接近 ACSM 对肌肥大训练量的常见优化参考"],
+      "forbidden_claims": [
+        "少于 10 组就是不健康",
+        "10 组是健康安全线"
+      ],
+      "applicability_notes": [
+        "这是训练目标优化量，不是安全阈值（AI Patch §7 / AC-AI04）",
+        "需要可靠的 muscle-group 映射；当前不具备"
+      ],
+      "version": "1"
+    },
+    {
+      "evidence_id": "E-NUT-PROTEIN-REF",
+      "metric_key": "nutrition.protein_intake",
+      "population": "healthy_exercising_adults",
+      "reference_type": "range",
+      "reference_value": { "g_per_kg_per_day": [1.4, 2.0] },
+      "evidence_level": "B",
+      "source_org": "ISSN",
+      "source_title": "Position Stand — Protein and Exercise",
+      "source_year": 2017,
+      "source_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5477153/",
+      "allowed_claims": ["按常见运动人群建议……"],
+      "forbidden_claims": ["官方规定你必须吃这个量"],
+      "applicability_notes": [
+        "不自动适用于未成年人、妊娠/哺乳、已知肾脏疾病或需要临床营养管理的人群（AI Patch §11.2）",
+        "产品必须声明为一般健康成人训练参考，不替代医疗建议"
+      ],
+      "version": "1"
+    },
+    {
+      "evidence_id": "E-NUT-PROTEIN-OP",
+      "metric_key": "nutrition.protein_target",
+      "population": "healthy_exercising_adults",
+      "reference_type": "target",
+      "reference_value": { "g_per_kg_per_day": 1.6 },
+      "formula": "body_weight_kg * 1.6",
+      "evidence_level": "D",
+      "source_org": "Pawside",
+      "source_title": "Pawside operational protein target",
+      "source_year": 2026,
+      "source_url": "https://bjsm.bmj.com/content/52/6/376",
+      "allowed_claims": ["Pawside 参考运动营养研究，为你生成约 XXg/day 的蛋白质建议。"],
+      "forbidden_claims": ["官方规定你必须吃 XXg"],
+      "applicability_notes": [
+        "位于 ISSN 1.4–2.0 g/kg/day 范围内，接近 Morton 2018 meta-analysis 的 ~1.62 g/kg/day 平台点",
+        "Evidence D：必须标注为 Pawside operational target（AI Patch §11.1 / AC-AI06）"
+      ],
+      "version": "1"
+    },
+    {
+      "evidence_id": "E-NUT-MACRO-DIST",
+      "metric_key": "nutrition.macro_distribution",
+      "population": "chinese_adults",
+      "reference_type": "range",
+      "reference_value": {
+        "carb_energy_pct": [50, 65],
+        "fat_energy_pct": [20, 30],
+        "protein_energy_pct": [10, 15],
+        "fiber_g_per_day": [25, 30]
+      },
+      "evidence_level": "A",
+      "source_org": "国家卫生健康委",
+      "source_title": "WS/T 578.1—2017 宏量营养素参考摄入量",
+      "source_year": 2017,
+      "source_url": "https://www.nhc.gov.cn/ewebeditor/uploadfile/2017/10/20171017152901174.pdf",
+      "allowed_claims": ["属于一般成人参考范围"],
+      "forbidden_claims": ["超过系统建议即等于不健康"],
+      "applicability_notes": [
+        "面向规律训练人群时不能机械用 10–15% protein 取代 g/kg 运动蛋白目标（AI Patch §12）",
+        "25% fat 是 Pawside 在该范围内的默认中点，Evidence D"
+      ],
+      "version": "1"
+    },
+    {
+      "evidence_id": "E-NUT-SAFE-001",
+      "metric_key": "nutrition.calorie_safety",
+      "population": "all",
+      "reference_type": "no_universal_threshold",
+      "evidence_level": null,
+      "source_org": "Pawside",
+      "source_title": "Calorie safety policy",
+      "source_year": 2026,
+      "source_url": "",
+      "allowed_claims": ["当前已记录摄入低于你的参考线", "这个目标低于当前可用身体信息推算出的参考范围"],
+      "forbidden_claims": [
+        "女性低于 1200 kcal 危险",
+        "男性低于 1500 kcal 危险",
+        "存在全产品统一的热量安全红线"
+      ],
+      "applicability_notes": [
+        "证据不支持所有女性 <1200 / 男性 <1500 的统一诊断规则（AI Patch §14）",
+        "成人肥胖食养指南的限能量范围仅适用于成人肥胖食养场景，不是通用红线（AI Patch §13）"
+      ],
+      "version": "1"
+    },
+    {
+      "evidence_id": "E-NUT-SAFE-002",
+      "metric_key": "nutrition.rmr_estimate",
+      "population": "all",
+      "reference_type": "no_universal_threshold",
+      "formula": "Mifflin-St Jeor (requires weight, height, age, sex)",
+      "evidence_level": "C",
+      "source_org": "Pawside",
+      "source_title": "Estimated RMR policy",
+      "source_year": 2026,
+      "source_url": "",
+      "allowed_claims": ["estimated_rmr（估算值）"],
+      "forbidden_claims": ["your exact basal metabolism", "精确基础代谢"],
+      "applicability_notes": [
+        "只能叫 estimate；预测公式存在显著个体误差（AI Patch §16）",
+        "当前 Onboarding 缺 age，因此个体 RMR caution 必须返回 not_assessable，禁止偷偷省略 age（AI Patch §16.1 / AC-AI08）"
+      ],
+      "version": "1"
+    },
+    {
+      "evidence_id": "E-NUT-SAFE-003",
+      "metric_key": "nutrition.energy_availability",
+      "population": "athletes",
+      "reference_type": "no_universal_threshold",
+      "reference_value": { "historical_lea_reference_kcal_per_kg_ffm": 30 },
+      "evidence_level": "B",
+      "source_org": "IOC",
+      "source_title": "IOC Consensus Statement on Relative Energy Deficiency in Sport (RED-S)",
+      "source_year": 2023,
+      "source_url": "https://bjsm.bmj.com/content/57/17/1073.long",
+      "allowed_claims": ["能量可用性可能偏低，值得关注"],
+      "forbidden_claims": ["EA 29.8，所以你患有 RED-S"],
+      "applicability_notes": [
+        "IOC 明确 30 kcal/kg FFM/day 不是统一诊断阈值",
+        "Pawside V1 无法计算 EA：food completeness 不稳定、exercise kcal 不可靠、FFM 通常缺失，因此 status = not_assessable（AI Patch §18）"
+      ],
+      "version": "1"
+    },
+    {
+      "evidence_id": "E-REC-001",
+      "metric_key": "recovery.self_report",
+      "population": "pawside_users",
+      "reference_type": "no_universal_threshold",
+      "reference_value": { "scale_min": 1, "scale_max": 5 },
+      "evidence_level": "D",
+      "source_org": "Pawside",
+      "source_title": "Recovery V1 self-report scale",
+      "source_year": 2026,
+      "source_url": "",
+      "allowed_claims": ["今日自评恢复较低", "今日自评恢复一般", "今日自评恢复较好"],
+      "forbidden_claims": [
+        "医学恢复不良",
+        "过度训练",
+        "睡眠障碍",
+        "今天禁止训练",
+        "训练量必须降低 X%"
+      ],
+      "applicability_notes": [
+        "只是 subjective signal，不是医学测量（Product Patch §6.2）",
+        "1–5 量表的数值不是判定阈值，不能作为健康或训练决策的阈值使用",
+        "不得由此自动调整训练处方；如需该行为必须另有明确 rule（AI Patch §19 / Product §8）"
+      ],
+      "version": "1"
+    },
+    {
+      "evidence_id": "E-SLEEP-001",
+      "metric_key": "recovery.sleep_duration",
+      "population": "adults",
+      "reference_type": "range",
+      "reference_value": { "hours_per_night": [7, 8] },
+      "evidence_level": "A",
+      "source_org": "国家卫生健康委",
+      "source_title": "睡眠健康核心信息（2025）",
+      "source_year": 2025,
+      "source_url": "https://www.nhc.gov.cn/guihuaxxs/c100133/202503/70d5836afe804a858b899ee951a24a13.shtml",
+      "allowed_claims": ["一般成年人建议睡眠时长为 7–8 小时"],
+      "forbidden_claims": ["用户的睡眠时长不足"],
+      "applicability_notes": [
+        "Pawside V1 不记录 sleep duration，因此该 evidence 不参与当前自动评分（AI Patch §20）"
+      ],
+      "version": "1"
+    },
+    {
+      "evidence_id": "E-SESSION-001",
+      "metric_key": "training.session_duration",
+      "population": "all",
+      "reference_type": "no_universal_threshold",
+      "evidence_level": null,
+      "source_org": "Pawside",
+      "source_title": "Session duration policy",
+      "source_year": 2026,
+      "source_url": "",
+      "allowed_claims": ["本次记录时间明显长于常见 session，建议检查记录是否准确。"],
+      "forbidden_claims": ["你训练过度", "训练量不健康"],
+      "applicability_notes": [
+        "不存在适用于所有人的 >X 分钟即不健康（AI Patch §8）",
+        "very_short / very_long 只能作为 data quality / anomaly / context"
+      ],
+      "version": "1"
+    },
+    {
+      "evidence_id": "E-SESSION-002",
+      "metric_key": "training.record_completeness",
+      "population": "all",
+      "reference_type": "no_universal_threshold",
+      "evidence_level": null,
+      "source_org": "Pawside",
+      "source_title": "Record completeness policy",
+      "source_year": 2026,
+      "source_url": "",
+      "allowed_claims": ["这次训练只记录了部分动作数据，补上组数或重量能让复盘更准确。"],
+      "forbidden_claims": ["训练量不足", "训练量过高"],
+      "applicability_notes": [
+        "记录完整度是 data_quality domain，不是健康或训练量评价（Product Patch §13 Layer B）"
+      ],
+      "version": "1"
+    }
+  ]
+}

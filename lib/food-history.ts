@@ -4,6 +4,8 @@ export interface FoodHistorySuggestion {
   weight_g: number
   calories: number | null
   protein_g: number | null
+  carbs_g: number | null
+  fat_g: number | null
 }
 
 export interface LegacyFoodLogRow {
@@ -36,11 +38,17 @@ export function buildFoodHistorySuggestions(
 
       const calories = optionalNonNegativeNumber(item.calories ?? item.energy_kcal)
       const protein = optionalNonNegativeNumber(item.protein_g)
+      // Legacy rows carry carbs/fat only when the item was written after the
+      // four-macro bridge landed; older rows legitimately stay null.
+      const carbs = optionalNonNegativeNumber(item.carbs_g ?? item.carb_g)
+      const fat = optionalNonNegativeNumber(item.fat_g)
       const identity = JSON.stringify([
         name.toLocaleLowerCase(),
         weight,
         calories,
         protein,
+        carbs,
+        fat,
       ])
       if (seen.has(identity)) continue
 
@@ -51,6 +59,8 @@ export function buildFoodHistorySuggestions(
         weight_g: weight,
         calories,
         protein_g: protein,
+        carbs_g: carbs,
+        fat_g: fat,
       })
       if (suggestions.length >= limit) return suggestions
     }
