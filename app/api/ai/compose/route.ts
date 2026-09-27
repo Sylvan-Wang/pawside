@@ -136,6 +136,8 @@ export async function POST(request: NextRequest) {
         surface,
         facts,
         signals: interpreted,
+        userId: user.id,
+        scopeId: logId,
         context: {
           session_type: log.type,
           record_completeness: session.record_completeness,
@@ -201,6 +203,8 @@ export async function POST(request: NextRequest) {
       const result = await composeWithEvidence({
         surface,
         facts,
+        userId: user.id,
+        scopeId: `${date}:${parsed.data.meal_type ?? 'all'}`,
         // Meal status already carries domain + evidence_ref_ids from the status
         // layer, so the composer can bind claims without re-deriving anything.
         signals: interpreted.map((status) => ({
@@ -271,6 +275,8 @@ export async function POST(request: NextRequest) {
         surface,
         facts: evidence.facts,
         signals: evidence.signals,
+        userId: user.id,
+        scopeId: date,
         context: evidence.context,
         instructions: promptV2 ? DAILY_REVIEW_INSTRUCTIONS_V2 : DAILY_REVIEW_INSTRUCTIONS,
         ...coachOptions,
@@ -302,6 +308,8 @@ export async function POST(request: NextRequest) {
       surface,
       facts: [],
       signals: [],
+      userId: user.id,
+      scopeId: weekStart,
       context: reviewInput as unknown as Record<string, unknown>,
       instructions:
         '这是周复盘。趋势方向已经由规则引擎判定，你必须复用 computed_trends 中的描述，不得自行判断趋势。'
