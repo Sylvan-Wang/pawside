@@ -8,7 +8,7 @@
 |---|---|---|
 | D1 | 找到成因：一个 14 天前"点开始"但没做完的训练会话，被翻出来继续做，`duration_minutes` 按整段会话算，不是数据错误 | **已核实**（Sylvan 2026-09-27 提供 SQL 结果） |
 | D2 | 正常，不是 bug | **已核实**（Sylvan 2026-09-27） |
-| D3 | `view_date`/`log_date` 不一致的原因未知 | **待核实** — 需要 Sylvan 跑 SQL |
+| D3 | 正常：`view_date` 是"最早可以开始"，`log_date` 是实际训练日，间隔取决于用户节奏 | **已核实**（Sylvan 2026-09-27 提供 SQL 结果） |
 | D4 | 找到成因：`20260925000200_training_date_navigation.sql` 迁移的一次性回填 UPDATE，不是可疑写回 | **已核实**（Sylvan 2026-09-27 提供 SQL 结果） |
 | D5 | 不是 bug，`methods.version` 只是标签没同步 | **已核实**（patch 文档本身已给出结论，见下） |
 
@@ -64,13 +64,25 @@ SQL 结果（session `fe8c6cdc`）：
 
 ## D3 · `view_date` 09-13 和 `log_date` 09-24 不一致
 
-**结论：待核实，需要 Sylvan 跑 SQL 或直接确认。**
+**结论：已核实。正常，符合设计，不是补记功能，也不是写错。**
 
-原始报告没有给出具体的核实 SQL，只说了需要确认"补记旧日期"是正常情况还是日期写错了。需要 Sylvan：
+SQL 结果（补的核实查询）返回两条，两条 `execution_mode` 都是 `canonical`（不是"补充训练"的 `supplemental`，也不是`replay`）：
 
-1. 确认这条记录属于哪个功能路径——是用户在"补记"页面主动选了旧日期，还是某个自动生成逻辑写错了 `log_date`。
-2. 如果是补记功能：这是设计内行为，不用改，只需要在 `docs/coach/HANDOFF.md` 或本文档里记一句"这是正常的补记路径"，避免以后又被当成 bug 查一遍。
-3. 如果不是补记功能：需要贴一下这条记录的 `id`，方便下一个任务追查写入路径。
+| id | view_date | log_date | performed_at / started_at / completed_at |
+|---|---|---|---|
+| `d16075bb…` | 09-13 | 09-24 | 全部是 09-24（03:02–03:35，正常一次约 33 分钟的训练） |
+| `7abadee5…` | 09-11 | 09-12 | performed_at/started_at 09-12，completed_at 09-13 07:22 |
+
+两条都是**同一次真实训练，`started_at` 到 `completed_at` 之间没有异常间隔**（不是 D1 那种"很久以前点开始"的情况）。差异出在 `view_date` 本身：`view_date` 是 `20260925000200_training_date_navigation.sql` 迁移给已有的旧会话做的一次性回填，回填值取的是 `session_prescriptions.planned_for_date`（回填语句：`view_date = coalesce(prescription.planned_for_date, session.log_date)`）。
+
+结合 D2 已经确认的结论——`planned_for_date` 是"这一练从哪天起可以开始"（上一练完成的日期），不是固定日历——这两条记录的意思就是：
+
+- `d16075bb…`：上一练在 09-13 完成，这一练"解锁"了，但用户隔了 11 天，到 09-24 才真正去做。
+- `7abadee5…`：上一练在 09-11 完成，隔了 1 天，09-12 就做了这一练。
+
+**`view_date` = 这一练最早可以开始的日期，`log_date` = 用户实际训练的日期，两者之间的间隔就是"解锁后隔了多久才去练"，间隔多长完全取决于用户自己的节奏，不是 bug，也不是补记功能——补记功能对应的是 `execution_mode = supplemental`，这两条都不是。** 迁移本身的字段注释也印证了这一点：`view_date` "从不决定训练历史的归属"，`log_date` 才是"历史/统计用的日期"。
+
+不需要改代码，也不需要在这两个字段的语义上做任何调整。
 
 ---
 
@@ -111,4 +123,4 @@ set view_date = coalesce(view_date, log_date),
 
 ## 下一步
 
-D1、D2、D4、D5 都已经有结论，不需要再做什么（D1 留了一个产品问题给 Sylvan 决定，见上，不阻塞其它开发）。只剩 **D3** 需要 Sylvan 跑上面的 SQL、把结果贴回来。
+D1–D5 全部有结论，**T1 完成**。没有一项需要改代码；D1 留了一个产品问题给 Sylvan 决定（不阻塞其它开发，见上）。
