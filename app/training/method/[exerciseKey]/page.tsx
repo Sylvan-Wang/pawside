@@ -1,6 +1,6 @@
 import PageHeader from '@/components/PageHeader'
 import ExerciseMotion from '@/components/workout/ExerciseMotion'
-import { formatAuthority, getMethodExercise, METHOD_SPLITS } from '@/lib/method-catalog'
+import { getMethodExercise, METHOD_SPLITS } from '@/lib/method-catalog'
 import { notFound } from 'next/navigation'
 
 export function generateStaticParams() {
@@ -29,10 +29,8 @@ export default async function MethodExercisePage({
         </header>
 
         <section className="rounded-2xl bg-white p-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-gray-900">动作示意</h2>
-            <span className="text-[11px] text-gray-400">3 个关键帧</span>
-          </div>
+          {/* Patch B · B2: dropped "3 个关键帧" — not useful to a user. */}
+          <h2 className="text-sm font-semibold text-gray-900">动作示意</h2>
           {exercise.media ? (
             <ExerciseMotion name={exercise.name} media={exercise.media} mode="steps" />
           ) : (
@@ -43,18 +41,10 @@ export default async function MethodExercisePage({
         </section>
 
         <section className="rounded-2xl bg-white p-4">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-xs text-gray-400">当前处方</p>
-              <p className="mt-1 text-lg font-semibold text-gray-900">{exercise.prescription}</p>
-            </div>
-            <span className={exercise.authority === 'method_explicit'
-              ? 'shrink-0 rounded-full bg-gray-100 px-2.5 py-1 text-[11px] text-gray-600'
-              : 'shrink-0 rounded-full bg-amber-50 px-2.5 py-1 text-[11px] text-amber-800'
-            }>
-              {formatAuthority(exercise.authority)}
-            </span>
-          </div>
+          {/* Patch B · B2: dropped the "方法明确 / 运行时默认" badge —
+              it was an engineering provenance marker, not useful to a user. */}
+          <p className="text-xs text-gray-400">当前处方</p>
+          <p className="mt-1 text-lg font-semibold text-gray-900">{exercise.prescription}</p>
           <dl className="mt-4 grid grid-cols-1 gap-3 border-t border-gray-100 pt-4 text-sm">
             <div>
               <dt className="text-xs text-gray-400">强度</dt>

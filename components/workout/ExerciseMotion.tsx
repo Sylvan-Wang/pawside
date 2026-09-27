@@ -69,21 +69,18 @@ export default function ExerciseMotion({
           }
         />
       )}
+      {/*
+        Patch B · B2: the per-clip attribution/license/source line was pure
+        clutter for a user ("固定的小字对用户没用"). CC BY-SA 4.0 still
+        requires attribution, so it moved to Settings → 关于
+        (lib/exercise-media.ts's WORKOUT_GUIDE_* constants), stated once for
+        the whole media set instead of repeated under every exercise.
+      */}
       <figcaption className="mt-2 text-[11px] leading-5 text-neutral-300">
         <span>{media.provider_name}</span>
         {media.mapping_status === 'candidate' && (
           <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-amber-800">素材待动作审核</span>
         )}
-        <span className={compact ? 'sr-only' : 'block'}>
-          {media.attribution.text}{' '}
-          <a className="underline" href={media.attribution.license_url} target="_blank" rel="noreferrer">
-            {media.attribution.license}
-          </a>
-          {' · '}
-          <a className="underline" href={media.source_url} target="_blank" rel="noreferrer">
-            素材来源
-          </a>
-        </span>
       </figcaption>
     </figure>
   )

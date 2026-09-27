@@ -1,6 +1,6 @@
 import PageHeader from '@/components/PageHeader'
 import ExerciseMotion from '@/components/workout/ExerciseMotion'
-import { METHOD_SPLITS, formatAuthority } from '@/lib/method-catalog'
+import { METHOD_SPLITS } from '@/lib/method-catalog'
 import Link from 'next/link'
 
 export default function MethodOverviewPage() {
@@ -59,17 +59,11 @@ export default function MethodOverviewPage() {
                   </div>
                 )}
 
-                <div className="mt-3 flex items-end justify-between gap-3 border-t border-gray-100 pt-3">
-                  <div>
-                    <p className="text-[11px] text-gray-400">当前处方</p>
-                    <p className="mt-0.5 text-sm font-medium text-gray-900">{exercise.prescription}</p>
-                  </div>
-                  <span className={exercise.authority === 'method_explicit'
-                    ? 'shrink-0 rounded-full bg-gray-100 px-2 py-1 text-[10px] text-gray-600'
-                    : 'shrink-0 rounded-full bg-amber-50 px-2 py-1 text-[10px] text-amber-800'
-                  }>
-                    {formatAuthority(exercise.authority)}
-                  </span>
+                {/* Patch B · B2: dropped the "方法明确 / 运行时默认" badge —
+                    it was an engineering provenance marker, not useful to a user. */}
+                <div className="mt-3 border-t border-gray-100 pt-3">
+                  <p className="text-[11px] text-gray-400">当前处方</p>
+                  <p className="mt-0.5 text-sm font-medium text-gray-900">{exercise.prescription}</p>
                 </div>
               </Link>
             ))}
