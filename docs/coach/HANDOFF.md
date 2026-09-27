@@ -30,7 +30,7 @@
 |---|---|---|
 | D21：每餐参考量 = 日目标 ÷ 3，上限为参考量 × 1.5 | **已作废。**改用 `lib/nutrition/guidance.ts#buildMealCalorieRanges`（早 25–30%、午 30–40%、晚 30–35%），上限取范围的上沿；加餐没有范围 | A2 按新口径做；`lib/coach/meal-context.ts` 已经实现了整餐合并和范围判断 |
 | MUST 3：模型输出里只能写占位符，不能有裸数字 | 还没做。现在靠数字可追溯检查（`composer.ts`），外加 `extraAllowedNumbers` | 这是 A0-1 / A0-2 的内容，做完以后替换现有检查 |
-| `lib/evidence/coach-output.ts`、`composer.ts:367 PLACEHOLDER_MODE_RULES` | **任何远端分支都没有。**可能在 DSH 本地，也可能是报告写错了 | 不要去找。按规格 A0-4 自己实现；如果 Sylvan 之后拿到 DSH 的代码，再合并 |
+| `lib/evidence/coach-output.ts`、`output-checks.ts`、`render-values.ts`、composer v4 | **已由 DSH 实现**，在分支 `deepseek/coach-ai-a0-wp1-wp2`（commit `71e47d3`，基于 master `eb9ab2a`；163 个 evidence 测试通过）。截至 2026-09-27 还没推到远端 | **不要按规格重新实现。**等它推上来以后，以它为准，把本分支的输出守卫、`extraAllowedNumbers` 等合并进去，只留一套实现 |
 | A0-1 / A0-3 "直接采用上一轮骨架" | 骨架在 `docs/coach/skeletons/pawside-ai-p0-0.zip`，**迁移编号冲突** | 看 skeletons/README |
 | A3 训练后反馈 | 一部分已完成：关键组、处方与实际对比、下次训练的关键组（`lib/coach/workout-context.ts`） | 剩下的是 A0-4 的统一输出结构、`allowed_actions` 和行动行 |
 | AI 出口读 `workout_logs` | 仍然在读（它是正式执行表的镜像，通过 `method_workout_session_id` 关联） | 新代码优先读 `workout_sessions` / `exercise_executions` / `set_executions` |
@@ -54,13 +54,13 @@
 
 ## 6. 任务清单（按顺序做）
 
-每个任务一个 PR，分支名用 `coach/<任务号>-<短名>`。PR 说明用中文写，包括：改了什么、用了哪个开关、怎么验收、有哪些不确定的地方。
+每个任务一个 PR，分支名用 `coach/<任务号>-<短名>`；如果环境只允许 `claude/` 前缀，就用环境给的名字。后一个任务可以从前一个任务的分支切出来，PR 目标设成前一个分支。PR 说明用中文写，包括：改了什么、用了哪个开关、怎么验收、有哪些不确定的地方。
 
 | # | 任务 | 验收 |
 |---|---|---|
 | T0 | 审一遍今天的 patch（`coach-ai-patch-2026-09-27`），修掉发现的问题 | Sylvan 按 patch 文档第 6 节实际测过一遍 |
 | T1 | 数据核实：patch 文档第 4 节的 D1–D5。**只查不改**，把结论和建议改法写成一份文档 | 每一项都有结论，或者写明需要谁提供什么 |
-| T2 | A0-1 + A0-2：输出检查模块接入 composer。和现有的守卫合成一套，删掉重复实现 | 骨架里的测试 + 现有测试全部通过；每一种失败都有对应的 `reason` |
+| T2 | **整合**（A0-1 + A0-2 已由 DSH 完成）：`deepseek/coach-ai-a0-wp1-wp2` 推上来以后，把本分支（含 T0 修复）rebase 到它上面。`composer.ts` 和 `app/api/ai/daily-review/route.ts` 一定会冲突：以 DSH 的 v4 管线为准，把本分支的内部用语拦截、重试和计划数字白名单并进 `output-checks`，删掉重复实现。`docs/coach/skeletons/` 里的 output-checks 骨架作废 | DSH 的测试和本分支的测试全部通过；`lib/` 里只有一套数字检查、一套输出守卫 |
 | T3 | A0-3：生成日志 `ai_generations`（重新编号迁移） | 成功和失败的生成都有记录；写日志失败不影响主流程 |
 | T4 | A0-4 + A0-5：统一输出结构 `coach_output_v1` 和三态卡片 `CoachCard` | History 等旧调用方不受影响（兼容层）；三种状态都能在页面上看出区别 |
 | T5 | A1：首页 Coach 卡片 | 附录 A 的 S1–S5，外加"AI 失败"一条 |

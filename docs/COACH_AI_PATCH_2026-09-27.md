@@ -70,7 +70,24 @@ where user_id = '<uid>' order by generated_at desc limit 10;
 
 **D3 · `view_date` 09-13 和 `log_date` 09-24 不一致。** 需要确认是“补记旧日期”的正常情况，还是日期写错了。
 
+```sql
+select id, split_key, execution_mode, view_date, log_date, performed_at, started_at, completed_at
+from workout_sessions where view_date <> log_date order by started_at desc;
+```
+
 **D4 · 09-25 那次不明来源的写回。** 需要在 `workout_sessions`、`set_executions` 的 `updated_at` 里找出 09-25 被改过的行。
+
+```sql
+select 'workout_sessions' as t, id, updated_at from workout_sessions
+  where (updated_at at time zone 'Asia/Shanghai')::date = '2026-09-25'
+union all
+select 'exercise_executions', id, updated_at from exercise_executions
+  where (updated_at at time zone 'Asia/Shanghai')::date = '2026-09-25'
+union all
+select 'set_executions', id, updated_at from set_executions
+  where (updated_at at time zone 'Asia/Shanghai')::date = '2026-09-25'
+order by updated_at;
+```
 
 **D5 · Method 版本标记。** `IMPLEMENTATION_STATUS.md` 写的是 v1.2 已按 `internal_beta / v1_runtime` 激活；DSH 报告说 `methods` 表那一行还是 draft / 1.0。两者可能都对（一个是 release 表，一个是 method 表）。
 
