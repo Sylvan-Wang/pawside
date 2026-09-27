@@ -26,7 +26,20 @@ function output(summary: string, observation = '卧推主项按计划完成') {
 const baseInput = {
   surface: 'workout_session_feedback' as const,
   facts: [],
-  signals: [],
+  // Matches output()'s observation below, so the new status-escalation check
+  // (spec A0-1) does not reject these as "signal never supplied".
+  signals: [
+    {
+      metric_key: 'training.session_duration',
+      status: 'within_reference' as const,
+      evidence_ref_ids: [],
+      domain: 'data_quality' as const,
+      evidence_level: null,
+      confidence: 'high' as const,
+      allowed_claim: null,
+      authority: 'Pawside heuristic',
+    },
+  ],
   context: {},
   instructions: 'test',
 }

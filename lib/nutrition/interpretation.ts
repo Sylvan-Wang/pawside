@@ -72,38 +72,9 @@ export interface InterpretedSignal {
   authority: string
 }
 
-/**
- * AI Patch §31 numeric integrity.
- *
- * Every number a user sees must be traceable. AI output may only reference
- * numbers that exist in the supplied facts; anything else is rejected rather
- * than displayed. Returns the offending tokens so the caller can log them.
- */
-export function findUntraceableNumbers(
-  text: string,
-  allowedValues: Array<number | null | undefined>,
-): string[] {
-  const allowed = new Set<string>()
-  for (const value of allowedValues) {
-    if (value === null || value === undefined || !Number.isFinite(value)) continue
-    allowed.add(String(value))
-    allowed.add(String(Math.round(value)))
-    // One decimal place, matching what the generators persist.
-    allowed.add(String(Math.round(value * 10) / 10))
-    allowed.add(value.toFixed(1))
-  }
-
-  const found = text.match(/\d+(?:\.\d+)?/g) ?? []
-  return found.filter((token) => !allowed.has(token))
-}
-
-/**
- * Convenience guard for AI payloads: true when every number in `text` can be
- * mapped back to a supplied MetricFact.
- */
-export function hasTraceableNumbers(
-  text: string,
-  allowedValues: Array<number | null | undefined>,
-): boolean {
-  return findUntraceableNumbers(text, allowedValues).length === 0
-}
+// Numeric-integrity gate retired here (spec A0-1, docs/coach/HANDOFF.md §3):
+// findUntraceableNumbers / hasTraceableNumbers duplicated the same check as
+// lib/evidence/interpret.ts#validateNumericIntegrity and an inline copy in
+// composer.ts. The single implementation now lives in
+// lib/evidence/output-checks.ts and composeWithEvidence calls it directly;
+// see tests/coach/output-checks.test.ts.

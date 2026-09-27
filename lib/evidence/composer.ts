@@ -4,7 +4,7 @@ import {
   type OpenAIFailureReason,
   type OpenAIResult,
 } from '../ai-client'
-import { EVIDENCE_REGISTRY_VERSION, getEvidenceItem } from './registry'
+import { EVIDENCE_REGISTRY_VERSION, buildOutputCheckRegistry, getEvidenceItem } from './registry'
 import {
   AI_SCHEMAS,
   AI_NUMERIC_INTEGRITY_RULES,
@@ -13,6 +13,12 @@ import {
 import type { InterpretedSignal, MetricFact } from '../nutrition/interpretation'
 import { findInternalTerms } from '../coach/display'
 import { COACH_SHARED_RULES } from '../coach/prompts'
+import {
+  collectUserFacingStrings,
+  runOutputChecks,
+  retryHint,
+  type CheckFailure,
+} from './output-checks'
 
 /**
  * Pawside — AI Composer (AI Patch §1, §6, §25.3, §31).
@@ -51,6 +57,18 @@ export interface ComposeInput {
    * once with the violation named. Defaults to false for backwards compatibility.
    */
   outputGuard?: boolean
+  /**
+   * spec A0-2: true once a surface's prompt writes `{{metric_key}}` instead of
+   * digits (prompt v4+). false (default) keeps the free-number / traceable-
+   * number check that today's v1–v3 prompts rely on.
+   */
+  placeholderMode?: boolean
+  /**
+   * spec A0-4 `context.allowed_actions`: the action_type values this
+   * generation may choose from. Undefined/empty is a no-op check (the surface
+   * does not use action_type yet).
+   */
+  allowedActions?: string[]
 }
 
 export interface ComposeSuccess {
@@ -65,7 +83,11 @@ export interface ComposeSuccess {
 
 export interface ComposeFailure {
   ok: false
-  reason: OpenAIFailureReason | 'unbound_evidence' | 'untraceable_number' | 'internal_term'
+  reason:
+    | OpenAIFailureReason
+    | 'unbound_evidence'
+    | 'internal_term'
+    | CheckFailure['code']
   detail?: string
   model: string
 }
@@ -110,55 +132,12 @@ export function findUnboundSignals(signals: InterpretedSignal[]): InterpretedSig
   })
 }
 
-/** Collects every number the model is allowed to state. */
-function allowedNumbers(input: ComposeInput): number[] {
-  const numbers: number[] = []
-  for (const fact of input.facts) {
-    if (fact.value !== null && Number.isFinite(fact.value)) numbers.push(fact.value)
-  }
-  for (const value of input.extraAllowedNumbers ?? []) {
-    if (Number.isFinite(value)) numbers.push(value)
-  }
-  return numbers
-}
-
 /**
- * AI Patch §31 — walk the produced payload and reject any number that cannot be
- * traced back to a supplied MetricFact. Small integers that are structural
- * rather than claims (counts already in the facts) are covered because the facts
- * carry them.
+ * @deprecated Import from './output-checks' directly. Re-exported here only
+ * because tests/nutrition/composer-guardrails.test.ts imports it from this
+ * module's public surface.
  */
-const MACHINE_TEXT_KEYS = new Set([
-  'evidence_ref_ids',
-  'signal_key',
-  'metric_key',
-  'status',
-  'domain',
-  'basis',
-  'direction',
-  'level',
-])
-
-export function collectUserFacingStrings(
-  value: unknown,
-  out: string[] = [],
-  parentKey: string | null = null,
-): string[] {
-  if (typeof value === 'string') {
-    if (!parentKey || !MACHINE_TEXT_KEYS.has(parentKey)) out.push(value)
-    return out
-  }
-  if (Array.isArray(value)) {
-    for (const item of value) collectUserFacingStrings(item, out, parentKey)
-    return out
-  }
-  if (value && typeof value === 'object') {
-    for (const [key, item] of Object.entries(value as Record<string, unknown>)) {
-      collectUserFacingStrings(item, out, key)
-    }
-  }
-  return out
-}
+export { collectUserFacingStrings }
 
 export const HEADLINE_MAX_CHARS = 30
 
@@ -226,61 +205,66 @@ export async function composeWithEvidence(input: ComposeInput): Promise<ComposeR
     )
     if (!result.ok) return { kind: 'provider_failure', reason: result.reason, model: result.model }
 
-    // AI Patch §31: strip/reject untraceable numbers.
-    const texts = collectUserFacingStrings(result.data)
-    const allowed = allowedNumbers(input)
-    const untraceable: string[] = []
-    for (const text of texts) {
-      for (const token of text.match(/\d+(?:\.\d+)?/g) ?? []) {
-        const numeric = Number(token)
-        const traceable = allowed.some(
-          (value) => value === numeric
-            || Math.round(value) === numeric
-            || Math.round(value * 10) / 10 === numeric,
-        )
-        if (!traceable && !untraceable.includes(token)) untraceable.push(token)
-      }
-    }
-    if (untraceable.length > 0) {
+    // spec A0-1 / A0-2 — the one shared output-checks pass: numeric integrity
+    // (free-number or placeholder mode), forbidden claims (registry + global
+    // guardrails), unknown evidence ids, status escalation, invalid actions.
+    const checks = runOutputChecks({
+      rawOutput: result.data,
+      facts: input.facts.map((fact) => ({ metric_key: fact.metric_key, value: fact.value, unit: fact.unit })),
+      signals: input.signals.map((signal) => ({
+        metric_key: signal.metric_key,
+        status: signal.status,
+        evidence_ref_ids: signal.evidence_ref_ids,
+      })),
+      registry: buildOutputCheckRegistry(),
+      placeholderMode: input.placeholderMode === true,
+      extraAllowedNumbers: input.extraAllowedNumbers,
+      allowedActions: input.allowedActions,
+    })
+    if (!checks.ok) {
+      const first = checks.failures[0] as CheckFailure
       return {
         kind: 'checked',
         data: result.data,
         model: result.model,
-        hard: { ok: false, reason: 'untraceable_number', detail: untraceable.join(', '), model: result.model },
+        hard: { ok: false, reason: first.code, detail: retryHint(checks.failures), model: result.model },
         soft: null,
       }
     }
+    const rendered = checks.rendered
 
     if (guard) {
+      const texts = collectUserFacingStrings(rendered)
       const leaked = findInternalTerms(texts)
       if (leaked.length > 0) {
         return {
           kind: 'checked',
-          data: result.data,
+          data: rendered,
           model: result.model,
           hard: { ok: false, reason: 'internal_term', detail: leaked.join(', '), model: result.model },
           soft: null,
         }
       }
-      const headline = headlineOf(result.data)
+      const headline = headlineOf(rendered)
       if (headline !== null && [...headline].length > HEADLINE_MAX_CHARS) {
-        return { kind: 'checked', data: result.data, model: result.model, hard: null, soft: `summary 超过 ${HEADLINE_MAX_CHARS} 个字` }
+        return { kind: 'checked', data: rendered, model: result.model, hard: null, soft: `summary 超过 ${HEADLINE_MAX_CHARS} 个字` }
       }
     }
 
-    return { kind: 'checked', data: result.data, model: result.model, hard: null, soft: null }
+    return { kind: 'checked', data: rendered, model: result.model, hard: null, soft: null }
   }
 
   let outcome = await attempt(null)
   if (outcome.kind === 'provider_failure') {
     return { ok: false, reason: outcome.reason, model: outcome.model }
   }
-  // One retry, only under the coach guard, naming the violation.
-  if (guard && (outcome.hard || outcome.soft)) {
+  // One retry, on any hard failure (output-checks run unconditionally; the
+  // coach guard adds internal_term/soft length on top), naming the violation.
+  if (outcome.hard || (guard && outcome.soft)) {
     const correction = outcome.hard
       ? outcome.hard.reason === 'internal_term'
         ? `出现了内部用语（${outcome.hard.detail}）`
-        : `出现了资料里没有的数字（${outcome.hard.detail}）`
+        : outcome.hard.detail ?? '输出不合格'
       : outcome.soft
     const second = await attempt(correction)
     if (second.kind === 'provider_failure') {
