@@ -19,6 +19,7 @@ import {
   retryHint,
   type CheckFailure,
 } from './output-checks'
+import { logGeneration, type AIFailReason, type TraceContext } from '../ai/generation-log'
 
 /**
  * Pawside — AI Composer (AI Patch §1, §6, §25.3, §31).
@@ -69,6 +70,16 @@ export interface ComposeInput {
    * does not use action_type yet).
    */
   allowedActions?: string[]
+  /**
+   * spec A0-3: when present, every attempt (success and failure) is written to
+   * `ai_generations`. Omitted in tests that stub the model directly; every
+   * real caller (a route handler) has an authenticated user and should pass it.
+   */
+  userId?: string
+  /** The entity this generation is about (workout_log_id, date, week_start). */
+  scopeId?: string | null
+  /** Reserved for the future Coach Chat orchestrator (spec §10). Not used yet. */
+  trace?: TraceContext
 }
 
 export interface ComposeSuccess {
@@ -83,11 +94,7 @@ export interface ComposeSuccess {
 
 export interface ComposeFailure {
   ok: false
-  reason:
-    | OpenAIFailureReason
-    | 'unbound_evidence'
-    | 'internal_term'
-    | CheckFailure['code']
+  reason: AIFailReason
   detail?: string
   model: string
 }
@@ -157,15 +164,48 @@ export const collectStrings = collectUserFacingStrings
 export async function composeWithEvidence(input: ComposeInput): Promise<ComposeResult> {
   const bundle = AI_SCHEMAS[input.surface]
   const config = getOpenAIConfigStatus()
+  const composeStartedAt = Date.now()
+  const promptVersion = input.promptVersionSuffix
+    ? `${bundle.promptVersion}+${input.promptVersionSuffix}`
+    : bundle.promptVersion
+  const inputSnapshotId = buildSnapshotId(input)
 
-  // Fail before spending a request when the evidence binding is already broken.
-  const unbound = findUnboundSignals(input.signals)
-  if (unbound.length > 0) {
-    return {
-      ok: false,
-      reason: 'unbound_evidence',
-      detail: unbound.map((signal) => `${signal.metric_key}:${signal.status}`).join(', '),
-      model: config.model,
+  // spec A0-3: one row per attempt, success and failure, so a user complaint
+  // ("the AI seems weak") can be answered from the log instead of a hunch.
+  // Never allowed to affect the response it is describing.
+  async function logAttempt(record: {
+    attemptNumber: number
+    payload: unknown
+    status: 'ok' | 'failed'
+    failReason?: AIFailReason | null
+    failDetail?: string | null
+    output?: unknown
+    model: string
+    latencyMs: number
+  }): Promise<void> {
+    if (!input.userId) return
+    // Belt-and-braces on top of logGeneration's own never-throws contract:
+    // a logging failure must never surface as a composeWithEvidence failure.
+    try {
+      await logGeneration({
+        userId: input.userId,
+        surface: input.surface,
+        scopeId: input.scopeId ?? null,
+        inputSnapshotId,
+        promptVersion,
+        model: record.model,
+        evidenceRegistryVersion: EVIDENCE_REGISTRY_VERSION,
+        payload: record.payload,
+        output: record.output ?? null,
+        status: record.status,
+        failReason: record.failReason ?? null,
+        failDetail: record.failDetail ?? null,
+        attempt: record.attemptNumber,
+        latencyMs: record.latencyMs,
+        trace: input.trace,
+      })
+    } catch (err) {
+      console.warn('[ai_generations] logAttempt threw', err instanceof Error ? err.message : err)
     }
   }
 
@@ -181,6 +221,23 @@ export async function composeWithEvidence(input: ComposeInput): Promise<ComposeR
       : input.instructions ?? '',
   }
 
+  // Fail before spending a request when the evidence binding is already broken.
+  // Still logged: output=null, latency is the gate's own cost only.
+  const unbound = findUnboundSignals(input.signals)
+  if (unbound.length > 0) {
+    const detail = unbound.map((signal) => `${signal.metric_key}:${signal.status}`).join(', ')
+    await logAttempt({
+      attemptNumber: 1,
+      payload: basePayload,
+      status: 'failed',
+      failReason: 'unbound_evidence',
+      failDetail: detail,
+      model: config.model,
+      latencyMs: Date.now() - composeStartedAt,
+    })
+    return { ok: false, reason: 'unbound_evidence', detail, model: config.model }
+  }
+
   /*
    * The composer passes `true` as the local validator because correctness is
    * enforced by the provider's strict JSON schema (additionalProperties:false,
@@ -188,13 +245,14 @@ export async function composeWithEvidence(input: ComposeInput): Promise<ComposeR
    * that a shape validator cannot express live in those two places instead of a
    * per-surface type guard.
    */
-  async function attempt(correction: string | null): Promise<
+  async function attempt(correction: string | null, attemptNumber: number): Promise<
     | { kind: 'provider_failure'; reason: OpenAIFailureReason; model: string }
     | { kind: 'checked'; data: unknown; model: string; hard: ComposeFailure | null; soft: string | null }
   > {
     const payload = correction
       ? { ...basePayload, instructions: `${basePayload.instructions}\n\n上一次输出不合格：${correction}。请重新生成，并修正这一点。` }
       : basePayload
+    const attemptStartedAt = Date.now()
     const result: OpenAIResult<unknown> = await callStructuredOutput<unknown>(
       AI_NUMERIC_INTEGRITY_RULES,
       JSON.stringify(payload, null, 2),
@@ -203,7 +261,13 @@ export async function composeWithEvidence(input: ComposeInput): Promise<ComposeR
       (value): value is unknown => value !== null && typeof value === 'object',
       bundle.maxOutputTokens,
     )
-    if (!result.ok) return { kind: 'provider_failure', reason: result.reason, model: result.model }
+    const latencyMs = Date.now() - attemptStartedAt
+    if (!result.ok) {
+      await logAttempt({
+        attemptNumber, payload, status: 'failed', failReason: result.reason, model: result.model, latencyMs,
+      })
+      return { kind: 'provider_failure', reason: result.reason, model: result.model }
+    }
 
     // spec A0-1 / A0-2 — the one shared output-checks pass: numeric integrity
     // (free-number or placeholder mode), forbidden claims (registry + global
@@ -223,11 +287,16 @@ export async function composeWithEvidence(input: ComposeInput): Promise<ComposeR
     })
     if (!checks.ok) {
       const first = checks.failures[0] as CheckFailure
+      const detail = retryHint(checks.failures)
+      await logAttempt({
+        attemptNumber, payload, status: 'failed', failReason: first.code, failDetail: detail,
+        output: result.data, model: result.model, latencyMs,
+      })
       return {
         kind: 'checked',
         data: result.data,
         model: result.model,
-        hard: { ok: false, reason: first.code, detail: retryHint(checks.failures), model: result.model },
+        hard: { ok: false, reason: first.code, detail, model: result.model },
         soft: null,
       }
     }
@@ -237,6 +306,10 @@ export async function composeWithEvidence(input: ComposeInput): Promise<ComposeR
       const texts = collectUserFacingStrings(rendered)
       const leaked = findInternalTerms(texts)
       if (leaked.length > 0) {
+        await logAttempt({
+          attemptNumber, payload, status: 'failed', failReason: 'internal_term', failDetail: leaked.join(', '),
+          output: rendered, model: result.model, latencyMs,
+        })
         return {
           kind: 'checked',
           data: rendered,
@@ -247,14 +320,19 @@ export async function composeWithEvidence(input: ComposeInput): Promise<ComposeR
       }
       const headline = headlineOf(rendered)
       if (headline !== null && [...headline].length > HEADLINE_MAX_CHARS) {
+        // Not a hard failure and not part of the output-checks fail_reason
+        // vocabulary (spec A0-1 does not cover headline length); logged as ok,
+        // the composer still retries once to try for a shorter one.
+        await logAttempt({ attemptNumber, payload, status: 'ok', output: rendered, model: result.model, latencyMs })
         return { kind: 'checked', data: rendered, model: result.model, hard: null, soft: `summary 超过 ${HEADLINE_MAX_CHARS} 个字` }
       }
     }
 
+    await logAttempt({ attemptNumber, payload, status: 'ok', output: rendered, model: result.model, latencyMs })
     return { kind: 'checked', data: rendered, model: result.model, hard: null, soft: null }
   }
 
-  let outcome = await attempt(null)
+  let outcome = await attempt(null, 1)
   if (outcome.kind === 'provider_failure') {
     return { ok: false, reason: outcome.reason, model: outcome.model }
   }
@@ -266,7 +344,7 @@ export async function composeWithEvidence(input: ComposeInput): Promise<ComposeR
         ? `出现了内部用语（${outcome.hard.detail}）`
         : outcome.hard.detail ?? '输出不合格'
       : outcome.soft
-    const second = await attempt(correction)
+    const second = await attempt(correction, 2)
     if (second.kind === 'provider_failure') {
       return { ok: false, reason: second.reason, model: second.model }
     }
@@ -282,10 +360,8 @@ export async function composeWithEvidence(input: ComposeInput): Promise<ComposeR
     ok: true,
     data: result.data,
     model: result.model,
-    promptVersion: input.promptVersionSuffix
-      ? `${bundle.promptVersion}+${input.promptVersionSuffix}`
-      : bundle.promptVersion,
+    promptVersion,
     evidenceRegistryVersion: EVIDENCE_REGISTRY_VERSION,
-    inputSnapshotId: buildSnapshotId(input),
+    inputSnapshotId,
   }
 }

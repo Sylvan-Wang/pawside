@@ -137,6 +137,8 @@ export async function POST(req: NextRequest) {
       surface: 'daily_review',
       facts: evidence.facts,
       signals: evidence.signals,
+      userId: user.id,
+      scopeId: date,
       context: evidence.context,
       instructions: promptV2 ? DAILY_REVIEW_INSTRUCTIONS_V2 : DAILY_REVIEW_INSTRUCTIONS,
       ...(promptV2
