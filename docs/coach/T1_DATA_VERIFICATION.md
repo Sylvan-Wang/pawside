@@ -6,10 +6,10 @@
 
 | # | 结论 | 状态 |
 |---|---|---|
-| D1 | 19924 分钟那条记录的成因未知 | **待核实** — 需要 Sylvan 跑 SQL |
+| D1 | 找到成因：一个 14 天前"点开始"但没做完的训练会话，被翻出来继续做，`duration_minutes` 按整段会话算，不是数据错误 | **已核实**（Sylvan 2026-09-27 提供 SQL 结果） |
 | D2 | 正常，不是 bug | **已核实**（Sylvan 2026-09-27） |
 | D3 | `view_date`/`log_date` 不一致的原因未知 | **待核实** — 需要 Sylvan 跑 SQL |
-| D4 | 09-25 不明来源写回的具体行未知 | **待核实** — 需要 Sylvan 跑 SQL |
+| D4 | 找到成因：`20260925000200_training_date_navigation.sql` 迁移的一次性回填 UPDATE，不是可疑写回 | **已核实**（Sylvan 2026-09-27 提供 SQL 结果） |
 | D5 | 不是 bug，`methods.version` 只是标签没同步 | **已核实**（patch 文档本身已给出结论，见下） |
 
 补充一条不在原来 D1–D5 里、但同一批测试中发现的现象，见文末「补充发现」。
@@ -42,23 +42,23 @@ Sylvan 2026-09-27 确认：
 
 ## D1 · 19924 分钟那条记录
 
-**结论：待核实，需要 Sylvan 跑 SQL。**
+**结论：已核实。找到成因，不是数据写入错误。**
 
-页面已经不再把这类超范围时长显示给用户（T0 的 `lib/coach/session-duration.ts` 会把 5–150 分钟以外的值标记为"记录异常，未计入"），所以这不是一个用户可见的 bug；但它为什么会出现在数据里还不知道——如果是某种写入逻辑的问题，可能还会继续产生类似的异常记录，只是被前端过滤掉了而已。
+SQL 结果（session `fe8c6cdc`）：
 
-需要请 Sylvan 在线上库跑一次：
+| 字段 | 值 |
+|---|---|
+| `started_at` | 2026-09-13 08:53:00 |
+| `completed_at` | 2026-09-27 04:56:35 |
+| `duration_minutes` | 19924 |
+| `first_set`（第一组完成时间） | 2026-09-27 04:53:24 |
+| `last_set`（最后一组完成时间） | 2026-09-27 04:56:02 |
 
-```sql
-select ws.id, ws.started_at, ws.completed_at, ws.duration_minutes, wl.duration_minutes as log_minutes,
-       min(se.completed_at) as first_set, max(se.completed_at) as last_set
-from workout_sessions ws
-left join workout_logs wl on wl.method_workout_session_id = ws.id
-left join set_executions se on se.workout_session_id = ws.id and se.status = 'completed'
-where ws.duration_minutes > 150 or wl.duration_minutes > 150
-group by ws.id, wl.duration_minutes;
-```
+关键在于 `first_set` 和 `last_set` 都在 09-27，相隔只有约 2.6 分钟；而 `started_at` 是 14 天前的 09-13。也就是说：这个训练会话在 09-13 被"点开始"，之后一直没有结束（也没有做任何一组），14 天后（09-27）用户翻回这个未完成的会话，很快做了几组、点了结束。`duration_minutes` 按"点开始 → 点结束"整段计算，所以变成了 19924 分钟。**不是单位错误或写入 bug，是"很久以前开始、后来才继续做完"的真实会话。**
 
-结果贴回来后，看 `started_at`/`completed_at`/第一组和最后一组的时间差，应该能看出是"训练没点结束、隔了很久才关闭会话"这种正常但少见的情况，还是写入时的单位错误（比如秒当成了分钟）。
+这正是 T0 已经做的修复要解决的问题：T0 把训练时长的默认口径从"点开始 → 点结束"（`session_span`）换成了"第一组完成 → 最后一组完成"（`set_span`，`lib/coach/session-duration.ts`），如果用这个口径算这次会话，时长会是约 3 分钟——虽然仍然会因为不到 5 分钟被判定为"记录异常，未计入"（`DURATION_MIN_MINUTES = 5`），但不会再出现 19924 这种荒谬数字。**这条数据反过来印证了 T0 那个修复方向是对的。**
+
+**留给 Sylvan 的产品问题（不是这次数据核实要解决的，按 HANDOFF §8 不擅自定）**：一个训练会话可以在"点开始"14 天后还被翻出来继续、算作同一次训练，这是不是符合预期？如果不符合预期，可能需要给"未完成的会话"加一个过期时间，超过就提示用户重新开始一次新的训练，而不是继续这个很旧的会话。这次没有改动任何训练会话的开始/续做逻辑。
 
 ---
 
@@ -76,23 +76,23 @@ group by ws.id, wl.duration_minutes;
 
 ## D4 · 09-25 那次不明来源的写回
 
-**结论：待核实，需要 Sylvan 跑 SQL。**
+**结论：已核实。是迁移脚本的一次性回填，不是可疑写回。**
 
-需要在 `workout_sessions`、`set_executions` 里按 `updated_at` 落在 09-25 的行做一次筛选：
+SQL 结果：同一个 `user_id`（`8a2b06da…`）名下 4 行 `workout_sessions`，`created_at` 分布在 09-12 到 09-24 之间（横跨好几天，不是同一次训练产生的），但 **`updated_at` 全部是同一个时间点：2026-09-25 08:58:23.988119+00，精确到微秒都一样**。一个用户在同一微秒"手动"改了 4 场不同日期的训练记录是不可能的，这个特征就是一次批量 UPDATE 的指纹。
+
+对照仓库找到了源头：`supabase/migrations/20260925000200_training_date_navigation.sql` 里有一条没有 `where` 限定范围的全表回填：
 
 ```sql
-select id, user_id, status, updated_at, created_at
-from workout_sessions
-where updated_at::date = '2026-09-25' and updated_at <> created_at
-order by updated_at desc;
-
-select id, user_id, workout_session_id, status, actual_reps, actual_weight_kg, updated_at, completed_at
-from set_executions
-where updated_at::date = '2026-09-25' and updated_at <> created_at
-order by updated_at desc;
+update public.workout_sessions
+set view_date = coalesce(view_date, log_date),
+    performed_at = coalesce(performed_at, started_at, created_at),
+    performed_time_zone = coalesce(performed_time_zone, 'UTC'),
+    execution_mode = coalesce(execution_mode, 'canonical');
 ```
 
-（`updated_at <> created_at` 是为了排除正常的首次写入，只看"后来又被改过"的行。）结果贴回来后能看出这是训练页保存流程的正常更新（比如用户回来改了一组的数据），还是某个后台任务/迁移脚本意外写回了旧数据。
+这条迁移给 `workout_sessions` 新增了 `view_date`/`performed_at`/`performed_time_zone`/`execution_mode` 几个列，然后对**表里所有已有的行**做了一次回填（前面还有一条带 `where` 的回填，这条是兜底，把前一条没覆盖到的行也填上）。`workout_sessions` 表上有 `workout_sessions_set_updated_at` 触发器（`20260911000200_method_workout_runtime.sql`），任何 `UPDATE` 都会把 `updated_at` 设成 `now()`——迁移在 09-25 部署时跑了这条语句，全表所有行的 `updated_at` 就在同一微秒被改写成了迁移执行的那一刻。**这是预期中的迁移行为，不是数据问题，不需要改代码。**
+
+如果以后再遇到"一批不同日期创建的行，`updated_at` 却精确相同"，可以直接按这个模式判断：先查有没有同一天部署的、对该表做无 `where` 回填的迁移，通常就是答案，不用怀疑到应用层的写入逻辑。
 
 ---
 
@@ -111,4 +111,4 @@ order by updated_at desc;
 
 ## 下一步
 
-D1、D3、D4 需要 Sylvan 跑上面的 SQL、把结果贴回来，才能给出最终结论和改法。D2、D5 已经有结论，不需要再做什么。
+D1、D2、D4、D5 都已经有结论，不需要再做什么（D1 留了一个产品问题给 Sylvan 决定，见上，不阻塞其它开发）。只剩 **D3** 需要 Sylvan 跑上面的 SQL、把结果贴回来。
