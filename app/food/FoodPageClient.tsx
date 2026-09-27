@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import PageHeader from '@/components/PageHeader'
+import CoachCard from '@/components/CoachCard'
 import { useToast } from '@/components/Toast'
 import { today } from '@/lib/utils'
 import type { FoodHistorySuggestion } from '@/lib/food-history'
@@ -920,30 +921,19 @@ export default function FoodPage() {
               <p className="text-xs text-gray-400">本餐已保存</p>
               <p className="mt-1 text-sm font-medium">本餐反馈</p>
             </div>
-            {feedback.aiState === 'loading' && (
-              <p className="text-xs text-gray-400">教练反馈生成中…</p>
-            )}
-            {feedback.aiState === 'failed' && (
-              <p className="text-[11px] text-gray-400">基础总结 · AI 反馈暂时没有生成</p>
-            )}
-            {feedback.aiState === 'failed' && feedback.status.some(item => item.explanation) && (
-              <div className="space-y-2">
-                {feedback.status.filter(item => item.explanation).map(item => (
-                  <div key={item.metric_key} className="rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-900">
-                    <p>{item.explanation}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-            {feedback.ai && (
-              <div className="rounded-xl border border-gray-100 p-3">
-                <p className="text-sm font-medium">{feedback.ai.summary}</p>
-                {feedback.ai.observations.map((item, index) => (
-                  <p key={index} className="mt-1 text-xs leading-5 text-gray-600">· {item.text}</p>
-                ))}
-                {feedback.ai.next_actions.map((item, index) => (
-                  <p key={index} className="mt-1 text-xs leading-5 text-gray-700">→ {item.text}</p>
-                ))}
+            {/* spec A0-5: the shared CoachCard, same structure as Home / History / workout feedback. */}
+            <CoachCard
+              state={feedback.aiState === 'ready' ? 'ai' : feedback.aiState === 'failed' ? 'basic' : 'loading'}
+              headline={feedback.ai?.summary}
+              bullets={feedback.ai?.observations.map((item) => item.text) ?? []}
+              actions={feedback.ai?.next_actions.map((item) => item.text) ?? []}
+            >
+              {feedback.aiState === 'failed' && feedback.status.filter((item) => item.explanation).map((item) => (
+                <div key={item.metric_key} className="mt-2 rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-900">
+                  <p>{item.explanation}</p>
+                </div>
+              ))}
+              {feedback.ai && (
                 <div className="mt-3 flex items-center gap-2 text-xs text-gray-400">
                   <span>这次反馈有帮助吗？</span>
                   <button type="button" disabled={ratingSaving} onClick={() => rateFeedback('liked')}
@@ -951,8 +941,8 @@ export default function FoodPage() {
                   <button type="button" disabled={ratingSaving} onClick={() => rateFeedback('disliked')}
                     className={feedback.rating === 'disliked' ? 'opacity-100' : 'opacity-40'}>👎</button>
                 </div>
-              </div>
-            )}
+              )}
+            </CoachCard>
             <button type="button" onClick={() => router.push('/home')}
               className="w-full rounded-xl bg-black py-3.5 text-sm font-medium text-white">
               完成

@@ -1,6 +1,7 @@
 'use client'
 
 import PageHeader from '@/components/PageHeader'
+import CoachCard from '@/components/CoachCard'
 import ExerciseMotion from '@/components/workout/ExerciseMotion'
 import type { ExerciseMedia } from '@/lib/exercise-media'
 import {
@@ -1028,32 +1029,21 @@ export default function TrainingSessionPage() {
                   <p>训练时长 <span className="font-semibold">{sessionFeedback.facts.duration_excluded ? '记录异常，未计入' : sessionFeedback.facts.duration_minutes == null ? '未记录' : `${sessionFeedback.facts.duration_minutes} 分钟`}</span></p>
                   <p>训练容量 <span className="font-semibold">{sessionFeedback.facts.total_volume_kg == null ? '无法计算' : `${Math.round(sessionFeedback.facts.total_volume_kg * 10) / 10} kg`}</span></p>
                 </div>
-                {/* One coach block (coach patch 2026-09-27): AI text when it
-                    arrives; rule cards only when AI failed, labelled as the
-                    basic summary so the two are never shown together. */}
-                {sessionFeedback.aiState === 'loading' && (
-                  <p className="text-xs text-gray-400">教练反馈生成中…</p>
-                )}
-                {sessionFeedback.aiState === 'failed' && (
-                  <>
-                    <p className="text-[11px] text-gray-400">基础总结 · AI 反馈暂时没有生成</p>
-                    {sessionFeedback.signals.map((signal) => (
-                      <div key={signal.signal_key} className="rounded-lg bg-white px-3 py-2 text-xs">
-                        <p>{signal.text}</p>
-                        <p className="mt-1 text-[11px] text-gray-400">依据：{authorityLabel(signal.authority)}</p>
-                      </div>
-                    ))}
-                  </>
-                )}
-                {sessionFeedback.ai && (
-                  <div className="border-t border-gray-200 pt-3">
-                    <p className="text-sm font-medium">{sessionFeedback.ai.summary}</p>
-                    {sessionFeedback.ai.observations.map((item, index) => (
-                      <p key={index} className="mt-1 text-xs leading-5 text-gray-600">· {item.text}</p>
-                    ))}
-                    {sessionFeedback.ai.next_actions.map((item, index) => (
-                      <p key={index} className="mt-1 text-xs leading-5 text-gray-700">→ {item.text}</p>
-                    ))}
+                {/* spec A0-5: the shared CoachCard, so this Coach block looks
+                    and behaves the same as Home / History / meal feedback. */}
+                <CoachCard
+                  state={sessionFeedback.aiState === 'ready' ? 'ai' : sessionFeedback.aiState === 'failed' ? 'basic' : 'loading'}
+                  headline={sessionFeedback.ai?.summary}
+                  bullets={sessionFeedback.ai?.observations.map((item) => item.text) ?? []}
+                  actions={sessionFeedback.ai?.next_actions.map((item) => item.text) ?? []}
+                >
+                  {sessionFeedback.aiState === 'failed' && sessionFeedback.signals.map((signal) => (
+                    <div key={signal.signal_key} className="mt-2 rounded-lg bg-white px-3 py-2 text-xs">
+                      <p>{signal.text}</p>
+                      <p className="mt-1 text-[11px] text-gray-400">依据：{authorityLabel(signal.authority)}</p>
+                    </div>
+                  ))}
+                  {sessionFeedback.ai && (
                     <div className="mt-3 flex items-center gap-2 text-xs text-gray-400">
                       <span>这次反馈有帮助吗？</span>
                       <button type="button" disabled={feedbackSaving} onClick={() => rateSessionFeedback('liked')}
@@ -1061,8 +1051,8 @@ export default function TrainingSessionPage() {
                       <button type="button" disabled={feedbackSaving} onClick={() => rateSessionFeedback('disliked')}
                         className={sessionFeedback.rating === 'disliked' ? 'opacity-100' : 'opacity-40'}>👎</button>
                     </div>
-                  </div>
-                )}
+                  )}
+                </CoachCard>
               </div>
             )}
             <button type="button" onClick={() => router.push('/training/today')}

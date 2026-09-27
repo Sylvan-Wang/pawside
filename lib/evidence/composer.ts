@@ -9,6 +9,7 @@ import {
   AI_SCHEMAS,
   AI_NUMERIC_INTEGRITY_RULES,
   type AiSurface,
+  type AiSchemaBundle,
 } from './ai-schemas'
 import type { InterpretedSignal, MetricFact } from '../nutrition/interpretation'
 import { findInternalTerms } from '../coach/display'
@@ -80,6 +81,12 @@ export interface ComposeInput {
   scopeId?: string | null
   /** Reserved for the future Coach Chat orchestrator (spec §10). Not used yet. */
   trace?: TraceContext
+  /**
+   * spec A0-4: use this schema bundle (coach_output_v1's per-surface shape)
+   * instead of the surface's default AI_SCHEMAS entry. Implies placeholderMode
+   * (coach_output_v1 is placeholder-only; MUST 3).
+   */
+  schemaOverride?: AiSchemaBundle
 }
 
 export interface ComposeSuccess {
@@ -162,7 +169,8 @@ export function headlineOf(data: unknown): string | null {
 export const collectStrings = collectUserFacingStrings
 
 export async function composeWithEvidence(input: ComposeInput): Promise<ComposeResult> {
-  const bundle = AI_SCHEMAS[input.surface]
+  const bundle = input.schemaOverride ?? AI_SCHEMAS[input.surface]
+  const placeholderMode = input.placeholderMode === true || input.schemaOverride !== undefined
   const config = getOpenAIConfigStatus()
   const composeStartedAt = Date.now()
   const promptVersion = input.promptVersionSuffix
@@ -281,7 +289,7 @@ export async function composeWithEvidence(input: ComposeInput): Promise<ComposeR
         evidence_ref_ids: signal.evidence_ref_ids,
       })),
       registry: buildOutputCheckRegistry(),
-      placeholderMode: input.placeholderMode === true,
+      placeholderMode,
       extraAllowedNumbers: input.extraAllowedNumbers,
       allowedActions: input.allowedActions,
     })

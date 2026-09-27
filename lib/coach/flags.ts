@@ -41,3 +41,20 @@ export function coachDurationBasis(): DurationBasis {
     ? 'session_span'
     : 'set_span'
 }
+
+/**
+ * spec A0-4 — the unified `coach_output_v1` schema (workout/meal/daily).
+ *
+ * Unlike every flag above, this one defaults OFF. Turning it on swaps the
+ * live prompt and JSON schema for three surfaces at once, and spec §9's own
+ * acceptance method is "generate against Appendix A and paste the real
+ * output" — something this environment cannot do without live OpenAI access
+ * (docs/coach/HANDOFF.md §5). Ship it built and tested at the code level, let
+ * Sylvan turn it on once he has seen real generations against Appendix A.
+ */
+export function coachOutputV1Enabled(): boolean {
+  const raw = process.env.PAWSIDE_COACH_OUTPUT_V1
+  if (raw === undefined) return false
+  const value = raw.trim().toLowerCase()
+  return value === '1' || value === 'true' || value === 'on'
+}
