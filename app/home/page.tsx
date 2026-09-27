@@ -75,7 +75,12 @@ export default function HomePage() {
   const [weightData, setWeightData] = useState<{ date: string; weight: number }[]>([])
   const [currentWeight, setCurrentWeight] = useState<number | null>(null)
   const [aiSummary, setAiSummary] = useState<string | null>(null)
+  // B4: the first evidence/action, so the Home card matches Appendix A's
+  // S1–S5 shape (headline + one bullet + one action), not just a headline.
+  const [aiFirstEvidence, setAiFirstEvidence] = useState<string | null>(null)
+  const [aiFirstAction, setAiFirstAction] = useState<string | null>(null)
   const [aiSummaryLoading, setAiSummaryLoading] = useState(false)
+  const [aiRetrying, setAiRetrying] = useState(false)
   const [aiAvailable, setAiAvailable] = useState<boolean | null>(null)
   const [nutritionRows, setNutritionRows] = useState<DashboardNutritionRow[]>([])
   const [nutritionLoading, setNutritionLoading] = useState(true)
@@ -201,24 +206,31 @@ export default function HomePage() {
   // Load AI summary — sessionStorage cache so revisiting /home is instant.
   // spec A0-5: Home MUST read ai_status rather than showing the deterministic
   // fallback text as if it were a real AI answer (it previously did not).
-  const loadAiSummary = useCallback(async () => {
+  const loadAiSummary = useCallback(async (forceRefresh = false) => {
     const dateKey = today()
-    const cacheKey = `ai_summary_v4_${dateKey}`
+    // v5: cache now also carries the first evidence/action (B4).
+    const cacheKey = `ai_summary_v5_${dateKey}`
 
-    // Check sessionStorage first (same session, same day)
-    if (typeof window !== 'undefined') {
+    // Check sessionStorage first (same session, same day) — skipped on retry,
+    // since a cached failure would otherwise just be handed back unchanged.
+    if (!forceRefresh && typeof window !== 'undefined') {
       const cached = sessionStorage.getItem(cacheKey)
       if (cached) {
         try {
-          const parsed = JSON.parse(cached) as { summary: string | null; available: boolean }
+          const parsed = JSON.parse(cached) as {
+            summary: string | null; evidence: string | null; action: string | null; available: boolean
+          }
           setAiSummary(parsed.summary)
+          setAiFirstEvidence(parsed.evidence)
+          setAiFirstAction(parsed.action)
           setAiAvailable(parsed.available)
           return
         } catch { /* fall through to refetch */ }
       }
     }
 
-    setAiSummaryLoading(true)
+    if (forceRefresh) setAiRetrying(true)
+    else setAiSummaryLoading(true)
     try {
       const res = await fetch('/api/ai/daily-review', {
         method: 'POST',
@@ -232,20 +244,25 @@ export default function HomePage() {
         const data = await res.json()
         const available = Boolean(data?.ai_status?.available)
         const summary = data.summary || null
+        const evidence = (data.insights?.[0] as string | undefined) ?? null
+        const action = (data.actions?.[0] as string | undefined) ?? null
         setAiSummary(summary)
+        setAiFirstEvidence(evidence)
+        setAiFirstAction(action)
         setAiAvailable(available)
         if (summary && typeof window !== 'undefined') {
-          sessionStorage.setItem(cacheKey, JSON.stringify({ summary, available }))
+          sessionStorage.setItem(cacheKey, JSON.stringify({ summary, evidence, action, available }))
         }
       }
     } catch { /* silent */ } finally {
       setAiSummaryLoading(false)
+      setAiRetrying(false)
     }
   }, [])
 
   useEffect(() => { void Promise.resolve().then(load) }, [load])
   useEffect(() => { void Promise.resolve().then(loadMethod) }, [loadMethod])
-  useEffect(() => { void Promise.resolve().then(loadAiSummary) }, [loadAiSummary])
+  useEffect(() => { void Promise.resolve().then(() => loadAiSummary()) }, [loadAiSummary])
 
   /**
    * Product §26: Home renders today's nutrition from the shared deterministic
@@ -643,8 +660,12 @@ export default function HomePage() {
               return aiAvailable ? 'ai' : 'basic'
             })() as CoachCardState}
             headline={aiSummary}
+            bullets={aiFirstEvidence ? [aiFirstEvidence] : []}
+            actions={aiFirstAction ? [aiFirstAction] : []}
             loadingText="AI 分析中…"
             insufficientText="暂无数据，去记录今天的第一条吧～"
+            onRetry={() => loadAiSummary(true)}
+            retrying={aiRetrying}
           />
         </div>
 
