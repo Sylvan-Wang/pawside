@@ -175,6 +175,9 @@ interface SessionFeedbackView {
 
 const splitNames = { push: '推', pull: '拉', legs: '腿' }
 const WEIGHT_UNIT_STORAGE_KEY = 'pawside:training:weight-unit:v1'
+// Patch B · B5 (D1): a session left "started" this long triggers the
+// reopened-old-session banner. One place to change if the threshold moves.
+const STALE_SESSION_HOURS = 12
 
 function preferredWeightUnit(profileUnit: TrainingWeightUnit) {
   if (typeof window === 'undefined') return profileUnit
@@ -324,6 +327,7 @@ export default function TrainingSessionPage() {
   const [changingDuration, setChangingDuration] = useState(false)
   const [exerciseActionId, setExerciseActionId] = useState('')
   const [error, setError] = useState('')
+  const [staleBannerDismissed, setStaleBannerDismissed] = useState(false)
   const [completion, setCompletion] = useState<CompletionResult | null>(null)
   const [sessionFeedback, setSessionFeedback] = useState<SessionFeedbackView | null>(null)
   const [feedbackSaving, setFeedbackSaving] = useState(false)
@@ -598,7 +602,7 @@ export default function TrainingSessionPage() {
     }
   }
 
-  async function completeSession() {
+  async function completeSession(): Promise<boolean> {
     setFinishing(true)
     setError('')
     try {
@@ -673,11 +677,26 @@ export default function TrainingSessionPage() {
           setSessionFeedback(current => current ? { ...current, aiState: 'failed' } : current)
         }
       }
+      return true
     } catch (reason: unknown) {
       setError(reason instanceof Error ? reason.message : '暂时无法完成训练')
+      return false
     } finally {
       setFinishing(false)
     }
+  }
+
+  /**
+   * Patch B · B5: the stale-session banner's "结束并开始今天的训练". Reuses
+   * the same completion endpoint and eligibility gate as the page's own
+   * "结束今天训练" button — a session with nothing recorded still cannot be
+   * force-closed here (workout_sessions allows at most one 'started' session
+   * per user, so it must go through the normal completion path); see the PR
+   * description for that gap.
+   */
+  async function completeSessionAndStartToday() {
+    const ok = await completeSession()
+    if (ok) router.push('/training/today')
   }
 
   async function rateSessionFeedback(rating: 'liked' | 'disliked') {
@@ -792,9 +811,50 @@ export default function TrainingSessionPage() {
   const canShortenDuration = completionUnit === 'exercise'
     && data.progress.selected_session_minutes != null
 
+  // Patch B · B5 (D1): the session that produced the 19924-minute record was
+  // opened, left untouched for days, then resumed — this catches that case
+  // while it is still open, instead of only fixing the number after the fact.
+  const hoursSinceStarted = (Date.now() - new Date(data.session.started_at).getTime()) / 3_600_000
+  const isStaleSession = !isCompleted && hoursSinceStarted > STALE_SESSION_HOURS
+  const staleDaysAgo = Math.max(1, Math.round(hoursSinceStarted / 24))
+
   return (
     <div className="min-h-screen bg-gray-50 pb-10">
       <PageHeader title={`${splitNames[data.session.split_key]}训练`} back />
+      {isStaleSession && !staleBannerDismissed && (
+        <div className="mx-auto max-w-2xl px-4 pt-4">
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+            <p className="text-sm font-medium text-amber-900">这是 {staleDaysAgo} 天前开始的训练</p>
+            <p className="mt-1 text-xs leading-5 text-amber-800">
+              继续记录会算作同一次训练；也可以结束这一次，重新开始今天的训练。
+            </p>
+            <div className="mt-3 flex gap-2">
+              <button
+                type="button"
+                onClick={() => setStaleBannerDismissed(true)}
+                className="flex-1 rounded-lg border border-amber-300 bg-white py-2 text-xs font-medium text-amber-900"
+              >
+                继续记录
+              </button>
+              <button
+                type="button"
+                onClick={completeSessionAndStartToday}
+                disabled={!canComplete || finishing}
+                className="flex-1 rounded-lg bg-amber-900 py-2 text-xs font-medium text-white disabled:opacity-40"
+              >
+                结束并开始今天的训练
+              </button>
+            </div>
+            {!canComplete && (
+              <p className="mt-2 text-[11px] text-amber-700">
+                {completionUnit === 'set'
+                  ? `至少保存 1 组真实训练记录才能结束（当前 ${completedCount} / ${requiredCount}）。`
+                  : `完整完成任意 ${requiredCount} 个动作才能结束（当前 ${completedCount} / ${requiredCount}）。`}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
       <main className="mx-auto max-w-2xl space-y-4 px-4 py-5">
         <header className="rounded-2xl bg-black p-5 text-white">
           <div className="flex items-center justify-between text-xs text-white/60">
