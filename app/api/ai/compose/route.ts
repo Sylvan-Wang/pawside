@@ -15,15 +15,29 @@ import { loadRecoveryCheckin } from '@/lib/recovery-persistence'
 import { describeSelfReport } from '@/lib/recovery'
 import { EVIDENCE_REGISTRY_VERSION } from '@/lib/evidence/registry'
 import { getWeekStartKey, today } from '@/lib/utils'
-import { coachFlag } from '@/lib/coach/flags'
+import { coachFlag, coachOutputV1Enabled } from '@/lib/coach/flags'
 import {
   COACH_PROMPT_VERSION_SUFFIX,
   DAILY_REVIEW_INSTRUCTIONS_V2,
   MEAL_FEEDBACK_INSTRUCTIONS_V2,
   WORKOUT_FEEDBACK_INSTRUCTIONS_V2,
+  MEAL_FEEDBACK_INSTRUCTIONS_COACH_OUTPUT_V1,
+  WORKOUT_FEEDBACK_INSTRUCTIONS_COACH_OUTPUT_V1,
+  DAILY_REVIEW_INSTRUCTIONS_COACH_OUTPUT_V1,
+  COACH_OUTPUT_V1_SHARED_RULES,
 } from '@/lib/coach/prompts'
 import { loadMethodWorkoutContext } from '@/lib/coach/workout-context'
 import { loadMealContext, mealContextNumbers } from '@/lib/coach/meal-context'
+import {
+  buildCoachOutputSchema,
+  compatibleReview,
+  computeAllowedActions,
+  rankSignalsForContext,
+  COACH_OUTPUT_PROMPT_VERSIONS,
+  type CoachOutputSurface,
+  type CoachOutputV1,
+} from '@/lib/evidence/coach-output'
+import { AI_SCHEMAS, type AiSchemaBundle } from '@/lib/evidence/ai-schemas'
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
@@ -54,6 +68,16 @@ const bodySchema = z.object({
   meal_type: z.enum(['breakfast', 'lunch', 'dinner', 'snack']).optional(),
   time_zone: z.string().trim().min(1).max(100).optional(),
 })
+
+/** spec A0-4: the coach_output_v1 schema bundle for a surface, built once per request. */
+function buildBundle(surface: CoachOutputSurface): AiSchemaBundle {
+  return {
+    name: `${AI_SCHEMAS[surface].name}_v1`,
+    schema: buildCoachOutputSchema(surface),
+    maxOutputTokens: AI_SCHEMAS[surface].maxOutputTokens,
+    promptVersion: COACH_OUTPUT_PROMPT_VERSIONS[surface],
+  }
+}
 
 function unavailable(reason: string, detail?: string) {
   // Deliberately 200: the AI being unavailable is not a client error, and the
@@ -132,6 +156,13 @@ export async function POST(request: NextRequest) {
 
       const checkin = await loadRecoveryCheckin(supabase, user.id, log.date)
 
+      const outputV1 = coachOutputV1Enabled()
+      const allowedActions = computeAllowedActions({
+        surface: 'workout_session_feedback',
+        hasIncompleteRecord: (methodContext?.prescribed_not_logged.length ?? 0) > 0,
+        hasNextSession: methodContext?.next_session != null,
+      })
+
       const result = await composeWithEvidence({
         surface,
         facts,
@@ -161,19 +192,25 @@ export async function POST(request: NextRequest) {
             : null,
           next_session: methodContext?.next_session ?? null,
           data_issues: methodContext?.data_issues ?? [],
+          ...(outputV1 ? { allowed_actions: allowedActions, ranked_signals: rankSignalsForContext(interpreted) } : {}),
         },
         extraAllowedNumbers: methodContext?.allowed_numbers,
-        instructions: promptV2
-          ? WORKOUT_FEEDBACK_INSTRUCTIONS_V2
-          : '这是单次训练的即时反馈。只描述这一次训练的事实与已给出的信号，不要评价用户整体健康。',
-        ...coachOptions,
+        instructions: outputV1
+          ? `${WORKOUT_FEEDBACK_INSTRUCTIONS_COACH_OUTPUT_V1}\n\n${COACH_OUTPUT_V1_SHARED_RULES}`
+          : promptV2
+            ? WORKOUT_FEEDBACK_INSTRUCTIONS_V2
+            : '这是单次训练的即时反馈。只描述这一次训练的事实与已给出的信号，不要评价用户整体健康。',
+        ...(outputV1
+          ? { schemaOverride: buildBundle('workout_session_feedback'), allowedActions }
+          : coachOptions),
       })
 
       if (!result.ok) return unavailable(result.reason, result.detail)
 
       return NextResponse.json({
         data: {
-          ai: result.data,
+          ai: outputV1 ? compatibleReview(result.data as CoachOutputV1, 'workout_session_feedback') : result.data,
+          ...(outputV1 ? { ai_v1: result.data } : {}),
           prompt_version: result.promptVersion,
           model: result.model,
           evidence_registry_version: EVIDENCE_REGISTRY_VERSION,
@@ -199,6 +236,9 @@ export async function POST(request: NextRequest) {
           target,
         })
         : null
+
+      const mealOutputV1 = coachOutputV1Enabled()
+      const mealAllowedActions = computeAllowedActions({ surface: 'meal_feedback' })
 
       const result = await composeWithEvidence({
         surface,
@@ -240,19 +280,27 @@ export async function POST(request: NextRequest) {
             consumed: nutrition.consumed,
             remaining: nutrition.remaining,
           },
+          ...(mealOutputV1
+            ? { allowed_actions: mealAllowedActions, ranked_signals: rankSignalsForContext(interpreted) }
+            : {}),
         },
         extraAllowedNumbers: mealContextNumbers(mealContext),
-        instructions: promptV2
-          ? MEAL_FEEDBACK_INSTRUCTIONS_V2
-          : '这是保存一餐后的即时反馈。只解释已经计算好的目标、已摄入和剩余额度，不要自行换算食物克数或重新计算营养数值。',
-        ...coachOptions,
+        instructions: mealOutputV1
+          ? `${MEAL_FEEDBACK_INSTRUCTIONS_COACH_OUTPUT_V1}\n\n${COACH_OUTPUT_V1_SHARED_RULES}`
+          : promptV2
+            ? MEAL_FEEDBACK_INSTRUCTIONS_V2
+            : '这是保存一餐后的即时反馈。只解释已经计算好的目标、已摄入和剩余额度，不要自行换算食物克数或重新计算营养数值。',
+        ...(mealOutputV1
+          ? { schemaOverride: buildBundle('meal_feedback'), allowedActions: mealAllowedActions }
+          : coachOptions),
       })
 
       if (!result.ok) return unavailable(result.reason, result.detail)
 
       return NextResponse.json({
         data: {
-          ai: result.data,
+          ai: mealOutputV1 ? compatibleReview(result.data as CoachOutputV1, 'meal_feedback') : result.data,
+          ...(mealOutputV1 ? { ai_v1: result.data } : {}),
           prompt_version: result.promptVersion,
           model: result.model,
           evidence_registry_version: EVIDENCE_REGISTRY_VERSION,
@@ -271,22 +319,40 @@ export async function POST(request: NextRequest) {
         date,
         today: today(parsed.data.time_zone ?? 'UTC'),
       })
+
+      const dailyOutputV1 = coachOutputV1Enabled()
+      const dailyAllowedActions = computeAllowedActions({
+        surface: 'daily_review',
+        hasNextSession: (evidence.context as { next_training?: unknown }).next_training != null,
+        hasRecoveryCheckinToday: evidence.log.recovery.recorded,
+      })
+
       const result = await composeWithEvidence({
         surface,
         facts: evidence.facts,
         signals: evidence.signals,
         userId: user.id,
         scopeId: date,
-        context: evidence.context,
-        instructions: promptV2 ? DAILY_REVIEW_INSTRUCTIONS_V2 : DAILY_REVIEW_INSTRUCTIONS,
-        ...coachOptions,
+        context: {
+          ...evidence.context,
+          ...(dailyOutputV1
+            ? { allowed_actions: dailyAllowedActions, ranked_signals: rankSignalsForContext(evidence.signals) }
+            : {}),
+        },
+        instructions: dailyOutputV1
+          ? `${DAILY_REVIEW_INSTRUCTIONS_COACH_OUTPUT_V1}\n\n${COACH_OUTPUT_V1_SHARED_RULES}`
+          : promptV2 ? DAILY_REVIEW_INSTRUCTIONS_V2 : DAILY_REVIEW_INSTRUCTIONS,
+        ...(dailyOutputV1
+          ? { schemaOverride: buildBundle('daily_review'), allowedActions: dailyAllowedActions }
+          : coachOptions),
       })
 
       if (!result.ok) return unavailable(result.reason, result.detail)
 
       return NextResponse.json({
         data: {
-          ai: result.data,
+          ai: dailyOutputV1 ? compatibleReview(result.data as CoachOutputV1, 'daily_review') : result.data,
+          ...(dailyOutputV1 ? { ai_v1: result.data } : {}),
           facts: evidence.facts,
           signals: evidence.signals,
           prompt_version: result.promptVersion,

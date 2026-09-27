@@ -3,15 +3,28 @@ import {
   buildDailyReviewEvidence,
   DAILY_REVIEW_INSTRUCTIONS,
 } from '@/lib/evidence/daily-review'
-import { AI_PROMPT_VERSIONS } from '@/lib/evidence/ai-schemas'
+import { AI_PROMPT_VERSIONS, AI_SCHEMAS } from '@/lib/evidence/ai-schemas'
 import { EVIDENCE_REGISTRY_VERSION, resolveCitations } from '@/lib/evidence/registry'
 import { loadFeedback, upsertFeedback } from '@/lib/feedback'
 import { createClient } from '@/lib/supabase/server'
 import { today } from '@/lib/utils'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { coachFlag } from '@/lib/coach/flags'
-import { COACH_PROMPT_VERSION_SUFFIX, DAILY_REVIEW_INSTRUCTIONS_V2 } from '@/lib/coach/prompts'
+import { coachFlag, coachOutputV1Enabled } from '@/lib/coach/flags'
+import {
+  COACH_PROMPT_VERSION_SUFFIX,
+  DAILY_REVIEW_INSTRUCTIONS_V2,
+  DAILY_REVIEW_INSTRUCTIONS_COACH_OUTPUT_V1,
+  COACH_OUTPUT_V1_SHARED_RULES,
+} from '@/lib/coach/prompts'
+import {
+  buildCoachOutputSchema,
+  computeAllowedActions,
+  rankSignalsForContext,
+  COACH_OUTPUT_PROMPT_VERSIONS,
+  compatibleReview as toDailyReviewV1Shape,
+  type CoachOutputV1,
+} from '@/lib/evidence/coach-output'
 
 const requestSchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
@@ -71,10 +84,13 @@ export async function GET(req: NextRequest) {
 
   // Coach patch 2026-09-27: prompt v2 carries a version suffix, so reviews
   // cached under the old prompt are regenerated once instead of being served.
+  // spec A0-4: coach_output_v1 is its own bundle with its own prompt_version.
   const promptV2 = coachFlag('COACH_PROMPT_V2')
-  const expectedPromptVersion = promptV2
-    ? `${AI_PROMPT_VERSIONS.daily_review}+${COACH_PROMPT_VERSION_SUFFIX}`
-    : AI_PROMPT_VERSIONS.daily_review
+  const expectedPromptVersion = coachOutputV1Enabled()
+    ? COACH_OUTPUT_PROMPT_VERSIONS.daily_review
+    : promptV2
+      ? `${AI_PROMPT_VERSIONS.daily_review}+${COACH_PROMPT_VERSION_SUFFIX}`
+      : AI_PROMPT_VERSIONS.daily_review
 
   if (cached?.content_json && cached.prompt_version === expectedPromptVersion) {
     return NextResponse.json({
@@ -114,10 +130,14 @@ export async function POST(req: NextRequest) {
 
   // Coach patch 2026-09-27: prompt v2 carries a version suffix, so reviews
   // cached under the old prompt are regenerated once instead of being served.
+  // spec A0-4: coach_output_v1 is its own bundle with its own prompt_version.
   const promptV2 = coachFlag('COACH_PROMPT_V2')
-  const expectedPromptVersion = promptV2
-    ? `${AI_PROMPT_VERSIONS.daily_review}+${COACH_PROMPT_VERSION_SUFFIX}`
-    : AI_PROMPT_VERSIONS.daily_review
+  const dailyOutputV1 = coachOutputV1Enabled()
+  const expectedPromptVersion = dailyOutputV1
+    ? COACH_OUTPUT_PROMPT_VERSIONS.daily_review
+    : promptV2
+      ? `${AI_PROMPT_VERSIONS.daily_review}+${COACH_PROMPT_VERSION_SUFFIX}`
+      : AI_PROMPT_VERSIONS.daily_review
 
   if (cached?.content_json && cached.prompt_version === expectedPromptVersion) {
     return NextResponse.json({
@@ -133,20 +153,44 @@ export async function POST(req: NextRequest) {
       date,
       today: today(timeZone),
     })
+    const dailyAllowedActions = computeAllowedActions({
+      surface: 'daily_review',
+      hasNextSession: (evidence.context as { next_training?: unknown }).next_training != null,
+      hasRecoveryCheckinToday: evidence.log.recovery.recorded,
+    })
     const composed = await composeWithEvidence({
       surface: 'daily_review',
       facts: evidence.facts,
       signals: evidence.signals,
       userId: user.id,
       scopeId: date,
-      context: evidence.context,
-      instructions: promptV2 ? DAILY_REVIEW_INSTRUCTIONS_V2 : DAILY_REVIEW_INSTRUCTIONS,
-      ...(promptV2
-        ? { outputGuard: coachFlag('COACH_OUTPUT_GUARD'), promptVersionSuffix: COACH_PROMPT_VERSION_SUFFIX }
-        : {}),
+      context: {
+        ...evidence.context,
+        ...(dailyOutputV1
+          ? { allowed_actions: dailyAllowedActions, ranked_signals: rankSignalsForContext(evidence.signals) }
+          : {}),
+      },
+      instructions: dailyOutputV1
+        ? `${DAILY_REVIEW_INSTRUCTIONS_COACH_OUTPUT_V1}\n\n${COACH_OUTPUT_V1_SHARED_RULES}`
+        : promptV2 ? DAILY_REVIEW_INSTRUCTIONS_V2 : DAILY_REVIEW_INSTRUCTIONS,
+      ...(dailyOutputV1
+        ? {
+          schemaOverride: {
+            name: `${AI_SCHEMAS.daily_review.name}_v1`,
+            schema: buildCoachOutputSchema('daily_review'),
+            maxOutputTokens: AI_SCHEMAS.daily_review.maxOutputTokens,
+            promptVersion: COACH_OUTPUT_PROMPT_VERSIONS.daily_review,
+          },
+          allowedActions: dailyAllowedActions,
+        }
+        : promptV2
+          ? { outputGuard: coachFlag('COACH_OUTPUT_GUARD'), promptVersionSuffix: COACH_PROMPT_VERSION_SUFFIX }
+          : {}),
     })
 
-    const review = composed.ok ? composed.data as DailyReviewOutput : null
+    const review = composed.ok
+      ? (dailyOutputV1 ? toDailyReviewV1Shape(composed.data as CoachOutputV1, 'daily_review') : composed.data) as DailyReviewOutput
+      : null
     const evidenceIds = review
       ? [...review.key_findings.flatMap((entry) => entry.evidence_ref_ids), ...review.safety.evidence_ref_ids]
       : []

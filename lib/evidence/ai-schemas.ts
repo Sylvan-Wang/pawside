@@ -20,7 +20,7 @@
  */
 
 /** Shared enums, mirrored from lib/nutrition/interpretation.ts. */
-const statusEnum = [
+export const statusEnum = [
   'within_reference',
   'below_reference',
   'above_reference',
@@ -30,7 +30,7 @@ const statusEnum = [
   'not_assessable',
 ] as const
 
-const domainEnum = [
+export const domainEnum = [
   'health_guideline',
   'training_optimization',
   'user_target',
@@ -39,7 +39,7 @@ const domainEnum = [
   'safety_signal',
 ] as const
 
-const basisEnum = ['method', 'rule', 'evidence'] as const
+export const basisEnum = ['method', 'rule', 'evidence'] as const
 
 export const MATERIALISED_AT = 'ai_schemas_v1'
 

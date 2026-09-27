@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import BottomNav from '@/components/BottomNav'
+import CoachCard, { type CoachCardState } from '@/components/CoachCard'
 import { getWeekStartKey, shiftDateKey, today } from '@/lib/utils'
 import { writeTodayTrainingCache } from '@/lib/training-navigation-cache'
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis } from 'recharts'
@@ -75,6 +76,7 @@ export default function HomePage() {
   const [currentWeight, setCurrentWeight] = useState<number | null>(null)
   const [aiSummary, setAiSummary] = useState<string | null>(null)
   const [aiSummaryLoading, setAiSummaryLoading] = useState(false)
+  const [aiAvailable, setAiAvailable] = useState<boolean | null>(null)
   const [nutritionRows, setNutritionRows] = useState<DashboardNutritionRow[]>([])
   const [nutritionLoading, setNutritionLoading] = useState(true)
   const [recoveryPrompt, setRecoveryPrompt] = useState<RecoveryPromptState | null>(null)
@@ -196,15 +198,24 @@ export default function HomePage() {
     }
   }, [loadMethod, methodActivating, methodAvailability?.reason, methodAvailability?.status, methodLoading, profile?.onboarding_completed, profileLoading, router])
 
-  // Load AI summary — sessionStorage cache so revisiting /home is instant
+  // Load AI summary — sessionStorage cache so revisiting /home is instant.
+  // spec A0-5: Home MUST read ai_status rather than showing the deterministic
+  // fallback text as if it were a real AI answer (it previously did not).
   const loadAiSummary = useCallback(async () => {
     const dateKey = today()
-    const cacheKey = `ai_summary_v3_${dateKey}`
+    const cacheKey = `ai_summary_v4_${dateKey}`
 
     // Check sessionStorage first (same session, same day)
     if (typeof window !== 'undefined') {
       const cached = sessionStorage.getItem(cacheKey)
-      if (cached) { setAiSummary(cached); return }
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached) as { summary: string | null; available: boolean }
+          setAiSummary(parsed.summary)
+          setAiAvailable(parsed.available)
+          return
+        } catch { /* fall through to refetch */ }
+      }
     }
 
     setAiSummaryLoading(true)
@@ -219,10 +230,12 @@ export default function HomePage() {
       })
       if (res.ok) {
         const data = await res.json()
+        const available = Boolean(data?.ai_status?.available)
         const summary = data.summary || null
         setAiSummary(summary)
+        setAiAvailable(available)
         if (summary && typeof window !== 'undefined') {
-          sessionStorage.setItem(cacheKey, summary)
+          sessionStorage.setItem(cacheKey, JSON.stringify({ summary, available }))
         }
       }
     } catch { /* silent */ } finally {
@@ -623,12 +636,16 @@ export default function HomePage() {
             <button onClick={() => router.push(`/history/${today()}`)}
               className="text-xs text-gray-400 underline">查看详情</button>
           </div>
-          {aiSummaryLoading
-            ? <p className="text-sm text-gray-400">AI 分析中…</p>
-            : aiSummary
-              ? <p className="text-sm text-gray-700 leading-relaxed">{aiSummary}</p>
-              : <p className="text-sm text-gray-400">暂无数据，去记录今天的第一条吧～</p>
-          }
+          <CoachCard
+            state={(() => {
+              if (aiSummaryLoading) return 'loading'
+              if (todayMealCount === 0 && todayWorkouts.length === 0) return 'insufficient'
+              return aiAvailable ? 'ai' : 'basic'
+            })() as CoachCardState}
+            headline={aiSummary}
+            loadingText="AI 分析中…"
+            insufficientText="暂无数据，去记录今天的第一条吧～"
+          />
         </div>
 
         {/* Weight trend */}

@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import PageHeader from '@/components/PageHeader'
 import { useToast } from '@/components/Toast'
 import { invalidateDayDerivedCache } from '@/lib/utils'
+import CoachCard, { type CoachCardState } from '@/components/CoachCard'
 interface WorkoutLog {
   id: string
   type: string
@@ -28,6 +29,7 @@ interface AIReview {
   cached: boolean
   feedback?: string | null
   input_snapshot_id?: string | null
+  ai_status?: { available: boolean; reason: string | null; detail: string | null }
 }
 
 interface BodyMetric {
@@ -332,42 +334,18 @@ export default function HistoryDetailPage() {
 
           {aiReview && !aiLoading && (
             <div className="space-y-3">
-              <p className="text-sm text-gray-800 leading-relaxed">{aiReview.summary}</p>
-
-              {aiReview.insights.length > 0 && (
-                <div>
-                  <p className="text-xs text-gray-400 mb-1.5 font-medium">观察</p>
-                  <div className="space-y-1.5">
-                    {aiReview.insights.map((insight, i) => (
-                      <div key={i} className="flex gap-2">
-                        <span className="text-gray-300 mt-0.5 flex-shrink-0">·</span>
-                        <p className="text-xs text-gray-700 leading-relaxed">{insight}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {aiReview.actions.length > 0 && (
-                <div>
-                  <p className="text-xs text-gray-400 mb-1.5 font-medium">建议</p>
-                  <div className="space-y-1.5">
-                    {aiReview.actions.map((action, i) => (
-                      <div key={i} className="flex gap-2">
-                        <span className="text-gray-300 mt-0.5 flex-shrink-0">→</span>
-                        <p className="text-xs text-gray-700 leading-relaxed">{action}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {aiReview.data_quality_tip && (
-                <p className="text-xs text-amber-600 bg-amber-50 rounded-lg px-3 py-2">
-                  {aiReview.data_quality_tip}
-                </p>
-              )}
-
+              <CoachCard
+                state={(() => {
+                  if (workouts.length === 0 && foods.length === 0 && !metric) return 'insufficient'
+                  return aiReview.ai_status?.available ? 'ai' : 'basic'
+                })() as CoachCardState}
+                headline={aiReview.summary}
+                bullets={aiReview.insights}
+                actions={aiReview.actions}
+                dataQualityTip={aiReview.data_quality_tip || null}
+                onRetry={() => triggerAIReview(true)}
+                insufficientText="这一天还没有记录，没有内容可以复盘。"
+              />
               {aiReview.cached && (
                 <p className="text-xs text-gray-300 text-right">已缓存</p>
               )}
