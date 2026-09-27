@@ -1,27 +1,18 @@
 'use client'
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
 import PageHeader from '@/components/PageHeader'
 import CoachCard from '@/components/CoachCard'
 import { useToast } from '@/components/Toast'
 import { today } from '@/lib/utils'
+import { createClient } from '@/lib/supabase/client'
 import type { FoodHistorySuggestion } from '@/lib/food-history'
-import { buildTodayGuidance, describeRemaining } from '@/lib/nutrition/guidance'
 import { resolutionLabel, type ResolutionSource } from '@/lib/nutrition/food-resolution'
+import { MEAL_LABELS } from '@/lib/coach/meal-context'
+import type { MealType } from '@/lib/nutrition/persistence'
+import type { MealBoard } from '@/lib/nutrition/meal-board'
+import { readMealDraft, writeMealDraft, clearMealDraft } from '@/lib/food-draft-store'
 
-const MEAL_TYPES = ['早餐', '午餐', '晚餐', '加餐']
-
-/**
- * Display label -> canonical `user_food_logs.meal_type` value.
- * Source: `user_food_logs.meal_type` check constraint
- * (20260413000000_v3_food_schema.sql:82).
- */
-const MEAL_TYPE_VALUES: Record<string, 'breakfast' | 'lunch' | 'dinner' | 'snack'> = {
-  '早餐': 'breakfast',
-  '午餐': 'lunch',
-  '晚餐': 'dinner',
-  '加餐': 'snack',
-}
+const MEAL_ORDER: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack']
 
 interface NutritionPer100g {
   basis_type?: string
@@ -70,13 +61,8 @@ type MacroField = 'calories' | 'protein' | 'carbs' | 'fat'
 const MACRO_DISPLAY_DIGITS: Record<MacroField, number> = { calories: 0, protein: 1, carbs: 1, fat: 1 }
 
 interface MealFeedbackView {
+  mealType: MealType
   foodLogId: string
-  nutrition: {
-    target: Record<string, number | null>
-    consumed: Record<string, number | null>
-    remaining: Record<string, number | null> | null
-    data_completeness: 'complete' | 'partial' | 'unknown'
-  }
   status: Array<{
     metric_key: string
     status: string
@@ -99,12 +85,12 @@ interface MealFeedbackView {
   rating: 'liked' | 'disliked' | null
 }
 
-interface DailyNutritionView {
+interface DailyState {
   target: Record<string, number | null>
   consumed: Record<string, number | null>
   remaining: Record<string, number | null> | null
-  meal_count: number
   data_completeness: 'complete' | 'partial' | 'unknown'
+  meal_board: MealBoard
 }
 
 function emptyFood(): FoodItem {
@@ -129,6 +115,11 @@ function emptyFood(): FoodItem {
   }
 }
 
+/** A single blank row is not worth persisting as a draft. */
+function isFoodListEmpty(items: FoodItem[]): boolean {
+  return items.every((item) => !item.name && !item.weight)
+}
+
 /**
  * AI Patch §9: actual = per_100g × weight / 100, for all four macros.
  *
@@ -149,10 +140,10 @@ function calcNutrition(per100g: NutritionPer100g, weight: string) {
 }
 
 /** Display helper — keeps the raw value in state, rounds only for the label. */
-function display(value: string, digits = 0): string {
-  if (value === '') return ''
+function display(value: string | number | null | undefined, digits = 0): string {
+  if (value === '' || value === null || value === undefined) return ''
   const n = Number(value)
-  if (!Number.isFinite(n)) return value
+  if (!Number.isFinite(n)) return String(value)
   const factor = 10 ** digits
   return String(Math.round(n * factor) / factor)
 }
@@ -169,6 +160,8 @@ function FoodRow({
   const [results, setResults] = useState<SearchResult[]>([])
   const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [hasSearched, setHasSearched] = useState(false)
+  const [showMore, setShowMore] = useState(false)
   const [resolving, setResolving] = useState(false)
   const [resolutionError, setResolutionError] = useState<string | null>(null)
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
@@ -184,7 +177,7 @@ function FoodRow({
 
   const search = useCallback(async (q: string) => {
     if (timer.current) clearTimeout(timer.current)
-    if (!q.trim()) { setResults([]); setOpen(false); return }
+    if (!q.trim()) { setResults([]); setOpen(false); setHasSearched(false); return }
 
     timer.current = setTimeout(async () => {
       setBusy(true)
@@ -215,6 +208,7 @@ function FoodRow({
         console.error('[food search error]', err)
       } finally {
         setBusy(false)
+        setHasSearched(true)
       }
     }, 250)
   }, [])
@@ -227,6 +221,7 @@ function FoodRow({
     for (const field of Object.keys(MACRO_DISPLAY_DIGITS) as MacroField[]) {
       if (!food.typedFields.includes(field)) cleared[field] = ''
     }
+    setHasSearched(false)
     onUpdate({
       name: val, per100g: null, autoFilled: false, historyFilled: false,
       foodId: null, resolutionSource: 'unresolved', sourceRefId: null,
@@ -335,7 +330,9 @@ function FoodRow({
     .every(value => value !== '' && Number.isFinite(Number(value)) && Number(value) >= 0)
 
   async function estimateWithAI() {
-    if (!food.name || !food.weight) return
+    // Weight is not required up front: per100g is stored regardless, and
+    // handleWeightChange recalculates the four macros once weight is typed.
+    if (!food.name) return
     setResolving(true)
     setResolutionError(null)
     try {
@@ -406,6 +403,9 @@ function FoodRow({
     }
   }
 
+  const showEmptySearchPrompt = hasSearched && !busy && results.length === 0
+    && food.name.trim() !== '' && !food.userConfirmed && !food.provisional
+
   return (
     <div className="border border-gray-100 rounded-xl p-3 space-y-2">
       <div className="flex justify-between items-center">
@@ -452,6 +452,18 @@ function FoodRow({
         )}
       </div>
 
+      {/* Patch B B1-4: 搜不到食物时，一步进入 AI 估算，不需要先滚到下面找按钮。 */}
+      {showEmptySearchPrompt && (
+        <button
+          type="button"
+          disabled={resolving}
+          onClick={estimateWithAI}
+          className="w-full rounded-lg border border-dashed border-gray-300 px-3 py-2 text-xs text-gray-600 disabled:opacity-50"
+        >
+          {resolving ? '处理中…' : `没搜到「${food.name}」，让 AI 估算`}
+        </button>
+      )}
+
       {history.length > 0 && (
         <div>
           <p className="mb-1.5 text-[11px] text-gray-400">最近常吃 · 点击快速填入</p>
@@ -464,18 +476,15 @@ function FoodRow({
                 className="shrink-0 rounded-full border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs text-gray-700"
               >
                 {item.name} · {item.weight_g}g
-                {item.calories == null ? '' : ` · ${display(String(item.calories))} kcal`}
-                {item.protein_g == null ? '' : ` · 蛋白 ${display(String(item.protein_g), 1)}g`}
+                {item.calories == null ? '' : ` · ${display(item.calories)} kcal`}
+                {item.protein_g == null ? '' : ` · 蛋白 ${display(item.protein_g, 1)}g`}
               </button>
             ))}
           </div>
         </div>
       )}
 
-      {/* Coach patch 2026-09-27: visible labels (a placeholder disappears once
-          a value is filled). Values the user did not type (reference, history,
-          AI estimate) are rounded for display only; state keeps the precise
-          number and the save path is unchanged. */}
+      {/* Patch B B1-3: 默认只显示名称·重量·热量·蛋白质，碳水和脂肪收进"更多"。 */}
       <div className="grid grid-cols-2 gap-2">
         <label className="text-[11px] text-gray-500">
           重量（g）
@@ -512,31 +521,40 @@ function FoodRow({
             }`}
           />
         </label>
-        <label className="text-[11px] text-gray-500">
-          碳水（g）
-          <input
-            type="number"
-            inputMode="decimal"
-            value={shownMacro('carbs')}
-            onChange={e => manualValue('carbs', e.target.value)}
-            className={`mt-1 w-full border rounded-lg px-2 py-2 text-sm text-gray-900 outline-none ${
-              food.autoFilled ? 'border-emerald-300 bg-emerald-50 text-emerald-800' : 'border-gray-200'
-            }`}
-          />
-        </label>
-        <label className="text-[11px] text-gray-500">
-          脂肪（g）
-          <input
-            type="number"
-            inputMode="decimal"
-            value={shownMacro('fat')}
-            onChange={e => manualValue('fat', e.target.value)}
-            className={`mt-1 w-full border rounded-lg px-2 py-2 text-sm text-gray-900 outline-none ${
-              food.autoFilled ? 'border-emerald-300 bg-emerald-50 text-emerald-800' : 'border-gray-200'
-            }`}
-          />
-        </label>
       </div>
+
+      {showMore ? (
+        <div className="grid grid-cols-2 gap-2">
+          <label className="text-[11px] text-gray-500">
+            碳水（g）
+            <input
+              type="number"
+              inputMode="decimal"
+              value={shownMacro('carbs')}
+              onChange={e => manualValue('carbs', e.target.value)}
+              className={`mt-1 w-full border rounded-lg px-2 py-2 text-sm text-gray-900 outline-none ${
+                food.autoFilled ? 'border-emerald-300 bg-emerald-50 text-emerald-800' : 'border-gray-200'
+              }`}
+            />
+          </label>
+          <label className="text-[11px] text-gray-500">
+            脂肪（g）
+            <input
+              type="number"
+              inputMode="decimal"
+              value={shownMacro('fat')}
+              onChange={e => manualValue('fat', e.target.value)}
+              className={`mt-1 w-full border rounded-lg px-2 py-2 text-sm text-gray-900 outline-none ${
+                food.autoFilled ? 'border-emerald-300 bg-emerald-50 text-emerald-800' : 'border-gray-200'
+              }`}
+            />
+          </label>
+        </div>
+      ) : (
+        <button type="button" onClick={() => setShowMore(true)} className="text-xs text-gray-400 underline">
+          更多（碳水、脂肪）
+        </button>
+      )}
 
       {food.autoFilled && (
         <p className="text-xs text-emerald-600">✓ 已按每 100g 参考值自动计算四项营养</p>
@@ -573,19 +591,28 @@ function FoodRow({
 }
 
 export default function FoodPage() {
-  const router = useRouter()
   const { show, ToastEl } = useToast()
 
+  const [userId, setUserId] = useState<string | null>(null)
   const [date, setDate] = useState(today())
-  const [mealType, setMealType] = useState('')
-  const [foods, setFoods] = useState<FoodItem[]>([emptyFood()])
-  const [history, setHistory] = useState<FoodHistorySuggestion[]>([])
-  const [loading, setLoading] = useState(false)
-  const [feedback, setFeedback] = useState<MealFeedbackView | null>(null)
-  const [dailyNutrition, setDailyNutrition] = useState<DailyNutritionView | null>(null)
+  const [daily, setDaily] = useState<DailyState | null>(null)
   const [dailyLoading, setDailyLoading] = useState(true)
+  const [history, setHistory] = useState<FoodHistorySuggestion[]>([])
+
+  const [activeMealType, setActiveMealType] = useState<MealType | null>(null)
+  const [foods, setFoods] = useState<FoodItem[]>([emptyFood()])
+  const [restoredDraft, setRestoredDraft] = useState(false)
+  const [loading, setLoading] = useState(false)
+
+  const [feedback, setFeedback] = useState<MealFeedbackView | null>(null)
   const [ratingSaving, setRatingSaving] = useState(false)
   const saveRequestId = useRef<string | null>(null)
+
+  useEffect(() => {
+    let active = true
+    createClient().auth.getUser().then(({ data }) => { if (active) setUserId(data.user?.id ?? null) })
+    return () => { active = false }
+  }, [])
 
   useEffect(() => {
     let active = true
@@ -599,32 +626,70 @@ export default function FoodPage() {
     return () => { active = false }
   }, [])
 
-  useEffect(() => {
-    let active = true
-    fetch(`/api/nutrition/daily?date=${encodeURIComponent(date)}`)
-      .then(async response => {
-        const payload = await response.json()
-        if (!response.ok) throw new Error(payload?.error?.message || '当日营养读取失败')
-        if (active) setDailyNutrition(payload.data)
-      })
-      .catch(reason => {
-        console.error('[daily nutrition error]', reason)
-        if (active) setDailyNutrition(null)
-      })
-      .finally(() => { if (active) setDailyLoading(false) })
-    return () => { active = false }
+  const loadDaily = useCallback(async () => {
+    setDailyLoading(true)
+    try {
+      const response = await fetch(`/api/nutrition/daily?date=${encodeURIComponent(date)}`)
+      const payload = await response.json()
+      if (!response.ok) throw new Error(payload?.error?.message || '当日营养读取失败')
+      setDaily(payload.data)
+    } catch (reason) {
+      console.error('[daily nutrition error]', reason)
+      setDaily(null)
+    } finally {
+      setDailyLoading(false)
+    }
   }, [date])
 
+  useEffect(() => { void Promise.resolve().then(loadDaily) }, [loadDaily])
+
+  function openMeal(mealType: MealType) {
+    setActiveMealType(mealType)
+    if (userId) {
+      const draft = readMealDraft<FoodItem>(userId, date, mealType)
+      if (draft && draft.length > 0) {
+        setFoods(draft)
+        setRestoredDraft(true)
+        return
+      }
+    }
+    setFoods([emptyFood()])
+    setRestoredDraft(false)
+  }
+
+  function closeMeal() {
+    setActiveMealType(null)
+    setFoods([emptyFood()])
+    setRestoredDraft(false)
+  }
+
+  function persistDraft(next: FoodItem[]) {
+    if (!userId || !activeMealType) return
+    writeMealDraft(userId, date, activeMealType, next, isFoodListEmpty(next))
+  }
+
   function addFood() {
-    setFoods(f => [...f, emptyFood()])
+    setFoods(f => {
+      const next = [...f, emptyFood()]
+      persistDraft(next)
+      return next
+    })
   }
 
   function updateFood(i: number, patch: Partial<FoodItem>) {
-    setFoods(f => f.map((item, idx) => idx === i ? { ...item, ...patch } : item))
+    setFoods(f => {
+      const next = f.map((item, idx) => idx === i ? { ...item, ...patch } : item)
+      persistDraft(next)
+      return next
+    })
   }
 
   function removeFood(i: number) {
-    setFoods(f => f.filter((_, idx) => idx !== i))
+    setFoods(f => {
+      const next = f.filter((_, idx) => idx !== i)
+      persistDraft(next.length > 0 ? next : [emptyFood()])
+      return next.length > 0 ? next : [emptyFood()]
+    })
   }
 
   /**
@@ -632,7 +697,8 @@ export default function FoodPage() {
    * resulting facts. The client no longer computes or writes nutrition itself.
    */
   async function handleSave() {
-    if (!mealType) return show('请选择餐别', 'error')
+    if (!activeMealType) return
+    const mealType = activeMealType
     const valid = foods.filter(f => f.name && f.weight)
     if (!valid.length) return show('至少填写一个食物的名称和重量', 'error')
     if (valid.some(food => !food.userConfirmed)) {
@@ -640,8 +706,6 @@ export default function FoodPage() {
     }
     setLoading(true)
     try {
-      const mealTypeValue = MEAL_TYPE_VALUES[mealType]
-      if (!mealTypeValue) throw new Error('餐别无效')
       saveRequestId.current ??= crypto.randomUUID()
 
       const response = await fetch('/api/nutrition/food-log', {
@@ -650,7 +714,7 @@ export default function FoodPage() {
         body: JSON.stringify({
           request_id: saveRequestId.current,
           date,
-          meal_type: mealTypeValue,
+          meal_type: mealType,
           items: valid.map(f => ({
             food_id: f.foodId,
             food_name_raw: f.name,
@@ -690,9 +754,21 @@ export default function FoodPage() {
       if (facts?.has_estimated_items) {
         console.warn('[nutrition] some items were saved as estimated (no reference match)')
       }
+
+      if (userId) clearMealDraft(userId, date, mealType)
+      show('保存成功')
+      saveRequestId.current = null
+
+      // B1-2: stay on the page — close the panel, refresh the meal board so
+      // this meal's row shows the new food right away, no navigation.
+      setActiveMealType(null)
+      setFoods([emptyFood()])
+      setRestoredDraft(false)
+      await loadDaily()
+
       const nextFeedback: MealFeedbackView = {
+        mealType,
         foodLogId: facts.food_log_id,
-        nutrition: facts.nutrition,
         status: facts.status ?? [],
         aiState: 'loading',
         ai: null,
@@ -700,9 +776,6 @@ export default function FoodPage() {
         rating: null,
       }
       setFeedback(nextFeedback)
-      setDailyNutrition(facts.nutrition)
-      show('保存成功')
-      saveRequestId.current = null
 
       // Facts and rule status render immediately. AI is an optional explanation
       // layer and must never block or roll back the persisted meal.
@@ -713,7 +786,7 @@ export default function FoodPage() {
           body: JSON.stringify({
             surface: 'meal_feedback',
             date,
-            meal_type: mealTypeValue,
+            meal_type: mealType,
             time_zone: Intl.DateTimeFormat().resolvedOptions().timeZone,
           }),
         })
@@ -744,23 +817,6 @@ export default function FoodPage() {
     }
   }
 
-  const guidance = dailyNutrition
-    ? buildTodayGuidance({
-        calories_kcal: dailyNutrition.target.calories_kcal ?? null,
-        protein_g: dailyNutrition.target.protein_g ?? null,
-        carbs_g: dailyNutrition.target.carbs_g ?? null,
-        fat_g: dailyNutrition.target.fat_g ?? null,
-      })
-    : null
-
-  const preview = foods.reduce((totals, food) => ({
-    calories_kcal: totals.calories_kcal + (Number(food.calories) || 0),
-    protein_g: totals.protein_g + (Number(food.protein) || 0),
-    carbs_g: totals.carbs_g + (Number(food.carbs) || 0),
-    fat_g: totals.fat_g + (Number(food.fat) || 0),
-  }), { calories_kcal: 0, protein_g: 0, carbs_g: 0, fat_g: 0 })
-  const hasPreview = foods.some(food => food.name && food.weight)
-
   async function rateFeedback(rating: 'liked' | 'disliked') {
     if (!feedback?.provenance || ratingSaving) return
     const next = feedback.rating === rating ? null : rating
@@ -787,6 +843,9 @@ export default function FoodPage() {
     }
   }
 
+  const remainingCalories = daily?.remaining?.calories_kcal ?? null
+  const remainingProtein = daily?.remaining?.protein_g ?? null
+
   return (
     <div className="min-h-screen bg-gray-50 pb-8">
       {ToastEl}
@@ -794,134 +853,120 @@ export default function FoodPage() {
 
       <div className="px-4 py-4 space-y-4">
         <div className="bg-white rounded-2xl p-4">
-          <label className="block text-sm text-gray-600 mb-1">日期</label>
-          <input
-            type="date"
-            value={date}
-            onChange={e => {
-              setDailyLoading(true)
-              setDailyNutrition(null)
-              setFeedback(null)
-              setDate(e.target.value)
-            }}
-            className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-gray-400"
-          />
-        </div>
-
-        {!dailyLoading && guidance?.calorieTarget != null && guidance.mealRanges && (
-          <section className="rounded-2xl bg-blue-50/70 p-4" aria-label="今日饮食参考">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <h2 className="text-sm font-semibold text-gray-900">今日饮食参考</h2>
-                <p className="mt-1 text-2xl font-semibold tracking-tight text-gray-950">
-                  {display(String(guidance.calorieTarget))} <span className="text-sm font-normal">kcal</span>
-                </p>
-              </div>
-              <span className="rounded-full bg-white/80 px-2 py-1 text-[11px] text-gray-500">参考</span>
-            </div>
-            <div className="mt-3 grid grid-cols-3 gap-2 text-xs text-gray-700">
-              <p>早餐 {guidance.mealRanges.breakfast[0]}–{guidance.mealRanges.breakfast[1]}</p>
-              <p>午餐 {guidance.mealRanges.lunch[0]}–{guidance.mealRanges.lunch[1]}</p>
-              <p>晚餐 {guidance.mealRanges.dinner[0]}–{guidance.mealRanges.dinner[1]}</p>
-            </div>
-            <p className="mt-3 text-xs text-gray-600">
-              {guidance.proteinTarget == null ? '蛋白质目标待补充' : `蛋白质 ${display(String(guidance.proteinTarget), 1)}g`}
-              {' · '}
-              {guidance.carbTarget == null ? '碳水目标待补充' : `碳水 ${display(String(guidance.carbTarget), 1)}g`}
-            </p>
-            <p className="mt-1 text-xs text-gray-500">膳食纤维：暂无完整数据</p>
-            <p className="mt-2 text-[11px] leading-4 text-gray-500">餐次热量仅作参考，可按作息和饥饿感调整。</p>
-            <details className="mt-2 text-[11px] text-gray-500">
-              <summary className="cursor-pointer">为什么这样算？</summary>
-              <p className="mt-1 leading-4">
-                餐次区间按每日目标的参考比例生成；蛋白质和碳水来自你的每日目标与体重信息。它们用于辅助安排，不是必须吃满的固定处方。
-              </p>
-            </details>
-          </section>
-        )}
-
-        <div className="bg-white rounded-2xl p-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">餐别</label>
-          <div className="flex gap-2">
-            {MEAL_TYPES.map(m => (
-              <button key={m} onClick={() => setMealType(m)}
-                className={`flex-1 py-2 rounded-xl text-sm border transition-colors
-                  ${mealType === m ? 'bg-black text-white border-black' : 'border-gray-200 text-gray-600'}`}>
-                {m}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="bg-white rounded-2xl p-4 overflow-visible">
-          <div className="flex justify-between items-center mb-3">
-            <label className="text-sm font-medium text-gray-700">食物列表</label>
-            <button onClick={addFood} className="text-sm text-black font-medium">+ 添加食物</button>
-          </div>
-          <div className="space-y-4">
-            {foods.map((food, i) => (
-              <FoodRow
-                key={i}
-                food={food}
-                index={i}
-                history={history}
-                onUpdate={patch => updateFood(i, patch)}
-                onRemove={() => removeFood(i)}
-              />
-            ))}
-          </div>
-        </div>
-
-        {hasPreview && !feedback && (
-          <section className="rounded-2xl border border-dashed border-gray-200 bg-white p-4">
-            <p className="text-xs text-gray-400">保存前预览</p>
-            <h2 className="mt-1 text-sm font-medium">本餐预计加入</h2>
-            <p className="mt-2 text-xs text-gray-600">
-              {display(String(preview.calories_kcal))} kcal · 蛋白质 {display(String(preview.protein_g), 1)}g · 碳水 {display(String(preview.carbs_g), 1)}g · 脂肪 {display(String(preview.fat_g), 1)}g
-            </p>
-          </section>
-        )}
-
-        {dailyNutrition && (
-          <section className="space-y-3 rounded-2xl bg-white p-4" aria-live="polite">
-            <h2 className="text-base font-semibold">今日营养进度</h2>
-            <div className="space-y-3">
-              {([
-                ['calories_kcal', '热量', 'kcal'],
-                ['protein_g', '蛋白质', 'g'],
-                ['carbs_g', '碳水', 'g'],
-                ['fat_g', '脂肪', 'g'],
-              ] as const).map(([key, label, unit]) => {
-                const consumed = dailyNutrition.consumed[key]
-                const target = dailyNutrition.target[key]
-                const remaining = dailyNutrition.remaining?.[key] ?? null
-                return (
-                  <div key={key} className="flex items-start justify-between gap-3 text-sm">
-                    <div>
-                      <p className="font-medium text-gray-800">{label}</p>
-                      <p className="text-xs text-gray-400">{describeRemaining(remaining, unit)}</p>
-                    </div>
-                    <p className="text-right font-medium">
-                      {consumed == null ? '未记录' : display(String(consumed), 1)}
-                      {target == null ? ` ${unit}` : ` / ${display(String(target), 1)} ${unit}`}
-                    </p>
-                  </div>
-                )
-              })}
-            </div>
-            {dailyNutrition.data_completeness === 'partial' && (
-              <p className="rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-900">部分食物还缺少完整营养信息，补充或确认后会更新进度。</p>
-            )}
-          </section>
-        )}
-
-        {feedback ? (
-          <section className="space-y-4 rounded-2xl bg-white p-4" aria-live="polite">
+          <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-xs text-gray-400">本餐已保存</p>
+              <label className="block text-xs text-gray-400 mb-1">日期</label>
+              <input
+                type="date"
+                value={date}
+                onChange={e => {
+                  // Switching dates leaves any open entry panel and its
+                  // saved-per-date feedback behind; the draft itself stays on
+                  // this device either way.
+                  setActiveMealType(null)
+                  setFeedback(null)
+                  setDate(e.target.value)
+                }}
+                className="border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-gray-400"
+              />
+            </div>
+            {/* B1-1: 顶部右侧的全天剩余额度。 */}
+            <div className="text-right">
+              <p className="text-xs text-gray-400">还可摄入</p>
+              <p className="text-sm font-semibold text-gray-900">
+                {remainingCalories == null ? '—' : `${display(remainingCalories)} kcal`}
+              </p>
+              <p className="text-xs text-gray-500">
+                {remainingProtein == null ? '' : `蛋白质 ${display(remainingProtein, 1)} g`}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* B1-1: 今日餐单，四行，同一餐次的多次保存已经合并显示。 */}
+        <div className="bg-white rounded-2xl p-4 divide-y divide-gray-100">
+          {dailyLoading && <p className="py-3 text-sm text-gray-400">加载中…</p>}
+          {!dailyLoading && daily && MEAL_ORDER.map((mealType) => {
+            const meal = daily.meal_board[mealType]
+            const hasItems = meal.save_count > 0
+            return (
+              <div key={mealType} className="py-3 first:pt-0 last:pb-0">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-gray-900">{MEAL_LABELS[mealType]}</p>
+                    {hasItems ? (
+                      <p className="mt-0.5 text-xs text-gray-600 break-words">{meal.item_names.join(' · ')}</p>
+                    ) : (
+                      <p className="mt-0.5 text-xs text-gray-300">还没记</p>
+                    )}
+                  </div>
+                  <div className="flex-shrink-0 text-right">
+                    {hasItems && (
+                      <p className="text-xs font-medium text-gray-800">
+                        {display(meal.totals.calories_kcal)} kcal
+                        {meal.totals.protein_g != null && ` · 蛋白质 ${display(meal.totals.protein_g, 1)}g`}
+                      </p>
+                    )}
+                    {meal.meal_ref && (
+                      <p className="text-[11px] text-gray-400">参考 {meal.meal_ref.calories_kcal[0]}–{meal.meal_ref.calories_kcal[1]}</p>
+                    )}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => openMeal(mealType)}
+                  className="mt-2 text-xs font-medium text-black underline"
+                >
+                  {hasItems ? `+ 加到${MEAL_LABELS[mealType]}` : `记${MEAL_LABELS[mealType]}`}
+                </button>
+              </div>
+            )
+          })}
+          {!dailyLoading && !daily && (
+            <p className="py-3 text-sm text-gray-400">今日营养读取失败，下拉刷新重试。</p>
+          )}
+        </div>
+
+        {/* 录入面板：只在选中某一餐时展开。 */}
+        {activeMealType && (
+          <div className="bg-white rounded-2xl p-4 overflow-visible space-y-3" aria-label={`${MEAL_LABELS[activeMealType]}录入`}>
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-gray-900">{MEAL_LABELS[activeMealType]}</h2>
+              <button type="button" onClick={closeMeal} className="text-xs text-gray-400">收起</button>
+            </div>
+            {restoredDraft && (
+              <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">已恢复未保存的输入</p>
+            )}
+            <div className="space-y-4">
+              {foods.map((food, i) => (
+                <FoodRow
+                  key={i}
+                  food={food}
+                  index={i}
+                  history={history}
+                  onUpdate={patch => updateFood(i, patch)}
+                  onRemove={() => removeFood(i)}
+                />
+              ))}
+            </div>
+            <button onClick={addFood} className="text-sm text-black font-medium">+ 添加食物</button>
+            <button
+              onClick={handleSave}
+              disabled={loading}
+              className="w-full bg-black text-white rounded-xl py-3 text-sm font-medium disabled:opacity-50"
+            >
+              {loading ? '保存中…' : '保存'}
+            </button>
+          </div>
+        )}
+
+        {/* B1-6: 本餐反馈放在餐单下方，用 T4 的 CoachCard。 */}
+        {feedback && (
+          <section className="space-y-3 rounded-2xl bg-white p-4" aria-live="polite">
+            <div>
+              <p className="text-xs text-gray-400">{MEAL_LABELS[feedback.mealType]}已保存</p>
               <p className="mt-1 text-sm font-medium">本餐反馈</p>
             </div>
-            {/* spec A0-5: the shared CoachCard, same structure as Home / History / workout feedback. */}
             <CoachCard
               state={feedback.aiState === 'ready' ? 'ai' : feedback.aiState === 'failed' ? 'basic' : 'loading'}
               headline={feedback.ai?.summary}
@@ -943,19 +988,11 @@ export default function FoodPage() {
                 </div>
               )}
             </CoachCard>
-            <button type="button" onClick={() => router.push('/home')}
-              className="w-full rounded-xl bg-black py-3.5 text-sm font-medium text-white">
-              完成
-            </button>
           </section>
-        ) : (
-          <button
-            onClick={handleSave}
-            disabled={loading}
-            className="w-full bg-black text-white rounded-xl py-3.5 text-sm font-medium disabled:opacity-50"
-          >
-            {loading ? '加载中…' : '保存'}
-          </button>
+        )}
+
+        {daily?.data_completeness === 'partial' && (
+          <p className="rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-900">部分食物还缺少完整营养信息，补充或确认后会更新进度。</p>
         )}
       </div>
     </div>
