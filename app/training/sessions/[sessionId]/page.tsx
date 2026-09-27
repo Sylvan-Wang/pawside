@@ -156,6 +156,8 @@ interface SessionFeedbackView {
     duration_excluded?: boolean
   }
   signals: Array<{ signal_key: string; text: string; authority: string }>
+  /** loading → ready (AI text) or failed (rule cards shown as 基础总结). */
+  aiState: 'loading' | 'ready' | 'failed'
   ai: null | {
     summary: string
     observations: Array<{ text: string }>
@@ -637,6 +639,7 @@ export default function TrainingSessionPage() {
               workoutLogId,
               facts: factsPayload.data.facts,
               signals: factsPayload.data.signals ?? [],
+              aiState: 'loading',
               ai: null,
               provenance: null,
               rating: factsPayload.data.feedback?.rating ?? null,
@@ -652,6 +655,7 @@ export default function TrainingSessionPage() {
             if (aiResponse.ok && aiPayload?.data?.ai) {
               setSessionFeedback(current => current ? {
                 ...current,
+                aiState: 'ready',
                 ai: aiPayload.data.ai,
                 provenance: {
                   prompt_version: aiPayload.data.prompt_version,
@@ -660,10 +664,13 @@ export default function TrainingSessionPage() {
                   evidence_registry_version: aiPayload.data.evidence_registry_version,
                 },
               } : current)
+            } else {
+              setSessionFeedback(current => current ? { ...current, aiState: 'failed' } : current)
             }
           }
         } catch {
           // Session completion is already durable; feedback is non-blocking.
+          setSessionFeedback(current => current ? { ...current, aiState: 'failed' } : current)
         }
       }
     } catch (reason: unknown) {
@@ -1021,14 +1028,23 @@ export default function TrainingSessionPage() {
                   <p>训练时长 <span className="font-semibold">{sessionFeedback.facts.duration_excluded ? '记录异常，未计入' : sessionFeedback.facts.duration_minutes == null ? '未记录' : `${sessionFeedback.facts.duration_minutes} 分钟`}</span></p>
                   <p>训练容量 <span className="font-semibold">{sessionFeedback.facts.total_volume_kg == null ? '无法计算' : `${Math.round(sessionFeedback.facts.total_volume_kg * 10) / 10} kg`}</span></p>
                 </div>
-                {/* One coach block: rule cards only while there is no AI text,
-                    so the same point is never shown twice (coach patch 2026-09-27). */}
-                {!sessionFeedback.ai && sessionFeedback.signals.map((signal) => (
-                  <div key={signal.signal_key} className="rounded-lg bg-white px-3 py-2 text-xs">
-                    <p>{signal.text}</p>
-                    <p className="mt-1 text-[11px] text-gray-400">依据：{authorityLabel(signal.authority)}</p>
-                  </div>
-                ))}
+                {/* One coach block (coach patch 2026-09-27): AI text when it
+                    arrives; rule cards only when AI failed, labelled as the
+                    basic summary so the two are never shown together. */}
+                {sessionFeedback.aiState === 'loading' && (
+                  <p className="text-xs text-gray-400">教练反馈生成中…</p>
+                )}
+                {sessionFeedback.aiState === 'failed' && (
+                  <>
+                    <p className="text-[11px] text-gray-400">基础总结 · AI 反馈暂时没有生成</p>
+                    {sessionFeedback.signals.map((signal) => (
+                      <div key={signal.signal_key} className="rounded-lg bg-white px-3 py-2 text-xs">
+                        <p>{signal.text}</p>
+                        <p className="mt-1 text-[11px] text-gray-400">依据：{authorityLabel(signal.authority)}</p>
+                      </div>
+                    ))}
+                  </>
+                )}
                 {sessionFeedback.ai && (
                   <div className="border-t border-gray-200 pt-3">
                     <p className="text-sm font-medium">{sessionFeedback.ai.summary}</p>

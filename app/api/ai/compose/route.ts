@@ -152,7 +152,6 @@ export async function POST(request: NextRequest) {
           method: methodContext
             ? {
               split_label: methodContext.split_label,
-              execution_mode: methodContext.execution_mode,
               exercises: methodContext.exercises,
               prescribed_not_logged: methodContext.prescribed_not_logged,
               skipped: methodContext.skipped,

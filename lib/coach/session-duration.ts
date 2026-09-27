@@ -89,3 +89,32 @@ export function sanitizeStoredDuration(minutes: number | null | undefined): numb
   if (minutes === null || minutes === undefined || !Number.isFinite(minutes)) return null
   return withinDurationRange(minutes) ? minutes : null
 }
+
+/**
+ * Daily total from stored per-session minutes. Each session is gated on its
+ * own, so two normal sessions (90 + 80) are not excluded as one 170-minute
+ * "outlier", and one broken session does not hide a normal one.
+ *
+ * - no sessions → 0 (a rest day is a fact, not missing data)
+ * - some usable → sum of the usable ones
+ * - none usable → null
+ */
+export function sanitizeDailyDuration(sessionMinutes: Array<number | null | undefined>): {
+  minutes: number | null
+  excluded_count: number
+} {
+  if (sessionMinutes.length === 0) return { minutes: 0, excluded_count: 0 }
+  let total = 0
+  let usable = 0
+  let excluded = 0
+  for (const value of sessionMinutes) {
+    const clean = sanitizeStoredDuration(value)
+    if (clean === null) {
+      if (value !== null && value !== undefined && Number.isFinite(value)) excluded += 1
+      continue
+    }
+    total += clean
+    usable += 1
+  }
+  return { minutes: usable > 0 ? total : null, excluded_count: excluded }
+}

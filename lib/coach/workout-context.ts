@@ -237,9 +237,12 @@ export async function loadMethodWorkoutContext(
         .filter((planned) => describePlannedSet(planned).emphasis)
         .map((planned) => {
           const guidance = describePlannedSet(planned)
+          // Link by prescription id when the row has one; fall back to the
+          // set index only for rows without a link.
           const actual = completedActual.find((set) => (
-            (set.set_prescription_id && set.set_prescription_id === planned.id)
-            || (!set.is_extra && set.set_index === planned.set_index)
+            set.set_prescription_id
+              ? set.set_prescription_id === planned.id
+              : !set.is_extra && set.set_index === planned.set_index
           ))
           return {
             set_index: planned.set_index,
