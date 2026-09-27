@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import BottomNav from '@/components/BottomNav'
 import PageHeader from '@/components/PageHeader'
@@ -288,21 +289,18 @@ export default function SettingsPage() {
           {loading ? '加载中…' : '保存'}
         </button>
 
-        {/* AI provider */}
-        <div className="bg-white rounded-2xl p-4">
-          <p className="text-sm font-semibold mb-1">AI 服务</p>
-          <p className="text-xs text-gray-400 mb-3">每日复盘与建议草稿统一由 OpenAI 生成</p>
-          <div className="w-full py-2.5 rounded-xl text-sm border bg-black text-white border-black text-center">
-            OpenAI
-          </div>
-        </div>
-
         {/* Actions */}
         <div className="bg-white rounded-2xl overflow-hidden">
           <button onClick={handleExport} disabled={exporting}
             className="w-full px-4 py-4 text-left text-sm text-gray-700 border-b border-gray-50 disabled:opacity-50">
             {exporting ? '导出中…' : '导出数据（CSV）'}
           </button>
+          {/* Patch B · B2: dropped the standing "每日复盘与建议草稿统一由
+              OpenAI 生成" line — moved to 关于 as one plain sentence. */}
+          <Link href="/settings/about"
+            className="block w-full px-4 py-4 text-left text-sm text-gray-700 border-b border-gray-50">
+            关于
+          </Link>
           <button onClick={handleLogout}
             className="w-full px-4 py-4 text-left text-sm text-red-500">
             退出登录

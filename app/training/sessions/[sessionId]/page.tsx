@@ -30,7 +30,6 @@ import {
 import { useParams, useRouter } from 'next/navigation'
 import { clearSessionDrafts, clearSetDraft, readSetDraft, writeSetDraft } from '@/lib/training-draft-store'
 import { describePlannedSet } from '@/lib/coach/set-guidance'
-import { authorityLabel } from '@/lib/coach/display'
 import { useEffect, useRef, useState } from 'react'
 
 interface PlannedSet {
@@ -1037,10 +1036,11 @@ export default function TrainingSessionPage() {
                   bullets={sessionFeedback.ai?.observations.map((item) => item.text) ?? []}
                   actions={sessionFeedback.ai?.next_actions.map((item) => item.text) ?? []}
                 >
+                  {/* Patch B · B2: dropped the "依据：…" provenance line — it
+                      was engineering-facing clutter, not useful to a user. */}
                   {sessionFeedback.aiState === 'failed' && sessionFeedback.signals.map((signal) => (
                     <div key={signal.signal_key} className="mt-2 rounded-lg bg-white px-3 py-2 text-xs">
                       <p>{signal.text}</p>
-                      <p className="mt-1 text-[11px] text-gray-400">依据：{authorityLabel(signal.authority)}</p>
                     </div>
                   ))}
                   {sessionFeedback.ai && (
