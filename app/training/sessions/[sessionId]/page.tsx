@@ -27,6 +27,9 @@ import {
   type TrainingWeightUnit,
 } from '@/lib/training-weight-unit'
 import { useParams, useRouter } from 'next/navigation'
+import { clearSessionDrafts, clearSetDraft, readSetDraft, writeSetDraft } from '@/lib/training-draft-store'
+import { describePlannedSet } from '@/lib/coach/set-guidance'
+import { authorityLabel } from '@/lib/coach/display'
 import { useEffect, useRef, useState } from 'react'
 
 interface PlannedSet {
@@ -35,6 +38,15 @@ interface PlannedSet {
   target_reps_min: number | null
   target_reps_max: number | null
   target_weight_kg: number | null
+  // Coach patch 2026-09-27: already returned by set_prescriptions(*), now rendered.
+  set_type?: string | null
+  target_rpe?: number | null
+  target_rir?: number | null
+  failure_allowed?: boolean | null
+  failure_required?: boolean | null
+  rest_min_seconds?: number | null
+  rest_max_seconds?: number | null
+  quality_requirement?: string | null
 }
 
 interface ActualSet {
@@ -113,6 +125,8 @@ interface SetDraft {
   saved: boolean
   isExtra: boolean
   pending: boolean
+  /** Typed earlier but never saved; restored from this device. */
+  restored?: boolean
 }
 
 interface CompletionResult {
@@ -139,6 +153,7 @@ interface SessionFeedbackView {
     completed_set_count: number | null
     total_volume_kg: number | null
     record_completeness: string
+    duration_excluded?: boolean
   }
   signals: Array<{ signal_key: string; text: string; authority: string }>
   ai: null | {
@@ -194,6 +209,28 @@ function restorePendingDrafts(
   return drafts.sort((a, b) => a.setIndex - b.setIndex)
 }
 
+/** Restores numbers typed earlier but never saved (lib/training-draft-store.ts). */
+function overlayStoredDraft(
+  draft: SetDraft,
+  userId: string,
+  sessionId: string,
+  executionId: string,
+  weightUnit: TrainingWeightUnit,
+): SetDraft {
+  if (draft.saved || draft.pending) return draft
+  const stored = readSetDraft(userId, sessionId, executionId, draft.setIndex)
+  if (!stored) return draft
+  return {
+    ...draft,
+    // Re-render from kg so a unit switch since typing stays correct.
+    weight: stored.weightKg != null ? kgToWeightInput(stored.weightKg, weightUnit) : stored.weight,
+    weightKg: stored.weightKg,
+    reps: stored.reps,
+    rir: stored.rir,
+    restored: true,
+  }
+}
+
 function initialDrafts(
   exercise: ExerciseExecution,
   userId: string,
@@ -220,7 +257,7 @@ function initialDrafts(
           isExtra: set.is_extra,
           pending: Boolean(pending),
         }
-      }), exercise, userId, sessionId, weightUnit)
+      }).map((draft) => overlayStoredDraft(draft, userId, sessionId, exercise.id, weightUnit)), exercise, userId, sessionId, weightUnit)
   }
 
   const planned = exercise.prescription?.sets ?? []
@@ -242,7 +279,7 @@ function initialDrafts(
           isExtra: false,
           pending: Boolean(pending),
         }
-      }), exercise, userId, sessionId, weightUnit)
+      }).map((draft) => overlayStoredDraft(draft, userId, sessionId, exercise.id, weightUnit)), exercise, userId, sessionId, weightUnit)
   }
 
   return restorePendingDrafts([], exercise, userId, sessionId, weightUnit)
@@ -358,8 +395,20 @@ export default function TrainingSessionPage() {
   }, [activeExerciseIndex, data])
 
   function updateDraft(executionId: string, position: number, field: 'weight' | 'reps' | 'rir', value: string) {
-    const setIndex = drafts[executionId][position].setIndex
-    if (data) removePendingSetActualByKey(data.viewer_id, sessionId, executionId, setIndex)
+    const current = drafts[executionId][position]
+    const setIndex = current.setIndex
+    if (data) {
+      removePendingSetActualByKey(data.viewer_id, sessionId, executionId, setIndex)
+      const next = { ...current, [field]: value }
+      writeSetDraft(data.viewer_id, sessionId, executionId, setIndex, {
+        weight: next.weight,
+        weightKg: field === 'weight'
+          ? value === '' ? null : weightInputToKg(Number(value), weightUnit)
+          : current.weightKg,
+        reps: next.reps,
+        rir: next.rir,
+      })
+    }
     setDrafts((current) => ({
       ...current,
       [executionId]: current[executionId].map((draft, index) => (
@@ -372,6 +421,7 @@ export default function TrainingSessionPage() {
               } : {}),
               saved: false,
               pending: false,
+              restored: false,
             }
           : draft
       )),
@@ -495,10 +545,11 @@ export default function TrainingSessionPage() {
         throw new Error(result?.error?.message || '保存失败')
       }
       removePendingSetActual(pending)
+      clearSetDraft(data.viewer_id, sessionId, executionId, draft.setIndex)
       setDrafts((current) => ({
         ...current,
         [executionId]: current[executionId].map((item, index) => (
-          index === position ? { ...item, saved: true, pending: false } : item
+          index === position ? { ...item, saved: true, pending: false, restored: false } : item
         )),
       }))
       clearTrainingSessionCache(sessionId)
@@ -562,6 +613,7 @@ export default function TrainingSessionPage() {
       const payload = await response.json()
       if (!response.ok) throw new Error(payload?.error?.message || '暂时无法完成训练')
       setCompletion(payload.data)
+      if (data) clearSessionDrafts(data.viewer_id, sessionId)
       if (payload.data?.log_date) {
         sessionStorage.removeItem(`ai_review_${payload.data.log_date}`)
         sessionStorage.removeItem(`ai_summary_${payload.data.log_date}`)
@@ -872,12 +924,32 @@ export default function TrainingSessionPage() {
               const key = `${exercise.id}:${draft.setIndex}`
               return (
                 <div key={draft.setIndex} className="rounded-xl border border-gray-100 p-3">
-                  <div className="mb-2 flex items-center justify-between">
-                    <span className="text-sm font-medium">第 {draft.setIndex} 组{draft.isExtra ? ' · 实际记录' : ''}</span>
-                    <span className={`text-xs ${draft.pending ? 'text-amber-600' : draft.saved ? 'text-green-600' : 'text-gray-400'}`}>
-                      {draft.pending ? '待同步' : draft.saved ? '已保存' : '待保存'}
-                    </span>
-                  </div>
+                  {(() => {
+                    const planned = draft.isExtra
+                      ? null
+                      : exercise.prescription?.sets.find((set) => set.set_index === draft.setIndex) ?? null
+                    const guidance = planned ? describePlannedSet(planned) : null
+                    return (
+                      <div className="mb-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium">
+                            第 {draft.setIndex} 组
+                            {guidance ? ` · ${guidance.label}` : draft.isExtra ? ' · 额外记录' : ''}
+                          </span>
+                          <span className={`text-xs ${draft.pending ? 'text-amber-600' : draft.saved ? 'text-green-600' : draft.restored ? 'text-amber-600' : 'text-gray-400'}`}>
+                            {draft.pending ? '待同步' : draft.saved ? '已保存' : draft.restored ? '已恢复未保存的输入' : '待保存'}
+                          </span>
+                        </div>
+                        {guidance && (guidance.target || guidance.effort || guidance.note) && (
+                          <p className={`mt-1 text-xs leading-5 ${guidance.emphasis ? 'font-medium text-gray-900' : 'text-gray-500'}`}>
+                            {[guidance.target && `目标 ${guidance.target}`, guidance.effort, guidance.note]
+                              .filter(Boolean)
+                              .join(' · ')}
+                          </p>
+                        )}
+                      </div>
+                    )
+                  })()}
                   <div className="grid grid-cols-3 gap-2">
                     <label className="text-xs text-gray-500">
                       重量 {weightUnit}
@@ -946,13 +1018,15 @@ export default function TrainingSessionPage() {
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <p>完成动作 <span className="font-semibold">{sessionFeedback.facts.completed_exercise_count}</span></p>
                   <p>完成组数 <span className="font-semibold">{sessionFeedback.facts.completed_set_count ?? '未完整记录'}</span></p>
-                  <p>训练时长 <span className="font-semibold">{sessionFeedback.facts.duration_minutes == null ? '未记录' : `${sessionFeedback.facts.duration_minutes} 分钟`}</span></p>
+                  <p>训练时长 <span className="font-semibold">{sessionFeedback.facts.duration_excluded ? '记录异常，未计入' : sessionFeedback.facts.duration_minutes == null ? '未记录' : `${sessionFeedback.facts.duration_minutes} 分钟`}</span></p>
                   <p>训练容量 <span className="font-semibold">{sessionFeedback.facts.total_volume_kg == null ? '无法计算' : `${Math.round(sessionFeedback.facts.total_volume_kg * 10) / 10} kg`}</span></p>
                 </div>
-                {sessionFeedback.signals.map((signal) => (
+                {/* One coach block: rule cards only while there is no AI text,
+                    so the same point is never shown twice (coach patch 2026-09-27). */}
+                {!sessionFeedback.ai && sessionFeedback.signals.map((signal) => (
                   <div key={signal.signal_key} className="rounded-lg bg-white px-3 py-2 text-xs">
                     <p>{signal.text}</p>
-                    <p className="mt-1 text-[11px] text-gray-400">依据：{signal.authority}</p>
+                    <p className="mt-1 text-[11px] text-gray-400">依据：{authorityLabel(signal.authority)}</p>
                   </div>
                 ))}
                 {sessionFeedback.ai && (

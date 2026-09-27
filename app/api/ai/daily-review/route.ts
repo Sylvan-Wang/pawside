@@ -10,6 +10,8 @@ import { createClient } from '@/lib/supabase/server'
 import { today } from '@/lib/utils'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+import { coachFlag } from '@/lib/coach/flags'
+import { COACH_PROMPT_VERSION_SUFFIX, DAILY_REVIEW_INSTRUCTIONS_V2 } from '@/lib/coach/prompts'
 
 const requestSchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
@@ -67,7 +69,14 @@ export async function GET(req: NextRequest) {
     .maybeSingle()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  if (cached?.content_json && cached.prompt_version === AI_PROMPT_VERSIONS.daily_review) {
+  // Coach patch 2026-09-27: prompt v2 carries a version suffix, so reviews
+  // cached under the old prompt are regenerated once instead of being served.
+  const promptV2 = coachFlag('COACH_PROMPT_V2')
+  const expectedPromptVersion = promptV2
+    ? `${AI_PROMPT_VERSIONS.daily_review}+${COACH_PROMPT_VERSION_SUFFIX}`
+    : AI_PROMPT_VERSIONS.daily_review
+
+  if (cached?.content_json && cached.prompt_version === expectedPromptVersion) {
     return NextResponse.json({
       ...(cached.content_json as object),
       cached: true,
@@ -103,7 +112,14 @@ export async function POST(req: NextRequest) {
     .eq('target_date', date)
     .maybeSingle()
 
-  if (cached?.content_json && cached.prompt_version === AI_PROMPT_VERSIONS.daily_review) {
+  // Coach patch 2026-09-27: prompt v2 carries a version suffix, so reviews
+  // cached under the old prompt are regenerated once instead of being served.
+  const promptV2 = coachFlag('COACH_PROMPT_V2')
+  const expectedPromptVersion = promptV2
+    ? `${AI_PROMPT_VERSIONS.daily_review}+${COACH_PROMPT_VERSION_SUFFIX}`
+    : AI_PROMPT_VERSIONS.daily_review
+
+  if (cached?.content_json && cached.prompt_version === expectedPromptVersion) {
     return NextResponse.json({
       ...(cached.content_json as object),
       cached: true,
@@ -122,7 +138,10 @@ export async function POST(req: NextRequest) {
       facts: evidence.facts,
       signals: evidence.signals,
       context: evidence.context,
-      instructions: DAILY_REVIEW_INSTRUCTIONS,
+      instructions: promptV2 ? DAILY_REVIEW_INSTRUCTIONS_V2 : DAILY_REVIEW_INSTRUCTIONS,
+      ...(promptV2
+        ? { outputGuard: coachFlag('COACH_OUTPUT_GUARD'), promptVersionSuffix: COACH_PROMPT_VERSION_SUFFIX }
+        : {}),
     })
 
     const review = composed.ok ? composed.data as DailyReviewOutput : null
@@ -147,7 +166,7 @@ export async function POST(req: NextRequest) {
         model: composed.model,
         fallback_reason: composed.ok ? null : composed.reason,
       },
-      prompt_version: composed.ok ? composed.promptVersion : AI_PROMPT_VERSIONS.daily_review,
+      prompt_version: composed.ok ? composed.promptVersion : expectedPromptVersion,
       model: composed.model,
       evidence_registry_version: EVIDENCE_REGISTRY_VERSION,
       input_snapshot_id: composed.ok ? composed.inputSnapshotId : null,

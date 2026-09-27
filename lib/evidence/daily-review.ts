@@ -3,6 +3,24 @@ import { buildDailyLog, type DailyLog } from '../nutrition/daily-log'
 import type { InterpretedSignal, MetricFact } from '../nutrition/interpretation'
 import { buildNutritionFacts } from './metric-facts'
 import { interpretRecovery, metricFact } from './interpret'
+import { SPLIT_LABELS } from '../coach/display'
+import { sanitizeStoredDuration } from '../coach/session-duration'
+
+/** Coach patch: the next Method split, best-effort (null on any error). */
+async function loadNextTraining(supabase: SupabaseClient, userId: string) {
+  try {
+    const { data, error } = await supabase
+      .from('method_enrollments')
+      .select('next_split_key')
+      .eq('user_id', userId)
+      .eq('status', 'active')
+      .maybeSingle()
+    if (error || !data?.next_split_key) return null
+    return { split_label: SPLIT_LABELS[data.next_split_key] ?? data.next_split_key }
+  } catch {
+    return null
+  }
+}
 
 /**
  * Canonical Daily Review input.
@@ -52,9 +70,16 @@ export async function buildDailyReviewEvidence(
     }),
     dayFact({
       metricKey: 'training.duration_minutes',
-      value: log.summary.total_duration_minutes,
+      // Coach patch: a stored duration outside 5–150 min is a recording issue
+      // (e.g. an unfinished session closed days later), never a training fact.
+      value: sanitizeStoredDuration(log.summary.total_duration_minutes),
       unit: 'min',
-      basis: { source: 'workout_logs.duration_minutes', date: log.date },
+      basis: {
+        source: 'workout_logs.duration_minutes',
+        date: log.date,
+        excluded_out_of_range: log.summary.total_duration_minutes !== null
+          && sanitizeStoredDuration(log.summary.total_duration_minutes) === null,
+      },
       completeness,
     }),
     dayFact({
@@ -125,11 +150,15 @@ export async function buildDailyReviewEvidence(
     interpretRecovery(recoveryFact),
   ]
 
+  const nextTraining = await loadNextTraining(supabase, input.userId)
+
   return {
     log,
     facts,
     signals,
     context: {
+      is_rest_day: log.summary.workout_count === 0,
+      next_training: nextTraining,
       date: log.date,
       period_label: log.period_label,
       is_today: log.is_today,

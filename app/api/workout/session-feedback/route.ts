@@ -4,6 +4,8 @@ import { loadRecoveryCheckin } from '@/lib/recovery-persistence'
 import { describeSelfReport } from '@/lib/recovery'
 import { computeSessionFacts, computeSessionSignals } from '@/lib/workout/session-facts'
 import { createClient } from '@/lib/supabase/server'
+import { coachDurationBasis, coachFlag } from '@/lib/coach/flags'
+import { computeEffectiveDuration, type EffectiveDuration } from '@/lib/coach/session-duration'
 import { NextRequest, NextResponse } from 'next/server'
 
 /**
@@ -44,7 +46,16 @@ export async function GET(request: NextRequest) {
     if (error) throw new Error(error.message)
     if (!log) return apiError('NOT_FOUND', '训练记录不存在', 404)
 
-    const durationMinutes = log.duration_minutes === null ? null : Number(log.duration_minutes)
+    const storedMinutes = log.duration_minutes === null ? null : Number(log.duration_minutes)
+
+    // Coach patch 2026-09-27: for Method sessions, duration = first → last
+    // completed set (flag PAWSIDE_COACH_DURATION_BASIS), and a value outside
+    // 5–150 min is shown as a recording issue instead of a number.
+    let duration: EffectiveDuration | null = null
+    if (coachFlag('COACH_METHOD_CONTEXT') && log.method_workout_session_id) {
+      duration = await loadEffectiveDuration(supabase, user.id, log.method_workout_session_id, storedMinutes)
+    }
+    const durationMinutes = duration ? duration.minutes : storedMinutes
 
     const facts = computeSessionFacts({
       exercises: log.exercises,
@@ -75,6 +86,8 @@ export async function GET(request: NextRequest) {
           type: log.type,
           method_workout_session_id: log.method_workout_session_id,
           duration_minutes: durationMinutes,
+          duration_excluded: duration?.excluded ?? false,
+          duration_basis: duration?.basis ?? 'stored',
           notes: log.notes,
           exercise_count: facts.exercise_count,
           completed_exercise_count: facts.completed_exercise_count,
@@ -100,5 +113,39 @@ export async function GET(request: NextRequest) {
       reason instanceof Error ? reason.message : '暂时无法读取本次训练反馈',
       500,
     )
+  }
+}
+
+async function loadEffectiveDuration(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  sessionId: string,
+  storedMinutes: number | null,
+): Promise<EffectiveDuration | null> {
+  try {
+    const [{ data: session }, { data: sets }] = await Promise.all([
+      supabase
+        .from('workout_sessions')
+        .select('started_at,completed_at')
+        .eq('id', sessionId)
+        .eq('user_id', userId)
+        .maybeSingle(),
+      supabase
+        .from('set_executions')
+        .select('completed_at')
+        .eq('workout_session_id', sessionId)
+        .eq('user_id', userId)
+        .eq('status', 'completed'),
+    ])
+    if (!session) return null
+    return computeEffectiveDuration({
+      basis: coachDurationBasis(),
+      startedAt: session.started_at,
+      completedAt: session.completed_at,
+      setCompletedAts: (sets ?? []).map((row) => row.completed_at as string | null),
+      storedMinutes,
+    })
+  } catch {
+    return null
   }
 }

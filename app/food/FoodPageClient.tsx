@@ -137,6 +137,7 @@ function calcNutrition(per100g: NutritionPer100g, weight: string) {
 
 /** Display helper — keeps the raw value in state, rounds only for the label. */
 function display(value: string, digits = 0): string {
+  if (value === '') return ''
   const n = Number(value)
   if (!Number.isFinite(n)) return value
   const factor = 10 ** digits
@@ -206,10 +207,15 @@ function FoodRow({
   }, [])
 
   function handleNameChange(val: string) {
+    // Coach patch 2026-09-27: values that came from the previous food (a
+    // reference match, history or an AI estimate) belong to that food. Keep
+    // them only when the user typed them by hand.
+    const keepTypedValues = food.resolutionSource === 'user_override'
     onUpdate({
       name: val, per100g: null, autoFilled: false, historyFilled: false,
       foodId: null, resolutionSource: 'unresolved', sourceRefId: null,
       userConfirmed: false, provisional: false, estimateCaveat: null,
+      ...(keepTypedValues ? {} : { calories: '', protein: '', carbs: '', fat: '' }),
     })
     search(val)
   }
@@ -441,50 +447,69 @@ function FoodRow({
         </div>
       )}
 
+      {/* Coach patch 2026-09-27: visible labels (a placeholder disappears once
+          a value is filled), and values derived from per-100g data are rounded
+          for display only; the save path still sends per100g, not these strings. */}
       <div className="grid grid-cols-2 gap-2">
-        <input
-          placeholder="重量(g)"
-          type="number"
-          value={food.weight}
-          onChange={e => handleWeightChange(e.target.value)}
-          className="w-full border border-gray-200 rounded-lg px-2 py-2 text-sm outline-none"
-        />
-        <input
-          placeholder="热量(kcal)"
-          type="number"
-          value={food.calories}
-          onChange={e => manualValue('calories', e.target.value)}
-          className={`w-full border rounded-lg px-2 py-2 text-sm outline-none ${
-            food.autoFilled ? 'border-emerald-300 bg-emerald-50 text-emerald-800' : 'border-gray-200'
-          }`}
-        />
-        <input
-          placeholder="蛋白质(g)"
-          type="number"
-          value={food.protein}
-          onChange={e => manualValue('protein', e.target.value)}
-          className={`w-full border rounded-lg px-2 py-2 text-sm outline-none ${
-            food.autoFilled ? 'border-emerald-300 bg-emerald-50 text-emerald-800' : 'border-gray-200'
-          }`}
-        />
-        <input
-          placeholder="碳水(g)"
-          type="number"
-          value={food.carbs}
-          onChange={e => manualValue('carbs', e.target.value)}
-          className={`w-full border rounded-lg px-2 py-2 text-sm outline-none ${
-            food.autoFilled ? 'border-emerald-300 bg-emerald-50 text-emerald-800' : 'border-gray-200'
-          }`}
-        />
-        <input
-          placeholder="脂肪(g)"
-          type="number"
-          value={food.fat}
-          onChange={e => manualValue('fat', e.target.value)}
-          className={`w-full border rounded-lg px-2 py-2 text-sm outline-none ${
-            food.autoFilled ? 'border-emerald-300 bg-emerald-50 text-emerald-800' : 'border-gray-200'
-          }`}
-        />
+        <label className="text-[11px] text-gray-500">
+          重量（g）
+          <input
+            placeholder="例如 150"
+            type="number"
+            inputMode="decimal"
+            value={food.weight}
+            onChange={e => handleWeightChange(e.target.value)}
+            className="mt-1 w-full border border-gray-200 rounded-lg px-2 py-2 text-sm text-gray-900 outline-none"
+          />
+        </label>
+        <label className="text-[11px] text-gray-500">
+          热量（kcal）
+          <input
+            type="number"
+            inputMode="decimal"
+            value={food.per100g ? display(food.calories, 0) : food.calories}
+            onChange={e => manualValue('calories', e.target.value)}
+            className={`mt-1 w-full border rounded-lg px-2 py-2 text-sm text-gray-900 outline-none ${
+              food.autoFilled ? 'border-emerald-300 bg-emerald-50 text-emerald-800' : 'border-gray-200'
+            }`}
+          />
+        </label>
+        <label className="text-[11px] text-gray-500">
+          蛋白质（g）
+          <input
+            type="number"
+            inputMode="decimal"
+            value={food.per100g ? display(food.protein, 1) : food.protein}
+            onChange={e => manualValue('protein', e.target.value)}
+            className={`mt-1 w-full border rounded-lg px-2 py-2 text-sm text-gray-900 outline-none ${
+              food.autoFilled ? 'border-emerald-300 bg-emerald-50 text-emerald-800' : 'border-gray-200'
+            }`}
+          />
+        </label>
+        <label className="text-[11px] text-gray-500">
+          碳水（g）
+          <input
+            type="number"
+            inputMode="decimal"
+            value={food.per100g ? display(food.carbs, 1) : food.carbs}
+            onChange={e => manualValue('carbs', e.target.value)}
+            className={`mt-1 w-full border rounded-lg px-2 py-2 text-sm text-gray-900 outline-none ${
+              food.autoFilled ? 'border-emerald-300 bg-emerald-50 text-emerald-800' : 'border-gray-200'
+            }`}
+          />
+        </label>
+        <label className="text-[11px] text-gray-500">
+          脂肪（g）
+          <input
+            type="number"
+            inputMode="decimal"
+            value={food.per100g ? display(food.fat, 1) : food.fat}
+            onChange={e => manualValue('fat', e.target.value)}
+            className={`mt-1 w-full border rounded-lg px-2 py-2 text-sm text-gray-900 outline-none ${
+              food.autoFilled ? 'border-emerald-300 bg-emerald-50 text-emerald-800' : 'border-gray-200'
+            }`}
+          />
+        </label>
       </div>
 
       {food.autoFilled && (
@@ -661,6 +686,7 @@ export default function FoodPage() {
           body: JSON.stringify({
             surface: 'meal_feedback',
             date,
+            meal_type: mealTypeValue,
             time_zone: Intl.DateTimeFormat().resolvedOptions().timeZone,
           }),
         })
@@ -864,7 +890,7 @@ export default function FoodPage() {
               <p className="text-xs text-gray-400">本餐已保存</p>
               <p className="mt-1 text-sm font-medium">本餐反馈</p>
             </div>
-            {feedback.status.some(item => item.explanation) && (
+            {!feedback.ai && feedback.status.some(item => item.explanation) && (
               <div className="space-y-2">
                 {feedback.status.filter(item => item.explanation).map(item => (
                   <div key={item.metric_key} className="rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-900">

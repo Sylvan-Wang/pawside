@@ -15,6 +15,15 @@ import { loadRecoveryCheckin } from '@/lib/recovery-persistence'
 import { describeSelfReport } from '@/lib/recovery'
 import { EVIDENCE_REGISTRY_VERSION } from '@/lib/evidence/registry'
 import { getWeekStartKey, today } from '@/lib/utils'
+import { coachFlag } from '@/lib/coach/flags'
+import {
+  COACH_PROMPT_VERSION_SUFFIX,
+  DAILY_REVIEW_INSTRUCTIONS_V2,
+  MEAL_FEEDBACK_INSTRUCTIONS_V2,
+  WORKOUT_FEEDBACK_INSTRUCTIONS_V2,
+} from '@/lib/coach/prompts'
+import { loadMethodWorkoutContext } from '@/lib/coach/workout-context'
+import { loadMealContext, mealContextNumbers } from '@/lib/coach/meal-context'
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
@@ -40,6 +49,9 @@ const bodySchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   workout_log_id: z.string().uuid().optional(),
   week_start: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  // Coach patch 2026-09-27: lets meal feedback judge the whole meal (all saves
+  // of this date + meal_type), not only the latest save. Optional for old clients.
+  meal_type: z.enum(['breakfast', 'lunch', 'dinner', 'snack']).optional(),
   time_zone: z.string().trim().min(1).max(100).optional(),
 })
 
@@ -70,6 +82,10 @@ export async function POST(request: NextRequest) {
   }
 
   const { surface } = parsed.data
+  const promptV2 = coachFlag('COACH_PROMPT_V2')
+  const coachOptions = promptV2
+    ? { outputGuard: coachFlag('COACH_OUTPUT_GUARD'), promptVersionSuffix: COACH_PROMPT_VERSION_SUFFIX }
+    : {}
 
   try {
     if (surface === 'workout_session_feedback') {
@@ -78,16 +94,26 @@ export async function POST(request: NextRequest) {
 
       const { data: log, error } = await supabase
         .from('workout_logs')
-        .select('id,date,type,duration_minutes,exercises')
+        .select('id,date,type,duration_minutes,exercises,method_workout_session_id')
         .eq('id', logId)
         .eq('user_id', user.id)
         .maybeSingle()
       if (error) throw new Error(error.message)
       if (!log) return apiError('NOT_FOUND', '训练记录不存在', 404)
 
+      // Coach patch: for Method sessions, read prescription vs actual from the
+      // normalized tables. Best-effort; null keeps the previous behaviour.
+      const methodContext = coachFlag('COACH_METHOD_CONTEXT') && log.method_workout_session_id
+        ? await loadMethodWorkoutContext(supabase, user.id, log.method_workout_session_id)
+        : null
+
       const { session, facts } = buildSessionFactsFromLog({
         exercises: log.exercises,
-        durationMinutes: log.duration_minutes === null ? null : Number(log.duration_minutes),
+        // With Method context, duration uses the effective definition and an
+        // out-of-range value is dropped (reported via data_issues instead).
+        durationMinutes: methodContext
+          ? methodContext.duration.minutes
+          : log.duration_minutes === null ? null : Number(log.duration_minutes),
       })
 
       // Layer B signals are decided by rules, and each carries an authority.
@@ -123,9 +149,23 @@ export async function POST(request: NextRequest) {
             }
             : null,
           exercise_names: session.exercises.map((exercise) => exercise.name),
+          method: methodContext
+            ? {
+              split_label: methodContext.split_label,
+              execution_mode: methodContext.execution_mode,
+              exercises: methodContext.exercises,
+              prescribed_not_logged: methodContext.prescribed_not_logged,
+              skipped: methodContext.skipped,
+            }
+            : null,
+          next_session: methodContext?.next_session ?? null,
+          data_issues: methodContext?.data_issues ?? [],
         },
-        instructions:
-          '这是单次训练的即时反馈。只描述这一次训练的事实与已给出的信号，不要评价用户整体健康。',
+        extraAllowedNumbers: methodContext?.allowed_numbers,
+        instructions: promptV2
+          ? WORKOUT_FEEDBACK_INSTRUCTIONS_V2
+          : '这是单次训练的即时反馈。只描述这一次训练的事实与已给出的信号，不要评价用户整体健康。',
+        ...coachOptions,
       })
 
       if (!result.ok) return unavailable(result.reason, result.detail)
@@ -150,6 +190,14 @@ export async function POST(request: NextRequest) {
       const nutrition = await getDailyNutritionFacts(supabase, user.id, date, target)
       const facts = buildNutritionFacts(nutrition)
       const interpreted = computeMealFeedbackStatus(nutrition)
+      const mealContext = coachFlag('COACH_MEAL_CONTEXT') && parsed.data.meal_type
+        ? await loadMealContext(supabase, {
+          userId: user.id,
+          date,
+          mealType: parsed.data.meal_type,
+          target,
+        })
+        : null
 
       const result = await composeWithEvidence({
         surface,
@@ -173,9 +221,28 @@ export async function POST(request: NextRequest) {
           target: nutrition.target,
           consumed: nutrition.consumed,
           remaining: nutrition.remaining,
+          this_meal: mealContext
+            ? {
+              meal: mealContext.meal_label,
+              saves_merged: mealContext.save_count,
+              items: mealContext.item_names,
+              totals: mealContext.totals,
+              position: mealContext.position,
+              has_estimated_items: mealContext.has_estimated_items,
+            }
+            : null,
+          meal_ref: mealContext?.meal_ref ?? null,
+          day: {
+            is_today: date === today(parsed.data.time_zone ?? 'UTC'),
+            consumed: nutrition.consumed,
+            remaining: nutrition.remaining,
+          },
         },
-        instructions:
-          '这是保存一餐后的即时反馈。只解释已经计算好的目标、已摄入和剩余额度，不要自行换算食物克数或重新计算营养数值。',
+        extraAllowedNumbers: mealContextNumbers(mealContext),
+        instructions: promptV2
+          ? MEAL_FEEDBACK_INSTRUCTIONS_V2
+          : '这是保存一餐后的即时反馈。只解释已经计算好的目标、已摄入和剩余额度，不要自行换算食物克数或重新计算营养数值。',
+        ...coachOptions,
       })
 
       if (!result.ok) return unavailable(result.reason, result.detail)
@@ -206,7 +273,8 @@ export async function POST(request: NextRequest) {
         facts: evidence.facts,
         signals: evidence.signals,
         context: evidence.context,
-        instructions: DAILY_REVIEW_INSTRUCTIONS,
+        instructions: promptV2 ? DAILY_REVIEW_INSTRUCTIONS_V2 : DAILY_REVIEW_INSTRUCTIONS,
+        ...coachOptions,
       })
 
       if (!result.ok) return unavailable(result.reason, result.detail)
