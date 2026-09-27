@@ -54,6 +54,7 @@ const INTERNAL_TERM_PATTERNS: RegExp[] = [
   /\b(signal_key|metric_key|evidence_ref_ids?|allowed_actions?|top_set_hint|set_type|record_completeness)\b/,
   /\b(within_reference|below_reference|above_reference|insufficient_data|not_assessable)\b/,
   /\b(name_only|rest_pause|backoff|warmup|working)\b/,
+  /\b(not_started|in_progress|skipped|canonical|calibration)\b/,
   /\bpartial\b/i,
   /\b(EV|E)-[A-Z0-9]+-[A-Z0-9-]+\b/,
   /\bRX-DAY\d/,
