@@ -57,7 +57,16 @@ interface FoodItem {
   provisional: boolean
   confidence: number | null
   estimateCaveat: string | null
+  /**
+   * Macro fields the user typed by hand. Only these are shown as typed; every
+   * other value (reference, history, AI estimate) is rounded for display while
+   * state keeps the precise number.
+   */
+  typedFields: MacroField[]
 }
+
+type MacroField = 'calories' | 'protein' | 'carbs' | 'fat'
+const MACRO_DISPLAY_DIGITS: Record<MacroField, number> = { calories: 0, protein: 1, carbs: 1, fat: 1 }
 
 interface MealFeedbackView {
   foodLogId: string
@@ -73,6 +82,8 @@ interface MealFeedbackView {
     explanation: string | null
     authority: string
   }>
+  /** loading → ready (AI text) or failed (rule cards shown as 基础总结). */
+  aiState: 'loading' | 'ready' | 'failed'
   ai: null | {
     summary: string
     observations: Array<{ text: string }>
@@ -113,6 +124,7 @@ function emptyFood(): FoodItem {
     provisional: false,
     confidence: null,
     estimateCaveat: null,
+    typedFields: [],
   }
 }
 
@@ -210,12 +222,15 @@ function FoodRow({
     // Coach patch 2026-09-27: values that came from the previous food (a
     // reference match, history or an AI estimate) belong to that food. Keep
     // them only when the user typed them by hand.
-    const keepTypedValues = food.resolutionSource === 'user_override'
+    const cleared: Partial<Record<MacroField, string>> = {}
+    for (const field of Object.keys(MACRO_DISPLAY_DIGITS) as MacroField[]) {
+      if (!food.typedFields.includes(field)) cleared[field] = ''
+    }
     onUpdate({
       name: val, per100g: null, autoFilled: false, historyFilled: false,
       foodId: null, resolutionSource: 'unresolved', sourceRefId: null,
       userConfirmed: false, provisional: false, estimateCaveat: null,
-      ...(keepTypedValues ? {} : { calories: '', protein: '', carbs: '', fat: '' }),
+      ...cleared,
     })
     search(val)
   }
@@ -242,6 +257,7 @@ function FoodRow({
         patch.carbs = calc.carbs
         patch.fat = calc.fat
         patch.autoFilled = true
+        patch.typedFields = []
       }
     }
     onUpdate(patch)
@@ -264,6 +280,7 @@ function FoodRow({
       per100g: null,
       autoFilled: false,
       historyFilled: true,
+      typedFields: [],
       resolutionSource: 'user_memory',
       sourceRefId: null,
       userConfirmed: true,
@@ -282,6 +299,7 @@ function FoodRow({
       patch.carbs = calc.carbs
       patch.fat = calc.fat
       patch.autoFilled = !!(calc.calories || calc.protein || calc.carbs || calc.fat)
+      patch.typedFields = []
     } else if (food.userConfirmed) {
       // A same-serving history value has no per-100g basis. Changing its weight
       // invalidates that confirmation instead of silently keeping old macros.
@@ -292,9 +310,10 @@ function FoodRow({
     onUpdate(patch)
   }
 
-  function manualValue(field: 'calories' | 'protein' | 'carbs' | 'fat', value: string) {
+  function manualValue(field: MacroField, value: string) {
     onUpdate({
       [field]: value,
+      typedFields: food.typedFields.includes(field) ? food.typedFields : [...food.typedFields, field],
       foodId: null,
       per100g: null,
       autoFilled: false,
@@ -305,6 +324,10 @@ function FoodRow({
       provisional: false,
       estimateCaveat: null,
     })
+  }
+
+  function shownMacro(field: MacroField): string {
+    return food.typedFields.includes(field) ? food[field] : display(food[field], MACRO_DISPLAY_DIGITS[field])
   }
 
   const hasCompleteActual = [food.calories, food.protein, food.carbs, food.fat]
@@ -326,6 +349,7 @@ function FoodRow({
       const calculated = calcNutrition(per100g, food.weight)
       onUpdate({
         ...calculated,
+        typedFields: [],
         foodId: null,
         per100g,
         resolutionSource: 'ai_estimate',
@@ -448,8 +472,9 @@ function FoodRow({
       )}
 
       {/* Coach patch 2026-09-27: visible labels (a placeholder disappears once
-          a value is filled), and values derived from per-100g data are rounded
-          for display only; the save path still sends per100g, not these strings. */}
+          a value is filled). Values the user did not type (reference, history,
+          AI estimate) are rounded for display only; state keeps the precise
+          number and the save path is unchanged. */}
       <div className="grid grid-cols-2 gap-2">
         <label className="text-[11px] text-gray-500">
           重量（g）
@@ -467,7 +492,7 @@ function FoodRow({
           <input
             type="number"
             inputMode="decimal"
-            value={food.per100g ? display(food.calories, 0) : food.calories}
+            value={shownMacro('calories')}
             onChange={e => manualValue('calories', e.target.value)}
             className={`mt-1 w-full border rounded-lg px-2 py-2 text-sm text-gray-900 outline-none ${
               food.autoFilled ? 'border-emerald-300 bg-emerald-50 text-emerald-800' : 'border-gray-200'
@@ -479,7 +504,7 @@ function FoodRow({
           <input
             type="number"
             inputMode="decimal"
-            value={food.per100g ? display(food.protein, 1) : food.protein}
+            value={shownMacro('protein')}
             onChange={e => manualValue('protein', e.target.value)}
             className={`mt-1 w-full border rounded-lg px-2 py-2 text-sm text-gray-900 outline-none ${
               food.autoFilled ? 'border-emerald-300 bg-emerald-50 text-emerald-800' : 'border-gray-200'
@@ -491,7 +516,7 @@ function FoodRow({
           <input
             type="number"
             inputMode="decimal"
-            value={food.per100g ? display(food.carbs, 1) : food.carbs}
+            value={shownMacro('carbs')}
             onChange={e => manualValue('carbs', e.target.value)}
             className={`mt-1 w-full border rounded-lg px-2 py-2 text-sm text-gray-900 outline-none ${
               food.autoFilled ? 'border-emerald-300 bg-emerald-50 text-emerald-800' : 'border-gray-200'
@@ -503,7 +528,7 @@ function FoodRow({
           <input
             type="number"
             inputMode="decimal"
-            value={food.per100g ? display(food.fat, 1) : food.fat}
+            value={shownMacro('fat')}
             onChange={e => manualValue('fat', e.target.value)}
             className={`mt-1 w-full border rounded-lg px-2 py-2 text-sm text-gray-900 outline-none ${
               food.autoFilled ? 'border-emerald-300 bg-emerald-50 text-emerald-800' : 'border-gray-200'
@@ -668,6 +693,7 @@ export default function FoodPage() {
         foodLogId: facts.food_log_id,
         nutrition: facts.nutrition,
         status: facts.status ?? [],
+        aiState: 'loading',
         ai: null,
         provenance: null,
         rating: null,
@@ -694,6 +720,7 @@ export default function FoodPage() {
         if (aiResponse.ok && aiPayload?.data?.ai) {
           setFeedback(current => current ? {
             ...current,
+            aiState: 'ready',
             ai: aiPayload.data.ai,
             provenance: {
               prompt_version: aiPayload.data.prompt_version,
@@ -702,9 +729,12 @@ export default function FoodPage() {
               evidence_registry_version: aiPayload.data.evidence_registry_version,
             },
           } : current)
+        } else {
+          setFeedback(current => current ? { ...current, aiState: 'failed' } : current)
         }
       } catch {
         // The deterministic facts/status panel remains the successful result.
+        setFeedback(current => current ? { ...current, aiState: 'failed' } : current)
       }
     } catch (err: unknown) {
       show(err instanceof Error ? err.message : '保存失败', 'error')
@@ -890,7 +920,13 @@ export default function FoodPage() {
               <p className="text-xs text-gray-400">本餐已保存</p>
               <p className="mt-1 text-sm font-medium">本餐反馈</p>
             </div>
-            {!feedback.ai && feedback.status.some(item => item.explanation) && (
+            {feedback.aiState === 'loading' && (
+              <p className="text-xs text-gray-400">教练反馈生成中…</p>
+            )}
+            {feedback.aiState === 'failed' && (
+              <p className="text-[11px] text-gray-400">基础总结 · AI 反馈暂时没有生成</p>
+            )}
+            {feedback.aiState === 'failed' && feedback.status.some(item => item.explanation) && (
               <div className="space-y-2">
                 {feedback.status.filter(item => item.explanation).map(item => (
                   <div key={item.metric_key} className="rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-900">

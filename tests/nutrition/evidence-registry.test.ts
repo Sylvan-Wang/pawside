@@ -14,7 +14,6 @@ import {
   interpretHypertrophyVolume,
   interpretRecovery,
   interpretWeeklyAerobic,
-  validateNumericIntegrity,
 } from '../../lib/evidence/interpret.ts'
 import { metricFact } from '../../lib/evidence/interpret.ts'
 
@@ -197,30 +196,5 @@ describe('interpretRecovery (AI Patch §19)', () => {
   })
 })
 
-describe('validateNumericIntegrity (AI Patch §31)', () => {
-  const facts = [
-    metricFact({ metricKey: 'a', value: 86, unit: 'g', window: 'day', calculationBasis: {}, dataCompleteness: 'complete' }),
-    metricFact({ metricKey: 'b', value: 1540, unit: 'kcal', window: 'day', calculationBasis: {}, dataCompleteness: 'complete' }),
-  ]
-
-  it('accepts text whose numbers all come from the facts', () => {
-    expect(validateNumericIntegrity(['今天摄入 1540 kcal，蛋白质 86g'], facts).ok).toBe(true)
-  })
-
-  it('rejects a number the model invented', () => {
-    const result = validateNumericIntegrity(['今天摄入 1540 kcal，蛋白质 99g'], facts)
-    expect(result.ok).toBe(false)
-    expect(result.untraceable).toContain('99')
-  })
-
-  it('rejects a fabricated food weight', () => {
-    // §26: the AI may not convert remaining protein into grams of chicken.
-    const result = validateNumericIntegrity(['还差约 300g 鸡胸肉'], facts)
-    expect(result.ok).toBe(false)
-    expect(result.untraceable).toContain('300')
-  })
-
-  it('ignores text with no numbers', () => {
-    expect(validateNumericIntegrity(['今天记录得不错'], facts).ok).toBe(true)
-  })
-})
+// validateNumericIntegrity moved to tests/coach/output-checks.test.ts — the
+// implementation now lives in lib/evidence/output-checks.ts (spec A0-1).

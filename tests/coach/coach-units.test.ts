@@ -7,7 +7,7 @@ import {
   segmentedReps,
   userFacingNote,
 } from '../../lib/coach/set-guidance.ts'
-import { computeEffectiveDuration, sanitizeStoredDuration } from '../../lib/coach/session-duration.ts'
+import { computeEffectiveDuration, sanitizeDailyDuration, sanitizeStoredDuration } from '../../lib/coach/session-duration.ts'
 import { summarizeMeal } from '../../lib/coach/meal-context.ts'
 
 describe('display', () => {
@@ -24,6 +24,7 @@ describe('display', () => {
       expect.arrayContaining(['AI Patch', '§', 'partial']),
     )
     expect(findInternalTerms(['卧推三组都按计划完成，下次末组可以冲一下'])).toEqual([])
+    expect(findInternalTerms(['上斜卧推状态是 skipped'])).toEqual(['skipped'])
   })
 
   it('translates enums and authorities to plain words', () => {
@@ -136,6 +137,19 @@ describe('effective duration', () => {
     expect(sanitizeStoredDuration(19924)).toBeNull()
     expect(sanitizeStoredDuration(3)).toBeNull()
     expect(sanitizeStoredDuration(45)).toBe(45)
+  })
+})
+
+describe('daily duration', () => {
+  it('gates each session on its own, not the day total', () => {
+    expect(sanitizeDailyDuration([90, 80])).toEqual({ minutes: 170, excluded_count: 0 })
+    expect(sanitizeDailyDuration([60, 19924])).toEqual({ minutes: 60, excluded_count: 1 })
+    expect(sanitizeDailyDuration([19924])).toEqual({ minutes: null, excluded_count: 1 })
+  })
+
+  it('treats a day without sessions as zero, not missing', () => {
+    expect(sanitizeDailyDuration([])).toEqual({ minutes: 0, excluded_count: 0 })
+    expect(sanitizeDailyDuration([null])).toEqual({ minutes: null, excluded_count: 0 })
   })
 })
 

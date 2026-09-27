@@ -1,4 +1,5 @@
 import registryData from '../../docs/product/evidence/evidence-registry.json'
+import type { RegistryLike } from './output-checks'
 
 /**
  * Pawside — Evidence Registry access (AI Patch §3, §4, §35).
@@ -185,4 +186,36 @@ export function validateRegistry(): string[] {
   }
 
   return problems
+}
+
+/**
+ * Coach patch — global claims forbidden regardless of which evidence id is in
+ * play (HANDOFF §4 硬约束 5 / spec MUST 3.9). These are on top of, never
+ * instead of, each evidence item's own `forbidden_claims`.
+ */
+export const GLOBAL_FORBIDDEN_CLAIMS: string[] = [
+  '过度训练',
+  '训练过度',
+  '你不能练',
+  '今天不能练',
+  '明天补回来',
+  '明天少吃一点',
+  '你患有',
+  '你的体脂率是 X%',
+  '体脂率约为 X%',
+]
+
+let cachedOutputCheckRegistry: RegistryLike | null = null
+
+/** Adapts the evidence registry to the shape `lib/evidence/output-checks.ts` checks against. */
+export function buildOutputCheckRegistry(): RegistryLike {
+  if (cachedOutputCheckRegistry) return cachedOutputCheckRegistry
+  const forbiddenClaims = new Map<string, string[]>()
+  const ids = new Set<string>()
+  for (const item of EVIDENCE_ITEMS) {
+    ids.add(item.evidence_id)
+    forbiddenClaims.set(item.evidence_id, item.forbidden_claims)
+  }
+  cachedOutputCheckRegistry = { forbiddenClaims, ids, globalForbidden: GLOBAL_FORBIDDEN_CLAIMS }
+  return cachedOutputCheckRegistry
 }

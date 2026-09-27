@@ -5,7 +5,6 @@ import {
   type EvidenceRegistryItem,
 } from './registry'
 import {
-  findUntraceableNumbers,
   type DataCompleteness,
   type InterpretedSignal,
   type InterpretedStatus,
@@ -384,18 +383,7 @@ export function interpretEnergyAvailability(): InterpretedSignal {
   })
 }
 
-/**
- * AI Patch §31 — numeric integrity gate.
- *
- * Verifies that every number an AI payload states can be traced back to a
- * supplied MetricFact. Any untraceable number means the output must be rejected
- * or stripped, never displayed.
- */
-export function validateNumericIntegrity(
-  texts: string[],
-  facts: MetricFact[],
-): { ok: boolean; untraceable: string[] } {
-  const allowed = facts.map((fact) => fact.value)
-  const untraceable = texts.flatMap((text) => findUntraceableNumbers(text, allowed))
-  return { ok: untraceable.length === 0, untraceable }
-}
+// Numeric-integrity gate retired here (spec A0-1, docs/coach/HANDOFF.md §3):
+// this was one of three duplicate implementations. The single implementation
+// now lives in lib/evidence/output-checks.ts and composeWithEvidence calls it
+// directly; see tests/coach/output-checks.test.ts.

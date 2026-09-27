@@ -4,7 +4,7 @@ import type { InterpretedSignal, MetricFact } from '../nutrition/interpretation'
 import { buildNutritionFacts } from './metric-facts'
 import { interpretRecovery, metricFact } from './interpret'
 import { SPLIT_LABELS } from '../coach/display'
-import { sanitizeStoredDuration } from '../coach/session-duration'
+import { sanitizeDailyDuration } from '../coach/session-duration'
 
 /** Coach patch: the next Method split, best-effort (null on any error). */
 async function loadNextTraining(supabase: SupabaseClient, userId: string) {
@@ -59,6 +59,7 @@ export async function buildDailyReviewEvidence(
   const log = await buildDailyLog(supabase, input)
   const completeness = log.summary.data_completeness
   const facts = buildNutritionFacts(log.nutrition)
+  const dailyDuration = sanitizeDailyDuration(log.workouts.map((entry) => entry.duration_minutes))
 
   facts.push(
     dayFact({
@@ -70,15 +71,15 @@ export async function buildDailyReviewEvidence(
     }),
     dayFact({
       metricKey: 'training.duration_minutes',
-      // Coach patch: a stored duration outside 5–150 min is a recording issue
-      // (e.g. an unfinished session closed days later), never a training fact.
-      value: sanitizeStoredDuration(log.summary.total_duration_minutes),
+      // Coach patch: each stored session duration outside 5–150 min is a
+      // recording issue (e.g. an unfinished session closed days later), never
+      // a training fact. Gated per session, not on the day total.
+      value: dailyDuration.minutes,
       unit: 'min',
       basis: {
         source: 'workout_logs.duration_minutes',
         date: log.date,
-        excluded_out_of_range: log.summary.total_duration_minutes !== null
-          && sanitizeStoredDuration(log.summary.total_duration_minutes) === null,
+        excluded_out_of_range: dailyDuration.excluded_count,
       },
       completeness,
     }),
@@ -157,7 +158,9 @@ export async function buildDailyReviewEvidence(
     facts,
     signals,
     context: {
-      is_rest_day: log.summary.workout_count === 0,
+      // Today is not over: no workout yet is not the same as a rest day.
+      is_rest_day: !log.is_today && log.summary.workout_count === 0,
+      no_training_yet: log.is_today && log.summary.workout_count === 0,
       next_training: nextTraining,
       date: log.date,
       period_label: log.period_label,
