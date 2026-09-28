@@ -498,11 +498,13 @@ async function seedNewUser(account: TestAccount) {
 
 async function main() {
   const accounts: Array<{ label: string; email: string; seed: (a: TestAccount) => Promise<void> }> = [
-    { label: 'MODEL', email: 'pawside-test-model@example.test', seed: seedModelUser },
-    { label: 'INTERMITTENT', email: 'pawside-test-intermittent@example.test', seed: seedIntermittentUser },
-    { label: 'NEW', email: 'pawside-test-new@example.test', seed: seedNewUser },
+    { label: 'MODEL', email: 'pawsidetest.fullcompliance@gmail.com', seed: seedModelUser },
+    { label: 'INTERMITTENT', email: 'pawsidetest.intermittentgaps@gmail.com', seed: seedIntermittentUser },
+    { label: 'NEW', email: 'pawsidetest.newuserempty@gmail.com', seed: seedNewUser },
   ]
-  const password = `Pawside-${crypto.randomUUID().slice(0, 8)}!`
+  // Fixed, low-friction password: these are throwaway QA accounts on a
+  // non-production project, never real user data.
+  const password = '123456'
   const created: TestAccount[] = []
 
   for (const spec of accounts) {
