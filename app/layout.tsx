@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next'
+import RecoveryCheckinSheet from '@/components/RecoveryCheckinSheet'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -30,7 +31,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
       </head>
-      <body suppressHydrationWarning>{children}</body>
+      <body suppressHydrationWarning>
+        {children}
+        <RecoveryCheckinSheet />
+      </body>
     </html>
   )
 }

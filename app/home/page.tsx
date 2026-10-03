@@ -31,11 +31,6 @@ interface DashboardNutritionRow {
   unit: string
 }
 
-interface RecoveryPromptState {
-  should_prompt: boolean
-  checkin: { checkin_date: string } | null
-}
-
 interface MethodContext {
   current_cycle_number: number
   next_split_key: 'push' | 'pull' | 'legs'
@@ -84,12 +79,6 @@ export default function HomePage() {
   const [aiAvailable, setAiAvailable] = useState<boolean | null>(null)
   const [nutritionRows, setNutritionRows] = useState<DashboardNutritionRow[]>([])
   const [nutritionLoading, setNutritionLoading] = useState(true)
-  const [recoveryPrompt, setRecoveryPrompt] = useState<RecoveryPromptState | null>(null)
-  const [recoveryOpen, setRecoveryOpen] = useState(false)
-  const [recoverySleep, setRecoverySleep] = useState<number | null>(null)
-  const [recoveryPostWorkout, setRecoveryPostWorkout] = useState<number | null>(null)
-  const [recoverySaving, setRecoverySaving] = useState(false)
-  const [hasEverTrained, setHasEverTrained] = useState(false)
 
   const load = useCallback(async () => {
     // getSession reads from localStorage — no network call
@@ -115,10 +104,6 @@ export default function HomePage() {
     setProfile(p)
     setTodayWorkouts(workoutRes.data || [])
     setWeeklyDone((weekWorkoutRes.data || []).length)
-    // Product §7: with no prior training, the recovery question is optional, so
-    // Home needs to know whether to ask it at all.
-    setHasEverTrained((streakWRes.data || []).length > 0)
-
     const metrics = metricsRes.data || []
     const withWeight = metrics.filter(m => m.weight_kg).reverse()
     setWeightData(withWeight.map(m => ({ date: m.date.slice(5), weight: m.weight_kg })))
@@ -266,7 +251,7 @@ export default function HomePage() {
 
   /**
    * Product §26: Home renders today's nutrition from the shared deterministic
-   * source, and Product §7 offers the Recovery Check-in once per local day.
+   * source. The daily Recovery Check-in is mounted globally from app/layout.tsx.
    *
    * Real data only — the previous card showed a meal count. Nothing here
    * substitutes a default for an unset target (Product §27).
@@ -275,23 +260,12 @@ export default function HomePage() {
     const dateKey = today()
     setNutritionLoading(true)
     try {
-      const [dailyResponse, recoveryResponse] = await Promise.all([
-        fetch(`/api/daily-log?date=${dateKey}&today=${dateKey}&preload=1`, { cache: 'no-store' }),
-        fetch(`/api/recovery/checkin?date=${dateKey}`, { cache: 'no-store' }),
-      ])
+      const dailyResponse = await fetch(`/api/daily-log?date=${dateKey}&today=${dateKey}&preload=1`, { cache: 'no-store' })
 
       if (dailyResponse.ok) {
         const payload = await dailyResponse.json()
         setNutritionRows(payload?.data?.dashboard_nutrition ?? [])
         setTodayMealCount(Number(payload?.data?.log?.summary?.meal_count ?? 0))
-      }
-
-      if (recoveryResponse.ok) {
-        const payload = await recoveryResponse.json()
-        setRecoveryPrompt({
-          should_prompt: Boolean(payload?.data?.should_prompt),
-          checkin: payload?.data?.checkin ?? null,
-        })
       }
     } catch (reason) {
       console.error('[home] failed to load today facts', reason)
@@ -301,41 +275,6 @@ export default function HomePage() {
   }, [])
 
   useEffect(() => { void Promise.resolve().then(loadTodayFacts) }, [loadTodayFacts])
-
-  async function submitRecoveryCheckin(skipped = false) {
-    const dateKey = today()
-    setRecoverySaving(true)
-    try {
-      const response = await fetch('/api/recovery/checkin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          date: dateKey,
-          sleep_quality: skipped ? null : recoverySleep,
-          post_workout_recovery: skipped ? null : recoveryPostWorkout,
-          skipped,
-        }),
-      })
-      if (!response.ok) {
-        const payload = await response.json().catch(() => null)
-        throw new Error(payload?.error?.message || '保存失败')
-      }
-      // Product §21: a recovery answer is part of the day's facts, so the
-      // displayed daily summary must not keep showing the pre-answer state.
-      sessionStorage.removeItem(`ai_review_${dateKey}`)
-      sessionStorage.removeItem(`ai_summary_${dateKey}`)
-      sessionStorage.removeItem(`ai_review_v3_${dateKey}`)
-      sessionStorage.removeItem(`ai_summary_v3_${dateKey}`)
-      setRecoveryOpen(false)
-      setRecoveryPrompt({ should_prompt: false, checkin: { checkin_date: dateKey } })
-      await loadTodayFacts()
-      await loadAiSummary()
-    } catch (reason) {
-      console.error('[home] recovery check-in failed', reason)
-    } finally {
-      setRecoverySaving(false)
-    }
-  }
 
   useEffect(() => {
     router.prefetch('/training/today')
@@ -582,69 +521,6 @@ export default function HomePage() {
             </div>
           )}
         </div>
-
-        {/* Recovery Check-in prompt — Product §7: max once per local day */}
-        {recoveryPrompt?.should_prompt && !recoveryOpen && (
-          <div className="bg-white rounded-2xl p-4">
-            <h2 className="text-sm font-semibold">今天状态怎么样？</h2>
-            <p className="mt-1 text-xs leading-5 text-gray-400">
-              每天最多问一次，可以跳过，不影响记录训练或饮食。
-            </p>
-            <button onClick={() => setRecoveryOpen(true)}
-              className="mt-3 w-full rounded-xl bg-black py-2.5 text-sm font-medium text-white">
-              记录今天的状态
-            </button>
-          </div>
-        )}
-
-        {recoveryOpen && (
-          <div className="bg-white rounded-2xl p-4">
-            <h2 className="text-sm font-semibold">今天状态怎么样？</h2>
-
-            <p className="mt-3 text-xs text-gray-500">昨晚睡得好吗？</p>
-            <div className="mt-1.5 flex gap-1.5">
-              {[1, 2, 3, 4, 5].map((value) => (
-                <button key={value} type="button" onClick={() => setRecoverySleep(value)}
-                  className={recoverySleep === value
-                    ? 'flex-1 rounded-lg border border-black bg-black py-2 text-xs text-white'
-                    : 'flex-1 rounded-lg border border-gray-200 py-2 text-xs text-gray-600'}>
-                  {value}
-                </button>
-              ))}
-            </div>
-
-            {/* Product §7: with no training history the recovery question is optional. */}
-            {hasEverTrained && (
-              <>
-                <p className="mt-3 text-xs text-gray-500">上一次训练后恢复得怎么样？</p>
-                <div className="mt-1.5 flex gap-1.5">
-                  {[1, 2, 3, 4, 5].map((value) => (
-                    <button key={value} type="button" onClick={() => setRecoveryPostWorkout(value)}
-                      className={recoveryPostWorkout === value
-                        ? 'flex-1 rounded-lg border border-black bg-black py-2 text-xs text-white'
-                        : 'flex-1 rounded-lg border border-gray-200 py-2 text-xs text-gray-600'}>
-                      {value}
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-
-            <div className="mt-3 flex gap-2">
-              <button onClick={() => submitRecoveryCheckin(false)} disabled={recoverySaving}
-                className="flex-1 rounded-xl bg-black py-2.5 text-sm font-medium text-white disabled:opacity-50">
-                {recoverySaving ? '保存中…' : '完成'}
-              </button>
-              <button onClick={() => submitRecoveryCheckin(true)} disabled={recoverySaving}
-                className="rounded-xl border border-gray-200 px-4 py-2.5 text-sm text-gray-600 disabled:opacity-50">
-                跳过
-              </button>
-            </div>
-            <p className="mt-2 text-xs text-gray-400">
-              这只是你的主观感受，不会自动改变训练安排。
-            </p>
-          </div>
-        )}
 
         {/* Today AI summary */}
         <div className="bg-white rounded-2xl p-4">

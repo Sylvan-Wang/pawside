@@ -8,7 +8,8 @@ import {
   isValidSelfReport,
   shouldPromptCheckin,
 } from '@/lib/recovery'
-import { invalidateDayDerivedCache } from '@/lib/utils'
+import { buildRecoveryWorkoutPrompt } from '@/lib/recovery-prompt'
+import { invalidateDayDerivedCache, shiftDateKey } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
@@ -46,13 +47,69 @@ export async function GET(request: NextRequest) {
 
   try {
     const checkin = await loadRecoveryCheckin(supabase, user.id, date)
+    if (checkin) {
+      return NextResponse.json({
+        data: {
+          checkin,
+          should_prompt: false,
+          training_in_progress: false,
+          workout: null,
+          sleep_description: describeSelfReport(checkin.sleep_quality_self_report),
+          recovery_description: describeSelfReport(checkin.post_workout_recovery_self_report),
+        },
+      })
+    }
+
+    const [activeSessionResult, previousSessionResult, enrollmentResult] = await Promise.all([
+      supabase
+        .from('workout_sessions')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('status', 'started')
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from('workout_sessions')
+        .select('split_key,log_date,completed_at')
+        .eq('user_id', user.id)
+        .eq('status', 'completed')
+        .lt('log_date', date)
+        .order('log_date', { ascending: false })
+        .order('completed_at', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from('method_enrollments')
+        .select('next_split_key')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .order('started_at', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ])
+
+    const firstError = activeSessionResult.error ?? previousSessionResult.error ?? enrollmentResult.error
+    if (firstError) throw new Error(firstError.message)
+
+    const previous = previousSessionResult.data
+    const workout = buildRecoveryWorkoutPrompt({
+      splitKey: previous?.split_key ?? null,
+      logDate: previous?.log_date ?? null,
+      today: date,
+      yesterday: shiftDateKey(date, -1),
+      twoDaysAgo: shiftDateKey(date, -2),
+      nextSplitKey: enrollmentResult.data?.next_split_key ?? null,
+    })
+    const trainingInProgress = Boolean(activeSessionResult.data)
     return NextResponse.json({
       data: {
         checkin,
-        should_prompt: shouldPromptCheckin(checkin),
+        should_prompt: shouldPromptCheckin(checkin) && !trainingInProgress,
+        training_in_progress: trainingInProgress,
+        workout,
         // Product §8: only these three descriptions are permitted.
-        sleep_description: describeSelfReport(checkin?.sleep_quality_self_report ?? null),
-        recovery_description: describeSelfReport(checkin?.post_workout_recovery_self_report ?? null),
+        sleep_description: describeSelfReport(null),
+        recovery_description: describeSelfReport(null),
       },
     })
   } catch (reason: unknown) {
