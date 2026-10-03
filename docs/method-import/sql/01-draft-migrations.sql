@@ -31,6 +31,8 @@ $$;
 create trigger method_enrollments_guard_delete
   before delete on public.method_enrollments
   for each row execute function public.guard_enrollment_delete_with_history();
+-- Supabase 默认给 anon/authenticated 授予新函数的执行权限；触发器函数不需要这些权限。
+revoke all on function public.guard_enrollment_delete_with_history() from public, anon, authenticated;
 commit;
 -- 回滚：drop trigger method_enrollments_guard_delete on public.method_enrollments;
 --       drop function public.guard_enrollment_delete_with_history();
@@ -89,6 +91,8 @@ begin
   return cur;
 end
 $$;
+revoke all on function public.canonical_exercise_id(uuid) from public, anon;
+grant execute on function public.canonical_exercise_id(uuid) to authenticated;
 commit;
 -- 回滚：恢复 exercises_authenticated_read（using (true)）后 drop 新策略、新表、新函数、新列。
 

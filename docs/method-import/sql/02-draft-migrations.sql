@@ -128,7 +128,9 @@ as $$
   order by split.order_index
   limit 1
 $$;
-revoke all on function public.next_program_day(uuid) from public, anon;
+-- 内部辅助函数：只由 security definer 的 RPC 调用，登录用户不得直接执行（避免用他人的周期 ID 探测）。
+-- 注意 Supabase 默认给 authenticated 授予新函数的执行权限，所以必须显式撤销 authenticated。
+revoke all on function public.next_program_day(uuid) from public, anon, authenticated;
 
 create function public.workout_log_type_for_split(p_enrollment_id uuid, p_split_key text)
 returns text
@@ -142,7 +144,7 @@ as $$
   join public.method_splits split on split.method_release_id = enrollment.method_release_id
   where enrollment.id = p_enrollment_id and split.key = p_split_key
 $$;
-revoke all on function public.workout_log_type_for_split(uuid, text) from public, anon;
+revoke all on function public.workout_log_type_for_split(uuid, text) from public, anon, authenticated;
 commit;
 
 -- =====================================================================================

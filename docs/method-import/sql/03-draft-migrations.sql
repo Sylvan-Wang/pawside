@@ -114,6 +114,7 @@ end
 $$;
 create trigger user_method_imports_quota before insert on public.user_method_imports
   for each row execute function public.enforce_import_quota();
+revoke all on function public.enforce_import_quota() from public, anon, authenticated;
 
 alter table public.user_method_imports enable row level security;
 alter table public.user_method_imports force row level security;
