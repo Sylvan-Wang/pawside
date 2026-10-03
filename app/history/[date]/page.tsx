@@ -139,7 +139,11 @@ export default function HistoryDetailPage() {
 
     let error = null
     if (type === 'workout') {
-      ;({ error } = await supabase.from('workout_logs').delete().eq('id', id))
+      const response = await fetch(`/api/workout-logs/${id}`, { method: 'DELETE' })
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null)
+        error = { message: payload?.error?.message || '删除失败' }
+      }
     } else if (type === 'food') {
       const response = await fetch(`/api/nutrition/food-log/${id}`, { method: 'DELETE' })
       if (!response.ok) {

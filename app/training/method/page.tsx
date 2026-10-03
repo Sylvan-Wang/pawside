@@ -1,32 +1,39 @@
 import PageHeader from '@/components/PageHeader'
 import ExerciseMotion from '@/components/workout/ExerciseMotion'
-import { METHOD_SPLITS } from '@/lib/method-catalog'
+import { loadMethodCatalog } from '@/lib/method-library'
 import Link from 'next/link'
 
-export default function MethodOverviewPage() {
+export default async function MethodOverviewPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ release?: string }>
+}) {
+  const { release } = await searchParams
+  const catalog = await loadMethodCatalog(release)
+  const releaseQuery = catalog.releaseId ? `?release=${catalog.releaseId}` : ''
   return (
     <div className="min-h-screen bg-gray-50 pb-10">
       <PageHeader title="训练方法" back />
       <main className="space-y-5 px-4 py-5">
         <header className="rounded-2xl bg-black p-5 text-white">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-xs text-white/60">Canonical Workbook · v1.2</p>
-            <span className="rounded-full bg-white/10 px-2.5 py-1 text-[11px] text-white/80">计划预览</span>
+            <p className="text-xs text-white/60">版本 {catalog.version}</p>
+            <Link href="/training/method/library" className="rounded-full bg-white/10 px-2.5 py-1 text-[11px] text-white/80">方法库</Link>
           </div>
-          <h1 className="mt-4 text-2xl font-semibold tracking-tight">推 · 拉 · 腿</h1>
+          <h1 className="mt-4 text-2xl font-semibold tracking-tight">{catalog.name}</h1>
           <p className="mt-2 text-sm leading-6 text-white/70">
-            先理解今天为什么这样练。浏览动作不会写入训练记录，开始训练后才会保存实际完成情况。
+            {catalog.description || '先理解今天为什么这样练。浏览动作不会写入训练记录，开始训练后才会保存实际完成情况。'}
           </p>
         </header>
 
-        <section className="rounded-2xl border border-amber-100 bg-amber-50 p-4">
+        {catalog.source === 'fixture' && <section className="rounded-2xl border border-amber-100 bg-amber-50 p-4">
           <p className="text-xs font-medium text-amber-900">当前状态</p>
           <p className="mt-1 text-sm leading-6 text-amber-800">
-            Method v1.2 已按 internal beta 运行；当前采用 v1 runtime 默认值，仍有 2 项严格来源证据待补，因此暂不标记 Strict Method 认证。
+            新方法运行时尚未为此账号开启，当前继续显示已验证的 v1.2 计划。
           </p>
-        </section>
+        </section>}
 
-        {METHOD_SPLITS.map((split) => (
+        {catalog.splits.map((split) => (
           <section key={split.key} className="space-y-3">
             <div className="flex items-end justify-between px-1">
               <div>
@@ -39,7 +46,7 @@ export default function MethodOverviewPage() {
             {split.exercises.map((exercise) => (
               <Link
                 key={exercise.key}
-                href={'/training/method/' + exercise.key}
+                href={`/training/method/${exercise.key}${releaseQuery}`}
                 className="block rounded-2xl bg-white p-4 transition active:scale-[0.99]"
               >
                 <div className="flex items-start justify-between gap-3">

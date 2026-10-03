@@ -34,10 +34,9 @@ export async function POST(
     return apiError('VALIDATION_ERROR', '训练完成信息无效', 400, parsed.error.flatten())
   }
 
-  // Minimum P1 §9: completion runs on complete_method_session_v2
-  // (exercise_count_threshold_v1). The legacy complete_method_session is left
-  // untouched for the released caller.
-  const { data, error } = await supabase.rpc('complete_method_session_v2', {
+  const { data: multiDayEnabled } = await supabase.rpc('feature_enabled', { p_key: 'multi_day_runtime' })
+  const rpcName = multiDayEnabled ? 'complete_method_session_v3' : 'complete_method_session_v2'
+  const { data, error } = await supabase.rpc(rpcName, {
     p_session_id: sessionId,
     p_completion_request_id: parsed.data.completion_request_id,
     p_duration_minutes: parsed.data.duration_minutes ?? null,

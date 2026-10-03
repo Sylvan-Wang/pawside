@@ -1,5 +1,4 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { SPLIT_LABELS } from './display'
 import { coachDurationBasis } from './flags'
 import { computeEffectiveDuration, type EffectiveDuration } from './session-duration'
 import {
@@ -112,6 +111,7 @@ export async function loadLastTime(
         sets:set_executions(actual_weight_kg,actual_reps,status,is_extra)
       `)
       .eq('user_id', userId)
+      .is('session.deleted_at', null)
       .eq('exercise_id', exerciseId)
       .neq('workout_session_id', session.id)
       .eq('session.status', 'completed')
@@ -157,12 +157,18 @@ async function loadNextSession(
 ): Promise<{ split_label: string; key_sets: string[]; plan: PlannedExerciseInput[] } | null> {
   const { data: enrollment, error } = await supabase
     .from('method_enrollments')
-    .select('next_split_key')
+    .select('next_split_key,method_release_id')
     .eq('id', enrollmentId)
     .eq('user_id', userId)
     .maybeSingle()
   if (error || !enrollment?.next_split_key) return null
-  const splitLabel = SPLIT_LABELS[enrollment.next_split_key] ?? enrollment.next_split_key
+  const { data: split } = await supabase
+    .from('method_splits')
+    .select('name_zh')
+    .eq('method_release_id', enrollment.method_release_id)
+    .eq('key', enrollment.next_split_key)
+    .maybeSingle()
+  const splitLabel = split?.name_zh ?? ''
 
   const { data: prescription } = await supabase
     .from('session_prescriptions')
@@ -212,6 +218,7 @@ export async function loadMethodWorkoutContext(
       .select('id, enrollment_id, split_key, execution_mode, started_at, completed_at, duration_minutes')
       .eq('id', methodWorkoutSessionId)
       .eq('user_id', userId)
+      .is('deleted_at', null)
       .maybeSingle()
     if (error || !session) return null
 
@@ -311,14 +318,31 @@ export async function loadMethodWorkoutContext(
       storedMinutes: session.duration_minutes,
     })
 
-    const next = await loadNextSession(supabase, userId, session.enrollment_id).catch(() => null)
+    const [next, sessionSplit] = await Promise.all([
+      loadNextSession(supabase, userId, session.enrollment_id).catch(() => null),
+      supabase
+        .from('method_enrollments')
+        .select('method_release_id')
+        .eq('id', session.enrollment_id)
+        .maybeSingle()
+        .then(async ({ data }) => {
+          if (!data?.method_release_id) return null
+          const { data: split } = await supabase
+            .from('method_splits')
+            .select('name_zh')
+            .eq('method_release_id', data.method_release_id)
+            .eq('key', session.split_key)
+            .maybeSingle()
+          return split?.name_zh ?? null
+        }),
+    ])
     if (next) for (const value of planNumbers(next.plan)) allowed.add(value)
 
     const dataIssues: string[] = []
     if (duration.excluded) dataIssues.push('这次记录的训练时长明显异常，已不计入分析')
 
     return {
-      split_label: SPLIT_LABELS[session.split_key] ?? session.split_key,
+      split_label: sessionSplit ?? '',
       execution_mode: session.execution_mode ?? null,
       duration,
       exercises,

@@ -4,18 +4,12 @@ export const RECOVERY_SPLIT_COPY = {
   legs: { label: '腿', muscles: '大腿、臀' },
 } as const
 
-export type RecoverySplitKey = keyof typeof RECOVERY_SPLIT_COPY
-
 export interface RecoveryWorkoutPrompt {
   days_ago: 1 | 2
-  split_key: RecoverySplitKey
+  split_key: string
   split_label: string
   muscles: string
   same_as_next: boolean
-}
-
-export function isRecoverySplitKey(value: string): value is RecoverySplitKey {
-  return value in RECOVERY_SPLIT_COPY
 }
 
 export function buildRecoveryWorkoutPrompt(input: {
@@ -25,8 +19,10 @@ export function buildRecoveryWorkoutPrompt(input: {
   yesterday: string
   twoDaysAgo: string
   nextSplitKey: string | null
+  splitLabel?: string | null
+  muscles?: string | null
 }): RecoveryWorkoutPrompt | null {
-  if (!input.splitKey || !isRecoverySplitKey(input.splitKey) || !input.logDate) return null
+  if (!input.splitKey || !input.logDate) return null
 
   const daysAgo = input.logDate === input.yesterday
     ? 1
@@ -35,12 +31,17 @@ export function buildRecoveryWorkoutPrompt(input: {
       : null
   if (daysAgo === null || input.logDate >= input.today) return null
 
-  const copy = RECOVERY_SPLIT_COPY[input.splitKey]
+  const fallback = RECOVERY_SPLIT_COPY[input.splitKey as keyof typeof RECOVERY_SPLIT_COPY]
+  const splitLabel = input.splitLabel?.trim() || fallback?.label
+  const muscles = input.muscles?.trim() || fallback?.muscles
+  // Unknown method data must omit the whole soreness question instead of
+  // leaking an internal split key into user-facing text.
+  if (!splitLabel || !muscles) return null
   return {
     days_ago: daysAgo,
     split_key: input.splitKey,
-    split_label: copy.label,
-    muscles: copy.muscles,
+    split_label: splitLabel,
+    muscles,
     same_as_next: input.nextSplitKey === input.splitKey,
   }
 }

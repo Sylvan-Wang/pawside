@@ -36,7 +36,7 @@ interface ExercisePrescription {
 
 interface TodayTraining {
   id: string
-  split_key: 'push' | 'pull' | 'legs'
+  split_key: string
   status: string
   method_split: { name_zh: string } | null
   exercises: ExercisePrescription[]
@@ -50,12 +50,12 @@ interface WorkoutActual {
 interface ActiveSessionRecovery {
   kind: 'active_session'
   session_id: string
-  split_key: 'push' | 'pull' | 'legs'
+  split_key: string
   session_prescription_id: string
 }
 
 interface ProgramDay {
-  split_key: 'push' | 'pull' | 'legs'
+  split_key: string
   day_index: number
   name_zh: string
   status: string
@@ -67,14 +67,14 @@ interface ProgramDay {
 
 interface TodayTrainingPayload {
   program_day: {
-    split_key: 'push' | 'pull' | 'legs'
+    split_key: string
     day_index: number
     name_zh: string
     cycle_number: number
     prescription_id: string
   }
   days: ProgramDay[]
-  next_split_key: 'push' | 'pull' | 'legs' | null
+  next_split_key: string | null
   preferred_session_minutes: number
   current_log_date: string
   view_date: string
@@ -88,7 +88,7 @@ interface TrainingUnavailableState {
   message: string
 }
 
-const splitNames = { push: '推', pull: '拉', legs: '腿' }
+const splitNames: Record<string, string> = { push: '推', pull: '拉', legs: '腿' }
 
 const setTypeNames: Record<string, string> = {
   warmup: '热身',
@@ -302,7 +302,7 @@ export default function TodayTrainingPage() {
           <>
             {recovery && !workoutActual && (
               <aside className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-                当前还有一条{splitNames[recovery.split_key]}训练未完成。你可以继续浏览这个训练日，但开始新训练前需要先处理当前训练。
+                当前还有一条{splitNames[recovery.split_key] || '训练'}未完成。你可以继续浏览这个训练日，但开始新训练前需要先处理当前训练。
               </aside>
             )}
             <header className="rounded-2xl bg-black p-5 text-white">
@@ -345,7 +345,7 @@ export default function TodayTrainingPage() {
                 {starting
                   ? '正在开始…'
                   : recovery
-                    ? `继续当前${splitNames[recovery.split_key]}训练`
+                    ? `继续当前${splitNames[recovery.split_key] || '训练'}`
                     : '开始这个训练日'}
               </button>
             </header>

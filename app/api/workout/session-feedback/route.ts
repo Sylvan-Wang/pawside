@@ -129,6 +129,7 @@ async function loadEffectiveDuration(
         .select('started_at,completed_at')
         .eq('id', sessionId)
         .eq('user_id', userId)
+        .is('deleted_at', null)
         .maybeSingle(),
       supabase
         .from('set_executions')

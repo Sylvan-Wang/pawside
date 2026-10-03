@@ -26,7 +26,7 @@ export async function GET() {
     })
   }
 
-  const [cycleResult, progressionResult] = await Promise.all([
+  const [cycleResult, progressionResult, programDaysResult] = await Promise.all([
     supabase
       .from('method_cycles')
       .select('id,cycle_number,started_at,completed_at,push_session_id,pull_session_id,legs_session_id,status')
@@ -47,16 +47,44 @@ export async function GET() {
       `)
       .eq('enrollment_id', enrollment.id)
       .order('created_at'),
+    supabase
+      .from('method_splits')
+      .select('key,name_zh,order_index,day_type,is_required')
+      .eq('method_release_id', enrollment.method_release_id)
+      .order('order_index'),
   ])
 
-  if (cycleResult.error || progressionResult.error) {
+  if (cycleResult.error || progressionResult.error || programDaysResult.error) {
     return apiError('DATABASE_ERROR', '暂时无法读取训练进度', 500)
   }
+
+  const cycleId = cycleResult.data?.id ?? null
+  let prescriptionRows: Array<{ split_key: string; status: string; completed_at: string | null }> = []
+  if (cycleId) {
+    const { data, error } = await supabase
+      .from('session_prescriptions')
+      .select('split_key,status,completed_at')
+      .eq('enrollment_id', enrollment.id)
+      .eq('cycle_id', cycleId)
+    if (error) return apiError('DATABASE_ERROR', '暂时无法读取训练进度', 500)
+    prescriptionRows = data ?? []
+  }
+  const statusBySplit = new Map(prescriptionRows.map((row) => [row.split_key, row]))
+  const programDays = (programDaysResult.data ?? []).map((day) => {
+    const prescription = statusBySplit.get(day.key)
+    return {
+      ...day,
+      status: prescription?.status ?? 'unavailable',
+      completed: prescription?.status === 'completed' || prescription?.status === 'skipped',
+      completed_at: prescription?.completed_at ?? null,
+    }
+  })
 
   return NextResponse.json({
     data: {
       enrollment,
       cycle: cycleResult.data,
+      program_days: programDays,
       exercise_progression: progressionResult.data ?? [],
     },
   })

@@ -19,9 +19,15 @@ export const saveSetActualSchema = z.object({
   exercise_execution_id: z.string().uuid(),
   set_index: z.number().int().positive().max(50),
   actual_weight_kg: z.number().finite().min(0).max(1000).nullable().optional(),
-  actual_reps: z.number().int().min(0).max(1000),
+  actual_reps: z.number().int().min(0).max(1000).nullable().optional(),
   actual_rir: z.number().finite().min(0).max(20).nullable().optional(),
-})
+  actual_duration_seconds: z.number().int().min(0).max(7200).nullable().optional(),
+  actual_distance_m: z.number().finite().min(0).max(1000000).nullable().optional(),
+}).refine((input) => (
+  input.actual_reps !== null && input.actual_reps !== undefined
+  || input.actual_duration_seconds !== null && input.actual_duration_seconds !== undefined
+  || input.actual_distance_m !== null && input.actual_distance_m !== undefined
+), { message: '至少记录次数、时长或距离中的一项' })
 
 export const completeTrainingSessionSchema = z.object({
   completion_request_id: z.string().uuid(),

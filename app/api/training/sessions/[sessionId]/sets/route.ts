@@ -33,14 +33,21 @@ export async function PUT(
   }
 
   const input = parsed.data
-  const { data, error } = await supabase.rpc('save_method_set_actual', {
+  const { data: multiDayEnabled } = await supabase.rpc('feature_enabled', { p_key: 'multi_day_runtime' })
+  const rpcName = multiDayEnabled ? 'save_method_set_actual_v2' : 'save_method_set_actual'
+  const rpcArgs = {
     p_session_id: sessionId,
     p_exercise_execution_id: input.exercise_execution_id,
     p_set_index: input.set_index,
     p_actual_weight_kg: input.actual_weight_kg ?? null,
-    p_actual_reps: input.actual_reps,
+    p_actual_reps: input.actual_reps ?? null,
     p_actual_rir: input.actual_rir ?? null,
-  })
+    ...(multiDayEnabled ? {
+      p_actual_duration_seconds: input.actual_duration_seconds ?? null,
+      p_actual_distance_m: input.actual_distance_m ?? null,
+    } : {}),
+  }
+  const { data, error } = await supabase.rpc(rpcName, rpcArgs)
   if (error) return trainingDatabaseError(error)
 
   return NextResponse.json({ data })

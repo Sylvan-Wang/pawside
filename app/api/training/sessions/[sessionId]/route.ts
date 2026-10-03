@@ -9,6 +9,7 @@ import { z } from 'zod'
 const idSchema = z.string().uuid()
 
 interface RawExercise {
+  id: string
   canonical_name_zh: string
   media_mappings: ExerciseMediaMapping[] | null
 }
@@ -62,6 +63,7 @@ export async function GET(
       .select('id,session_prescription_id,enrollment_id,cycle_id,split_key,status,view_date,performed_at,performed_time_zone,log_date,execution_mode,duration_minutes,notes,started_at,completed_at,selected_session_minutes,selection_source,original_exercise_count,required_exercise_count,completion_policy_version,completed_exercise_count')
       .eq('id', sessionId)
       .eq('user_id', user.id)
+      .is('deleted_at', null)
       .maybeSingle(),
     supabase
       .from('exercise_executions')
@@ -71,7 +73,7 @@ export async function GET(
         order_index,
         status,
         exercise:exercises(
-          canonical_name_zh,
+          id,canonical_name_zh,
           media_mappings:exercise_external_mappings(
             provider,external_slug,source_version,license,attribution,
             source_url,mapping_status,mapping_notes
@@ -111,7 +113,7 @@ export async function GET(
     const sets = execution.sets ?? []
     return {
       ...execution,
-      exercise: exercise ? { canonical_name_zh: exercise.canonical_name_zh } : null,
+      exercise: exercise ? { id: exercise.id, canonical_name_zh: exercise.canonical_name_zh } : null,
       media: mapping ? buildWorkoutGuideMedia(mapping) : null,
       sets,
       fully_completed: exerciseIsFullyCompleted(sets),

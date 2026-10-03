@@ -66,13 +66,15 @@ export async function GET(request: NextRequest) {
         .select('id')
         .eq('user_id', user.id)
         .eq('status', 'started')
+        .is('deleted_at', null)
         .limit(1)
         .maybeSingle(),
       supabase
         .from('workout_sessions')
-        .select('split_key,log_date,completed_at')
+        .select('split_key,log_date,completed_at,enrollment_id')
         .eq('user_id', user.id)
         .eq('status', 'completed')
+        .is('deleted_at', null)
         .lt('log_date', date)
         .order('log_date', { ascending: false })
         .order('completed_at', { ascending: false })
@@ -80,7 +82,7 @@ export async function GET(request: NextRequest) {
         .maybeSingle(),
       supabase
         .from('method_enrollments')
-        .select('next_split_key')
+        .select('id,next_split_key,method_release_id')
         .eq('user_id', user.id)
         .eq('status', 'active')
         .order('started_at', { ascending: false })
@@ -92,6 +94,25 @@ export async function GET(request: NextRequest) {
     if (firstError) throw new Error(firstError.message)
 
     const previous = previousSessionResult.data
+    let previousSplitLabel: string | null = null
+    let previousMuscles: string | null = null
+    if (previous?.enrollment_id) {
+      const { data: previousEnrollment } = await supabase
+        .from('method_enrollments')
+        .select('method_release_id')
+        .eq('id', previous.enrollment_id)
+        .maybeSingle()
+      if (previousEnrollment?.method_release_id) {
+        const { data: split } = await supabase
+          .from('method_splits')
+          .select('name_zh,primary_focus')
+          .eq('method_release_id', previousEnrollment.method_release_id)
+          .eq('key', previous.split_key)
+          .maybeSingle()
+        previousSplitLabel = split?.name_zh ?? null
+        previousMuscles = split?.primary_focus?.join('、') ?? null
+      }
+    }
     const workout = buildRecoveryWorkoutPrompt({
       splitKey: previous?.split_key ?? null,
       logDate: previous?.log_date ?? null,
@@ -99,6 +120,8 @@ export async function GET(request: NextRequest) {
       yesterday: shiftDateKey(date, -1),
       twoDaysAgo: shiftDateKey(date, -2),
       nextSplitKey: enrollmentResult.data?.next_split_key ?? null,
+      splitLabel: previousSplitLabel,
+      muscles: previousMuscles,
     })
     const trainingInProgress = Boolean(activeSessionResult.data)
     return NextResponse.json({

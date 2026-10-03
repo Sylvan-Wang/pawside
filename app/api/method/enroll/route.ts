@@ -10,10 +10,10 @@ interface EnrollmentResult {
   method_release_id?: string
   cycle_id?: string
   cycle_number?: number
-  next_split_key?: 'push'
+  next_split_key?: string
 }
 
-export async function POST() {
+export async function POST(request: Request) {
   const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
 
@@ -21,7 +21,19 @@ export async function POST() {
     return apiError('UNAUTHORIZED', '请先登录', 401)
   }
 
-  const { data, error } = await supabase.rpc('initialize_current_method_enrollment')
+  let releaseId: string | null = null
+  try {
+    const body = await request.json() as { release_id?: unknown }
+    releaseId = typeof body.release_id === 'string' && /^[0-9a-f-]{36}$/i.test(body.release_id)
+      ? body.release_id
+      : null
+  } catch {
+    // Existing callers send no body and keep the official 1.2 path.
+  }
+
+  const { data, error } = releaseId
+    ? await supabase.rpc('enroll_in_method_release_v1', { p_release_id: releaseId })
+    : await supabase.rpc('initialize_current_method_enrollment')
   if (error || !data) {
     return apiError('DATABASE_ERROR', '暂时无法启用训练方法', 500)
   }
@@ -35,7 +47,7 @@ export async function POST() {
   return NextResponse.json({
     data: result,
     message: result.status === 'paused'
-      ? '三分化目前处于暂停状态。'
-      : '三分化已启用，第一项从「推」开始。',
+      ? '当前训练方法处于暂停状态。'
+      : '训练方法已启用。',
   })
 }

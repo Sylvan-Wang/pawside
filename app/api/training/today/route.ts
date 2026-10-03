@@ -23,10 +23,9 @@ interface PrescriptionRow {
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 
-const PROGRAM_DAY_ORDER = ['push', 'pull', 'legs'] as const
-type ProgramDaySplit = (typeof PROGRAM_DAY_ORDER)[number]
+type ProgramDaySplit = string
 
-const PROGRAM_DAY_FALLBACK_NAMES: Record<ProgramDaySplit, string> = {
+const PROGRAM_DAY_FALLBACK_NAMES: Record<string, string> = {
   push: '推',
   pull: '拉',
   legs: '腿',
@@ -79,7 +78,7 @@ function dateInTimeZone(timeZone: string) {
 }
 
 function isProgramDaySplit(value: string | null): value is ProgramDaySplit {
-  return value != null && (PROGRAM_DAY_ORDER as readonly string[]).includes(value)
+  return value != null && /^[a-z][a-z0-9_]{1,31}$/.test(value)
 }
 
 /**
@@ -114,7 +113,7 @@ export async function GET(request: Request) {
 
   const { data: enrollment, error: enrollmentError } = await supabase
     .from('method_enrollments')
-    .select('id,status,current_cycle_number,next_split_key,current_state')
+    .select('id,status,current_cycle_number,next_split_key,current_state,method_release_id')
     .eq('user_id', user.id)
     .eq('status', 'active')
     .order('started_at', { ascending: false })
@@ -128,6 +127,7 @@ export async function GET(request: Request) {
     .select('id,session_prescription_id,status,started_at,completed_at,view_date,log_date,execution_mode,split_key,selected_session_minutes,required_exercise_count')
     .eq('user_id', user.id)
     .eq('status', 'started')
+    .is('deleted_at', null)
     .order('started_at', { ascending: false })
     .limit(1)
     .maybeSingle()
@@ -154,6 +154,22 @@ export async function GET(request: Request) {
   if (cycleError) return apiError('DATABASE_ERROR', '暂时无法读取当前训练周期', 500)
   if (!cycle) return apiError('NOT_FOUND', '当前没有进行中的训练周期', 404)
 
+  const [{ data: methodSplits, error: methodSplitsError }, { data: multiDayEnabled }] = await Promise.all([
+    supabase
+      .from('method_splits')
+      .select('key,name_zh,order_index,is_required')
+      .eq('method_release_id', enrollment.method_release_id)
+      .order('order_index'),
+    supabase.rpc('feature_enabled', { p_key: 'multi_day_runtime' }),
+  ])
+  if (methodSplitsError || !methodSplits?.length) return apiError('DATABASE_ERROR', '暂时无法读取训练日', 500)
+  const programDays = methodSplits as Array<{ key: string; name_zh: string; order_index: number; is_required: boolean }>
+  const programDayOrder = programDays.map((day) => day.key)
+  const nameBySplit = new Map(programDays.map((day) => [day.key, day.name_zh]))
+  if (requestedSplit && !programDayOrder.includes(requestedSplit)) {
+    return apiError('VALIDATION_ERROR', '训练日无效', 400)
+  }
+
   // Minimum P1 §13.1: the duration selector defaults to the long-term preference.
   const { data: capability } = await supabase
     .from('onboarding_capability_profiles')
@@ -178,13 +194,13 @@ export async function GET(request: Request) {
     if (!bySplit.has(row.split_key)) bySplit.set(row.split_key, row)
   }
 
-  const nextSplitKey = isProgramDaySplit(enrollment.next_split_key)
+  const nextSplitKey = isProgramDaySplit(enrollment.next_split_key) && programDayOrder.includes(enrollment.next_split_key)
     ? enrollment.next_split_key
     : null
 
   function firstIncompleteSplit() {
-    for (const split of PROGRAM_DAY_ORDER) {
-      if (bySplit.get(split)?.status !== 'completed') return split
+    for (const split of programDayOrder) {
+      if (!['completed', 'skipped'].includes(bySplit.get(split)?.status ?? '')) return split
     }
     return null
   }
@@ -193,7 +209,10 @@ export async function GET(request: Request) {
     ?? (activeSession && isProgramDaySplit(activeSession.split_key) ? activeSession.split_key as ProgramDaySplit : null)
     ?? nextSplitKey
     ?? firstIncompleteSplit()
-    ?? 'push'
+    ?? programDays.find((day) => day.is_required)?.key
+    ?? programDayOrder[0]
+
+  if (!targetSplit) return apiError('NOT_FOUND', '当前方法没有可用训练日', 404)
 
   // PRD §2.3: adjacent Program Days must be queryable/generatable, idempotently.
   if (!bySplit.has(targetSplit) || !bySplit.has(nextSplitKey ?? targetSplit)) {
@@ -201,7 +220,8 @@ export async function GET(request: Request) {
       .filter((split, index, all) => all.indexOf(split) === index)
       .filter((split) => !bySplit.has(split))
     for (const split of missing) {
-      const { data: createdId, error: createError } = await supabase.rpc('create_program_day_prescription', {
+      const rpcName = multiDayEnabled ? 'create_program_day_prescription_v2' : 'create_program_day_prescription'
+      const { data: createdId, error: createError } = await supabase.rpc(rpcName, {
         p_cycle_id: cycle.id,
         p_split_key: split,
       })
@@ -246,17 +266,18 @@ export async function GET(request: Request) {
     ? activeSession
     : null
 
-  const days = PROGRAM_DAY_ORDER.map((split, index) => {
+  const days = programDays.map((day, index) => {
+    const split = day.key
     const row = bySplit.get(split)
     const nameZh = split === targetSplit
-      ? ((prescription.method_split as { name_zh?: string } | null)?.name_zh ?? PROGRAM_DAY_FALLBACK_NAMES[split])
-      : PROGRAM_DAY_FALLBACK_NAMES[split]
+      ? ((prescription.method_split as { name_zh?: string } | null)?.name_zh ?? nameBySplit.get(split) ?? PROGRAM_DAY_FALLBACK_NAMES[split] ?? '')
+      : (nameBySplit.get(split) ?? PROGRAM_DAY_FALLBACK_NAMES[split] ?? '')
     return {
       split_key: split,
       day_index: index + 1,
       name_zh: nameZh,
       status: row?.status ?? 'unavailable',
-      completed: row?.status === 'completed',
+      completed: row?.status === 'completed' || row?.status === 'skipped',
       started: row?.status === 'started' || (activeSession?.split_key === split),
       available: Boolean(row),
       prescription_id: row?.id ?? null,
@@ -267,9 +288,11 @@ export async function GET(request: Request) {
     data: {
       program_day: {
         split_key: targetSplit,
-        day_index: PROGRAM_DAY_ORDER.indexOf(targetSplit) + 1,
+        day_index: programDayOrder.indexOf(targetSplit) + 1,
         name_zh: (prescription.method_split as { name_zh?: string } | null)?.name_zh
-          ?? PROGRAM_DAY_FALLBACK_NAMES[targetSplit],
+          ?? nameBySplit.get(targetSplit)
+          ?? PROGRAM_DAY_FALLBACK_NAMES[targetSplit]
+          ?? '',
         cycle_number: cycle.cycle_number,
         prescription_id: prescription.id,
       },

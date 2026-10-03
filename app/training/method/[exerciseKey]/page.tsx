@@ -1,6 +1,7 @@
 import PageHeader from '@/components/PageHeader'
 import ExerciseMotion from '@/components/workout/ExerciseMotion'
-import { getMethodExercise, METHOD_SPLITS } from '@/lib/method-catalog'
+import { METHOD_SPLITS } from '@/lib/method-catalog'
+import { loadMethodExercise } from '@/lib/method-library'
 import { notFound } from 'next/navigation'
 
 export function generateStaticParams() {
@@ -11,11 +12,13 @@ export function generateStaticParams() {
 
 export default async function MethodExercisePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ exerciseKey: string }>
+  searchParams: Promise<{ release?: string }>
 }) {
-  const { exerciseKey } = await params
-  const exercise = getMethodExercise(exerciseKey)
+  const [{ exerciseKey }, { release }] = await Promise.all([params, searchParams])
+  const { exercise } = await loadMethodExercise(exerciseKey, release)
   if (!exercise) notFound()
 
   return (
@@ -28,7 +31,7 @@ export default async function MethodExercisePage({
           <p className="mt-2 text-sm leading-6 text-white/70">{exercise.purpose}</p>
         </header>
 
-        <section className="rounded-2xl bg-white p-4">
+        {exercise.cues.length > 0 && <section className="rounded-2xl bg-white p-4">
           {/* Patch B · B2: dropped "3 个关键帧" — not useful to a user. */}
           <h2 className="text-sm font-semibold text-gray-900">动作示意</h2>
           {exercise.media ? (
@@ -38,7 +41,7 @@ export default async function MethodExercisePage({
               尚未找到准确匹配的开源素材。为避免误导，这里不会展示相似动作。
             </div>
           )}
-        </section>
+        </section>}
 
         <section className="rounded-2xl bg-white p-4">
           {/* Patch B · B2: dropped the "方法明确 / 运行时默认" badge —
@@ -71,13 +74,13 @@ export default async function MethodExercisePage({
           </ol>
         </section>
 
-        <section className="rounded-2xl border border-gray-200 bg-white p-4">
+        {exercise.why && <section className="rounded-2xl border border-gray-200 bg-white p-4">
           <p className="text-xs font-medium text-gray-400">为什么这样安排</p>
           <p className="mt-2 text-sm leading-6 text-gray-700">{exercise.why}</p>
-        </section>
+        </section>}
 
         <p className="px-1 text-xs leading-5 text-gray-400">
-          当前是方法预览，不会标记完成，也不会改变训练记录。完成训练与下一步建议将在处方执行闭环接入后开放。
+          当前是方法预览，不会标记完成，也不会改变训练记录。
         </p>
       </main>
     </div>

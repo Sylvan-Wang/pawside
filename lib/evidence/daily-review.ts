@@ -3,7 +3,6 @@ import { buildDailyLog, type DailyLog } from '../nutrition/daily-log'
 import type { InterpretedSignal, MetricFact } from '../nutrition/interpretation'
 import { buildNutritionFacts } from './metric-facts'
 import { interpretRecovery, metricFact } from './interpret'
-import { SPLIT_LABELS } from '../coach/display'
 import { sanitizeDailyDuration } from '../coach/session-duration'
 
 /** Coach patch: the next Method split, best-effort (null on any error). */
@@ -11,12 +10,19 @@ async function loadNextTraining(supabase: SupabaseClient, userId: string) {
   try {
     const { data, error } = await supabase
       .from('method_enrollments')
-      .select('next_split_key')
+      .select('next_split_key,method_release_id')
       .eq('user_id', userId)
       .eq('status', 'active')
       .maybeSingle()
     if (error || !data?.next_split_key) return null
-    return { split_label: SPLIT_LABELS[data.next_split_key] ?? data.next_split_key }
+    const { data: split, error: splitError } = await supabase
+      .from('method_splits')
+      .select('name_zh')
+      .eq('method_release_id', data.method_release_id)
+      .eq('key', data.next_split_key)
+      .maybeSingle()
+    if (splitError || !split?.name_zh) return null
+    return { split_label: split.name_zh }
   } catch {
     return null
   }

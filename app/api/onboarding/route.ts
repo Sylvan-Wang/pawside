@@ -15,7 +15,7 @@ interface Phase2OnboardingResult {
     method_release_id?: string
     cycle_id?: string
     cycle_number?: number
-    next_split_key?: 'push'
+    next_split_key?: string
   }
 }
 

@@ -1,7 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { loadLastTime } from '../coach/workout-context'
 import { describePlannedSet, type PlannedSetInput } from '../coach/set-guidance'
-import { SPLIT_LABELS } from '../coach/display'
 
 export interface DailyWorkoutSetCard {
   set_index: number
@@ -117,15 +116,16 @@ export async function loadDailyWorkoutCards(
 ): Promise<DailyWorkoutCard[]> {
   const { data: sessions, error } = await supabase
     .from('workout_sessions')
-    .select('id,cycle_id,split_key,started_at,completed_at,completed_exercise_count')
+    .select('id,cycle_id,enrollment_id,split_key,started_at,completed_at,completed_exercise_count')
     .eq('user_id', userId)
     .eq('log_date', date)
     .eq('status', 'completed')
+    .is('deleted_at', null)
     .order('completed_at', { ascending: true })
   if (error) throw new Error(error.message)
 
   return Promise.all((sessions ?? []).map(async (session): Promise<DailyWorkoutCard> => {
-    const [{ data: cycle }, { data: rawExercises, error: exerciseError }, { data: log }] = await Promise.all([
+    const [{ data: cycle }, { data: rawExercises, error: exerciseError }, { data: log }, { data: enrollment }] = await Promise.all([
       supabase.from('method_cycles').select('cycle_number').eq('id', session.cycle_id).maybeSingle(),
       supabase
         .from('exercise_executions')
@@ -144,6 +144,7 @@ export async function loadDailyWorkoutCards(
         .eq('user_id', userId)
         .eq('method_workout_session_id', session.id)
         .maybeSingle(),
+      supabase.from('method_enrollments').select('method_release_id').eq('id', session.enrollment_id).maybeSingle(),
     ])
     if (exerciseError) throw new Error(exerciseError.message)
 
@@ -170,6 +171,15 @@ export async function loadDailyWorkoutCards(
       const output = generation?.output as { headline?: unknown } | null
       headline = typeof output?.headline === 'string' ? output.headline : null
     }
+
+    const { data: split } = enrollment?.method_release_id
+      ? await supabase
+        .from('method_splits')
+        .select('name_zh')
+        .eq('method_release_id', enrollment.method_release_id)
+        .eq('key', session.split_key)
+        .maybeSingle()
+      : { data: null }
 
     const exercises = rows.map((row): DailyWorkoutExerciseCard => {
       const prescription = one(row.prescription)
@@ -216,7 +226,7 @@ export async function loadDailyWorkoutCards(
     return {
       session_id: session.id,
       split_key: session.split_key,
-      split_label: SPLIT_LABELS[session.split_key] ?? session.split_key,
+      split_label: split?.name_zh ?? '',
       cycle_number: Number(cycle?.cycle_number ?? 1),
       completed_exercise_count: Number(session.completed_exercise_count ?? rows.filter((row) => row.status === 'completed').length),
       planned_exercise_count: rows.length,

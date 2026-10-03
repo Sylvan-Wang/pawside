@@ -40,7 +40,12 @@ export function recordCompletenessLabel(value: string | null | undefined): strin
   return RECORD_COMPLETENESS_LABELS[value] ?? RECORD_COMPLETENESS_LABELS.unknown
 }
 
+/** Legacy 1.2 fallback only. Unknown keys intentionally return an empty label. */
 export const SPLIT_LABELS: Record<string, string> = { push: '推', pull: '拉', legs: '腿' }
+
+export function splitLabelFallback(splitKey: string | null | undefined): string {
+  return splitKey ? SPLIT_LABELS[splitKey] ?? '' : ''
+}
 
 /**
  * Internal vocabulary that must never appear in user-facing text: patch

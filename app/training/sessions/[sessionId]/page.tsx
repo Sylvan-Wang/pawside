@@ -63,7 +63,7 @@ interface ExerciseExecution {
   id: string
   order_index: number
   status: string
-  exercise: { canonical_name_zh: string } | null
+  exercise: { id: string; canonical_name_zh: string } | null
   prescription: {
     target_summary_zh: string | null
     target_weight_kg: number | null
@@ -77,7 +77,9 @@ interface ExerciseExecution {
 
 interface TrainingSession {
   id: string
-  split_key: 'push' | 'pull' | 'legs'
+  enrollment_id: string | null
+  session_prescription_id: string | null
+  split_key: string
   status: 'started' | 'completed'
   view_date: string
   performed_at: string
@@ -116,6 +118,12 @@ interface SessionResponse {
   progress: SessionProgress
 }
 
+interface AdjustmentSubstitution {
+  kind: 'swap' | 'regression' | 'progression'
+  note: string | null
+  substitute: { id: string; canonical_name_zh: string } | { id: string; canonical_name_zh: string }[] | null
+}
+
 interface SetDraft {
   setIndex: number
   weight: string
@@ -130,7 +138,7 @@ interface SetDraft {
 }
 
 interface CompletionResult {
-  next_split_key: 'push' | 'pull' | 'legs'
+  next_split_key: string
   current_cycle_number: number
   cycle_completed: boolean
   progression_advanced: boolean
@@ -173,7 +181,7 @@ interface SessionFeedbackView {
   rating: 'liked' | 'disliked' | null
 }
 
-const splitNames = { push: '推', pull: '拉', legs: '腿' }
+const splitNames: Record<string, string> = { push: '推', pull: '拉', legs: '腿' }
 const WEIGHT_UNIT_STORAGE_KEY = 'pawside:training:weight-unit:v1'
 // Patch B · B5 (D1): a session left "started" this long triggers the
 // reopened-old-session banner. One place to change if the threshold moves.
@@ -326,6 +334,10 @@ export default function TrainingSessionPage() {
   const [finishing, setFinishing] = useState(false)
   const [changingDuration, setChangingDuration] = useState(false)
   const [exerciseActionId, setExerciseActionId] = useState('')
+  const [adjustmentOpen, setAdjustmentOpen] = useState(false)
+  const [adjustmentScope, setAdjustmentScope] = useState<'future' | 'once' | null>(null)
+  const [adjustmentSaving, setAdjustmentSaving] = useState(false)
+  const [substitutions, setSubstitutions] = useState<AdjustmentSubstitution[]>([])
   const [error, setError] = useState('')
   const [staleBannerDismissed, setStaleBannerDismissed] = useState(false)
   const [completion, setCompletion] = useState<CompletionResult | null>(null)
@@ -602,6 +614,57 @@ export default function TrainingSessionPage() {
     }
   }
 
+  async function openAdjustmentMenu(exerciseId: string | undefined) {
+    setAdjustmentOpen(true)
+    setAdjustmentScope(null)
+    setSubstitutions([])
+    if (!exerciseId || !data?.session.enrollment_id) return
+    const query = new URLSearchParams({ exercise_id: exerciseId, enrollment_id: data.session.enrollment_id })
+    const response = await fetch(`/api/method/adjustments?${query}`, { cache: 'no-store' })
+    const payload = await response.json()
+    if (response.ok) setSubstitutions(payload.data.substitutions ?? [])
+  }
+
+  async function applyAdjustment(
+    action: 'hide_exercise' | 'swap_exercise' | 'set_count' | 'rep_range',
+    payload: Record<string, unknown> = {},
+  ) {
+    if (!data || !exercise.exercise?.id || !data.session.enrollment_id || !adjustmentScope) return
+    setAdjustmentSaving(true)
+    setError('')
+    try {
+      const response = await fetch('/api/method/adjustments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          enrollment_id: data.session.enrollment_id,
+          split_key: data.session.split_key,
+          exercise_id: exercise.exercise.id,
+          action,
+          payload,
+          scope: adjustmentScope,
+        }),
+      })
+      const result = await response.json()
+      if (!response.ok) throw new Error(result?.error?.message || '调整失败')
+      if (adjustmentScope === 'once' && action === 'hide_exercise') {
+        setData((current) => current ? {
+          ...current,
+          exercises: current.exercises.map((item) => item.id === exercise.id ? { ...item, status: 'skipped' } : item),
+        } : current)
+      }
+      if (adjustmentScope === 'once' && action === 'set_count' && typeof payload.count === 'number') {
+        setDrafts((current) => ({ ...current, [exercise.id]: (current[exercise.id] ?? []).slice(0, payload.count as number) }))
+      }
+      clearTrainingSessionCache(sessionId)
+      setAdjustmentOpen(false)
+    } catch (reason: unknown) {
+      setError(reason instanceof Error ? reason.message : '调整失败')
+    } finally {
+      setAdjustmentSaving(false)
+    }
+  }
+
   async function completeSession(): Promise<boolean> {
     setFinishing(true)
     setError('')
@@ -820,7 +883,7 @@ export default function TrainingSessionPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-10">
-      <PageHeader title={`${splitNames[data.session.split_key]}训练`} back />
+      <PageHeader title={`${splitNames[data.session.split_key] || '本日'}训练`} back />
       {isStaleSession && !staleBannerDismissed && (
         <div className="mx-auto max-w-2xl px-4 pt-4">
           <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
@@ -861,7 +924,7 @@ export default function TrainingSessionPage() {
             <span>{isCompleted ? '本次训练已完成' : '实际训练记录'}</span>
             <span>动作 {activeExerciseIndex + 1} / {data.exercises.length}</span>
           </div>
-          <h1 className="mt-2 text-xl font-semibold">{splitNames[data.session.split_key]}训练</h1>
+          <h1 className="mt-2 text-xl font-semibold">{splitNames[data.session.split_key] || '本日'}训练</h1>
           <span className="sr-only" aria-live="polite">
             当前为第 {activeExerciseIndex + 1} 个动作，共 {data.exercises.length} 个动作
           </span>
@@ -924,6 +987,9 @@ export default function TrainingSessionPage() {
               <h2 id={`exercise-${exercise.id}`} className="mt-1 font-semibold text-gray-900">{exerciseName}</h2>
             </div>
             <div className="flex shrink-0 flex-col items-end gap-1">
+              {!isCompleted && (
+                <button type="button" aria-label="调整这个动作" onClick={() => openAdjustmentMenu(exercise.exercise?.id)} className="px-2 text-xl leading-none text-gray-500">⋯</button>
+              )}
               <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs text-gray-600">
                 {savedSetCount} / {exerciseDrafts.length} 组
               </span>
@@ -934,6 +1000,39 @@ export default function TrainingSessionPage() {
               )}
             </div>
           </div>
+
+          {adjustmentOpen && !isCompleted && (
+            <div className="mt-3 rounded-xl border border-gray-200 bg-gray-50 p-3">
+              <p className="text-sm font-medium text-gray-900">调整这个动作</p>
+              <p className="mt-3 text-xs text-gray-500">应用到哪里？</p>
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                <button type="button" onClick={() => setAdjustmentScope('future')} className={`rounded-lg border px-3 py-2 text-sm ${adjustmentScope === 'future' ? 'border-black bg-black text-white' : 'border-gray-200 bg-white'}`}>以后都这样</button>
+                <button type="button" onClick={() => setAdjustmentScope('once')} className={`rounded-lg border px-3 py-2 text-sm ${adjustmentScope === 'once' ? 'border-black bg-black text-white' : 'border-gray-200 bg-white'}`}>只这一次</button>
+              </div>
+              <div className="mt-3 space-y-2">
+                {substitutions.map((item) => {
+                  const substitute = Array.isArray(item.substitute) ? item.substitute[0] : item.substitute
+                  if (!substitute) return null
+                  return (
+                    <button key={`${item.kind}:${substitute.id}`} type="button" disabled={!adjustmentScope || adjustmentSaving}
+                      onClick={() => applyAdjustment('swap_exercise', { exercise_id: substitute.id })}
+                      className="block w-full rounded-lg bg-white px-3 py-2 text-left text-sm disabled:opacity-40">
+                      {item.kind === 'regression' ? '换更容易的动作' : '换一个动作'}：{substitute.canonical_name_zh}
+                    </button>
+                  )
+                })}
+                {exerciseDrafts.length > 1 && (
+                  <button type="button" disabled={!adjustmentScope || adjustmentSaving}
+                    onClick={() => applyAdjustment('set_count', { count: exerciseDrafts.length - 1 })}
+                    className="block w-full rounded-lg bg-white px-3 py-2 text-left text-sm disabled:opacity-40">太难了，少做一组</button>
+                )}
+                <button type="button" disabled={!adjustmentScope || adjustmentSaving || savedSetCount > 0}
+                  onClick={() => applyAdjustment('hide_exercise')}
+                  className="block w-full rounded-lg bg-white px-3 py-2 text-left text-sm text-red-600 disabled:opacity-40">这个动作我不做</button>
+              </div>
+              <button type="button" onClick={() => setAdjustmentOpen(false)} className="mt-3 text-sm text-gray-500">取消</button>
+            </div>
+          )}
 
           {exercise.prescription?.target_summary_zh && (
             <p className="mt-1 text-sm text-gray-500">今天建议：{exercise.prescription.target_summary_zh}</p>
@@ -1076,8 +1175,8 @@ export default function TrainingSessionPage() {
                 ? `补充训练已归入 ${completion.log_date}，不会改变当前训练顺序。`
                 : completion
                   ? completion.cycle_completed
-                  ? `第 ${completion.current_cycle_number - 1} 轮已完成，下一次从推训练开始。`
-                    : `下一次继续${splitNames[completion.next_split_key]}训练。`
+                  ? `第 ${completion.current_cycle_number - 1} 轮已完成，下一次从新一轮第一个训练日开始。`
+                    : `下一次继续${splitNames[completion.next_split_key] || '下一个训练日'}。`
                   : '本次实际训练已经保存。'}
             </p>
             {sessionFeedback && (
