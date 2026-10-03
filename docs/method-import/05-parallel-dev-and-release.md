@@ -33,7 +33,7 @@
 
 | 车道 | 内容 | 拥有的路径 |
 |---|---|---|
-| **A 运行时** | 多日方法、私有方法的运行时、个人调整层、数据脱钩 | `supabase/migrations/*`（方法与训练相关）、`app/api/training/**`、`app/api/method/**`、`app/training/**`、`lib/method-catalog.ts`、`lib/method-availability.ts`、`lib/training-*.ts`、`lib/contracts/method/runtime-defaults.ts` |
+| **A 运行时** | 多日方法、私有方法的运行时、个人调整层、数据脱钩 | `supabase/migrations/*`（方法与训练相关）、`app/api/training/**`、`app/api/method/**`、`app/training/**`、`lib/method-catalog.ts`、`lib/method-availability.ts`、`lib/training-*.ts`、`lib/contracts/method/runtime-defaults.ts`、`lib/coach/**`（仅限与方法数据相关的读取与名称对照；其余仍归 Coach 工作流） |
 | **B 导入** | 粘贴导入、抽取、金标、审核页、发布 | `lib/method-import/**`、`app/api/method-import/**`、导入与方法库相关页面、`scripts/method-import/**`（seed-library、eval）、`docs/method-import/gold/**` |
 | **C 其他新功能** | 复盘中心（日/周/月）、复盘设置，以及你之后的新功能 | `components/BottomNav.tsx`、`app/weekly/**`、`app/history/**`、`app/settings/**`、`app/api/review/**`、`app/api/ai/**`、`lib/evidence/**`、`lib/nutrition/**` |
 
@@ -45,6 +45,7 @@
 | `app/onboarding/page.tsx`、`app/api/onboarding/route.ts` | A（类型与文案） | 只由 A 改 |
 | `lib/contracts/method/*` | A、B | 全部由"契约 PR"先行落地，之后只做增量 |
 | `lib/ai-client.ts` | B | 不改现有导出；新增参数只增不改 |
+| `lib/evidence/daily-review.ts` | A（第 19 行名称对照）、C（复盘） | A 只改名称对照那一处；其余归 C |
 | `supabase/migrations/*` | A、B、C | 按第 3 节的全局序列，不得自行取号 |
 | `scripts/validate-backend-package.mjs` | 所有新增迁移/合约的 PR | 每个新迁移、新合约都要登记进清单 |
 | `package.json` | B（脚本）、A | 只加脚本行 |
@@ -156,7 +157,7 @@
 
 ## 9. 本地回放工具与已得到的证据
 
-**工具**：`docs/method-import/tools/local-replay.sh`。参数：`--with-drafts`（叠加 01–05 草案）、`--contracts`（运行 `supabase/tests/*.sql`，逐个运行、失败不中断、最后汇总）、`--keep`（保留数据库）。要求 PostgreSQL 16 二进制，不能以 root 运行。桩环境模拟了 `auth.users`、`auth.uid()`、角色，并按 Supabase 的习惯设置了默认权限（不模拟默认权限时，权限类结论会与线上不同；这一点是在核对时发现的，并因此收紧了草案里 3 个函数的权限）。
+**工具**：`docs/method-import/tools/local-replay.sh`。参数：`--with-drafts`（叠加 01–05 草案）、`--hash-check`（先写入一份训练历史并记录事实表哈希，应用草案后比对，必须逐表一致；已用"改写逐组数据"和"删除日志"两种故意违规验证过它会报警）、`--draft-tests`（运行 `sql/tests/*_contract.sql`）、`--contracts`（运行 `supabase/tests/*.sql`，逐个运行、失败不中断、最后汇总）、`--keep`（保留数据库）。要求 PostgreSQL 16 二进制，不能以 root 运行。桩环境模拟了 `auth.users`、`auth.uid()`、角色，并按 Supabase 的习惯设置了默认权限（不模拟默认权限时，权限类结论会与线上不同；这一点是在核对时发现的，并因此收紧了草案里 3 个函数的权限）。
 
 **证据（2026-10-03）**
 

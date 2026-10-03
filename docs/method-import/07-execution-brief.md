@@ -107,10 +107,10 @@ docs/method-import/tools/local-replay.sh --contracts
 | A1 | 完成训练 v3 | 新函数 `complete_method_session_v3`：基于合并后的最新 v2，仅做三处替换（日志类型用 `workout_log_type_for_split`，缺省回落到分化键；下一练用 `next_program_day`；整轮结束回到首个必需日；新处方 `planned_for_date = 当天 + min_gap_days`）；第一行校验 `multi_day_runtime` | F3、Patch B | 等价性合约（文档 6 第 3.3 节）通过；1.2 既有测试不改全部通过 |
 | A2 | 处方与逐组 v2 | `create_session_prescription_for_cycle_v2`、`create_program_day_prescription_v2`、`save_method_set_actual_v2` | F3 | 非法分化键被拒；新键可生成；时长、距离目标被复制；旧参数形状仍可调用 |
 | A3 | 报名与切换 | `enroll_in_method_release_v1`（可见性、前置校验、同一事务归档旧报名、首个必需日、建第 1 轮） | F3 | 不能报名他人的私有方法；开关关闭被拒；归档后历史保留 |
-| A4 | 接口与类型 | `api/training/today` 的程序日改读 release；各页面类型放宽；`lib/method-availability.ts` 文案由方法名驱动；接口按开关选择函数版本 | A1、A2 | 非白名单账户行为完全不变；白名单账户走通整轮 |
+| A4 | 接口与类型 | `api/training/today` 的程序日改读 release；各页面类型放宽；`lib/method-availability.ts` 文案由方法名驱动；接口按开关选择函数版本；`api/method/current/progress` 改为按处方状态汇总（保留原返回字段与 `kind: 'not_enrolled'`，扩展 `tests/api/normal-state-http.test.ts` 而不是删改其断言） | A1、A2 | 非白名单账户行为完全不变；白名单账户走通整轮 |
 | A5 | 方法页读库 | `/training/method`、`[exerciseKey]` 读库；`lib/method-catalog.ts` 内容留作测试夹具；新增方法库页（导入入口按开关隐藏） | A4 | 页面不再写死 1.2；快照测试 |
 | A6 | 个人调整 | `apply_adjustment_v1`、`revoke_adjustment_v1`、`skip_program_day_v1`；生成处方时叠加调整；动作卡「⋯」菜单（文档 4 第 3.2 节） | A2、`adjustments` 开关 | 换动作只能换成金标替换列表里的；任何调整不阻止开始/完成训练；可撤销 |
-| A7 | B8 部位对照 | 把 B8 的酸痛部位对照改为读 `method_splits.primary_focus`，未知键整题不出现 | Patch B | 1.2 的三种情况不变 |
+| A7 | 部位与名称对照 | 把 B8 的酸痛部位对照改为读 `method_splits.primary_focus`，未知键整题不出现；把 `lib/coach/display.ts` 的 `SPLIT_LABELS` 及其在 `lib/coach/workout-context.ts`、`lib/evidence/daily-review.ts` 里的 3 处使用，改为用 `method_splits.name_zh` 取名，未知时不显示、绝不回落为原始键 | Patch B | 1.2 仍显示 推/拉/腿；键为 `chest` 的日显示"胸"；教练文案里不出现原始键，`findInternalTerms` 不被触发 |
 | A8 | 历史删除与导出 | 历史删除方法写入的日志时调用软删除；导出新增 `v_user_exercise_sets` | F2 | 软删除后各读取方都不再出现该训练（文档 1 第 6 节清单逐项有测试） |
 
 ### 5.3 车道 B（导入）

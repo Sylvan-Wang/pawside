@@ -9,6 +9,7 @@
 #   docs/method-import/tools/local-replay.sh --with-drafts   # 再依次应用 sql/01..05 草案
 #   docs/method-import/tools/local-replay.sh --contracts     # 回放后运行 supabase/tests/*.sql（每个都在事务内回滚）
 #   docs/method-import/tools/local-replay.sh --draft-tests   # 叠加草案后运行 docs/method-import/sql/tests/*_contract.sql（rollback-only）
+#   docs/method-import/tools/local-replay.sh --hash-check    # 先写入一份训练历史并记录事实表哈希，应用草案后再比对，必须逐表一致
 #   docs/method-import/tools/local-replay.sh --keep          # 结束后保留数据库，打印连接方式
 #
 # 要求：PostgreSQL 16 的二进制（默认找 /usr/lib/postgresql/*/bin，可用 PGBIN 覆盖）；不能以 root 运行。
@@ -19,12 +20,13 @@
 
 set -euo pipefail
 
-WITH_DRAFTS=0; RUN_CONTRACTS=0; DRAFT_TESTS=0; KEEP=0
+WITH_DRAFTS=0; RUN_CONTRACTS=0; DRAFT_TESTS=0; HASH_CHECK=0; KEEP=0
 for arg in "$@"; do
   case "$arg" in
     --with-drafts) WITH_DRAFTS=1 ;;
     --contracts) RUN_CONTRACTS=1 ;;
     --draft-tests) DRAFT_TESTS=1; WITH_DRAFTS=1 ;;
+    --hash-check) HASH_CHECK=1; WITH_DRAFTS=1 ;;
     --keep) KEEP=1 ;;
     *) echo "未知参数: $arg" >&2; exit 2 ;;
   esac
@@ -104,6 +106,40 @@ for f in $(ls "$ROOT"/supabase/migrations/*.sql | sort); do
 done
 echo "OK    回放 supabase/migrations：$count 个文件"
 
+if [ "$HASH_CHECK" = "1" ]; then
+  # 数据安全门（文档 6 第 2 节）：在回放出的库里写入一份 1.2 的训练历史，记录事实表哈希。
+  "${PSQL[@]}" >/dev/null <<'SQL'
+update public.method_releases set status = 'active', activated_at = coalesce(activated_at, now())
+ where version = '1.2' and status <> 'active';
+insert into auth.users (id, email) values ('00000000-0000-0000-0000-0000000000a1', 'hash@check.test');
+do $seed$
+declare m uuid; r uuid; enr uuid; cyc uuid; presc uuid; epid uuid; ex uuid; ws uuid; ee uuid;
+begin
+  select id into m from public.methods where key = 'ksw_tcy_three_split_2026';
+  select id into r from public.method_releases where method_id = m and version = '1.2';
+  insert into public.method_enrollments (user_id, method_id, method_release_id, status)
+    values ('00000000-0000-0000-0000-0000000000a1', m, r, 'active') returning id into enr;
+  insert into public.method_cycles (enrollment_id, cycle_number) values (enr, 1) returning id into cyc;
+  select id into presc from public.session_prescriptions where cycle_id = cyc limit 1;
+  select x.id, x.exercise_id into epid, ex from public.exercise_prescriptions x
+   where x.session_prescription_id = presc order by x.order_index limit 1;
+  insert into public.workout_sessions (user_id, session_prescription_id, enrollment_id, cycle_id, split_key, status, completed_at)
+    values ('00000000-0000-0000-0000-0000000000a1', presc, enr, cyc, 'push', 'completed', now()) returning id into ws;
+  insert into public.exercise_executions (user_id, workout_session_id, exercise_prescription_id, exercise_id, order_index, status)
+    values ('00000000-0000-0000-0000-0000000000a1', ws, epid, ex, 1, 'completed') returning id into ee;
+  insert into public.set_executions (user_id, workout_session_id, exercise_execution_id, set_index, actual_weight_kg, actual_reps, status, completed_at)
+    values ('00000000-0000-0000-0000-0000000000a1', ws, ee, 1, 60, 10, 'completed', now()),
+           ('00000000-0000-0000-0000-0000000000a1', ws, ee, 2, 62.5, 8, 'completed', now());
+  insert into public.workout_logs (user_id, date, type, duration_minutes, exercises, method_workout_session_id)
+    values ('00000000-0000-0000-0000-0000000000a1', current_date, '推', 50,
+            '[{"name":"杠铃卧推","status":"completed","sets":[{"set":1,"weight_kg":60,"reps":10}]}]'::jsonb, ws);
+end $seed$;
+SQL
+  # 取 V13 查询（sql/01-online-readonly-checks.sql 中 [V13] 到 [V14] 之间的语句）
+  awk '/\[V13\]/{f=1;next} /\[V14\]/{f=0} f' "$ROOT/docs/method-import/sql/01-online-readonly-checks.sql" | grep -v '^--' > "$WORK/v13.sql"
+  "$PGBIN/psql" -d "$DB" -At -f "$WORK/v13.sql" > "$WORK/hash_before.txt"
+fi
+
 if [ "$WITH_DRAFTS" = "1" ]; then
   for f in $(ls "$ROOT"/docs/method-import/sql/0[1-9]-draft-migrations.sql 2>/dev/null | sort); do
     if ! out="$("${PSQL[@]}" -f "$f" 2>&1 >/dev/null)"; then
@@ -111,6 +147,16 @@ if [ "$WITH_DRAFTS" = "1" ]; then
     fi
     echo "OK    应用草案 $(basename "$f")"
   done
+fi
+
+if [ "$HASH_CHECK" = "1" ]; then
+  "$PGBIN/psql" -d "$DB" -At -f "$WORK/v13.sql" > "$WORK/hash_after.txt"
+  if [ "$(wc -l < "$WORK/hash_before.txt")" = "4" ] && diff -q "$WORK/hash_before.txt" "$WORK/hash_after.txt" >/dev/null; then
+    echo "OK    事实表哈希前后一致（workout_sessions、exercise_executions、set_executions、workout_logs）"
+  else
+    echo "FAIL  事实表哈希前后不一致或未能取得"; echo "--- 之前"; cat "$WORK/hash_before.txt"; echo "--- 之后"; cat "$WORK/hash_after.txt"
+    DRAFT_FAILED=1
+  fi
 fi
 
 if [ "$RUN_CONTRACTS" = "1" ]; then

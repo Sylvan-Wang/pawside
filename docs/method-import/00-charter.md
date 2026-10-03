@@ -1,6 +1,6 @@
 # 方法论导入大更新 · 文档 0：总纲与原则
 
-- 状态：草案 v0.1（待确认）
+- 状态：草案 v0.2（文档 1–7 与最终复扫已完成；决策汇总见 README）
 - 日期：2026-10-03
 - 基线：`origin/master @ eb9ab2a`。Patch B 链（`claude/coach-b*`）尚未合并，见附录 C。
 - 性质：只含文档。本文不改任何代码、数据库或线上数据。
@@ -124,13 +124,13 @@
 | 编号 | 文档 | 状态 |
 |---|---|---|
 | 0 | 总纲与原则 | 本文 |
-| 1 | 数据架构与脱钩方案（含线上只读核对 SQL） | 待写 |
-| 2 | 方法数据模型（多日类型、轮转函数、可见范围、按 release 报名） | 待写 |
-| 3 | 导入管线与金标集 | 待写 |
-| 4 | 用户体验与自主权（含复盘信息架构：日/周/月） | 待写；复盘线框待确认 |
-| 5 | 并行开发与发布计划 | 待写 |
-| 6 | 测试与验收 | 待写 |
-| 7 | 给执行 AI 的任务书 | 待写 |
+| 1 | 数据架构与脱钩方案（含线上只读核对 SQL） | 已写 |
+| 2 | 方法数据模型（多日类型、轮转函数、可见范围、按 release 报名） | 已写 |
+| 3 | 导入管线与金标集 | 已写 |
+| 4 | 用户体验与自主权（含复盘信息架构：日/周/月） | 已写；复盘 5 项默认待确认 |
+| 5 | 并行开发与发布计划 | 已写 |
+| 6 | 测试与验收 | 已写（含 4 份已实测的 SQL 合约） |
+| 7 | 给执行 AI 的任务书 | 已写 |
 
 ---
 
@@ -140,15 +140,15 @@
 
 | 模块 | 依赖（已核实） | 受方法改动影响 | 风险点 | 处理 |
 |---|---|---|---|---|
-| 日复盘 | 只读 `workout_logs`（`lib/nutrition/daily-log.ts:120`），不读方法表 | 间接 | 见下方 A1–A3 | 文档 2、6 |
+| 日复盘 | master 上只读 `workout_logs`（`lib/nutrition/daily-log.ts:120`）；**Patch B 之后**，`lib/evidence/daily-review.ts:13-19` 还读取 `method_enrollments.next_split_key`，并用 `lib/coach/display.ts:43` 写死的 `SPLIT_LABELS`（推/拉/腿）转成名称，未知键回落为原始键（最终复扫补入） | 间接 + 直接（Patch B 之后） | 见下方 A1–A4 | 文档 2、6 |
 | 周复盘 | 只读 `workout_logs`（`lib/nutrition/weekly-log.ts:99`）；已声明 `method_adherence` 不可用（`:212`） | 间接 | 无法区分"休息日"与"漏练" | 文档 2、4 |
-| 单次训练反馈 | `/api/ai/compose` 读 `workout_logs`（`:80`）；`session-facts` 只识别两种记录形状 | 间接 | 有氧记录会被判为信息不全 | 文档 2 |
+| 单次训练反馈 | `/api/ai/compose` 读 `workout_logs`（`:80`）；`session-facts` 只识别两种记录形状；Patch B 新增 `app/api/workout/session-feedback/route.ts` 读取 `workout_sessions`、`set_executions`，`lib/coach/workout-context.ts` 读取会话、处方、报名，并按 `split_key` 找上一次、用 `SPLIT_LABELS` 取名 | 间接 + 直接（Patch B 之后） | 有氧记录会被判为信息不全；软删除过滤要覆盖这些读取；名称映射 | 文档 1、2、6 |
 | 月复盘及复盘设置 | 全部分支均未找到 | 未知 | 无法评估 | O-1 |
 | 首页 | `workout_logs` 计数；`weekly_workout_target`（已标记 deprecated）；`next_split_key` 的类型写死为 `'push' \| 'pull' \| 'legs'`（`app/home/page.tsx:40`） | 是 | 类型约束、日类型展示、进度环口径 | 文档 2、4 |
 | 历史 / 历史详情 | `workout_logs`；可删除 `workout_logs` 行（`history/[date]/page.tsx:119`） | 间接 | 删除只影响日志这一份副本（推断），与逐组事实不一致 | 文档 1 |
 | 周报页与接口 | `workout_logs` + `weekly_workout_target`（`api/weekly/route.ts:22,33`） | 间接 | 口径 | 文档 4 |
 | 自由训练记录 | 类型词表为胸/背/腿/肩/手臂/有氧/拉伸/其他（`app/workout/page.tsx:9`） | 间接 | 与方法路径写入的"推/拉/腿"词表不统一 | 文档 2 |
-| 训练页与接口 | `today`、`sessions/*`、`start`、`sets`、`complete`、`duration`、`status`、`method/current`、`method/current/progress`、`method/enroll` | **直接** | 运行时写死：`PROGRAM_DAY_ORDER = ['push','pull','legs']` 与默认 `'push'`（`api/training/today/route.ts:26,196`）；类型写死：`training/today/page.tsx:39-77`、`training/sessions/[sessionId]/page.tsx:68,119`、`api/method/enroll/route.ts:13`、`api/onboarding/route.ts:18` | 文档 2（车道 A） |
+| 训练页与接口 | `today`、`sessions/*`、`start`、`sets`、`complete`、`duration`、`status`、`method/current`、`method/current/progress`（读 `method_cycles` 的 `push/pull/legs_session_id` 三列，最终复扫补入）、`method/enroll` | **直接** | 运行时写死：`PROGRAM_DAY_ORDER = ['push','pull','legs']` 与默认 `'push'`（`api/training/today/route.ts:26,196`）；类型写死：`training/today/page.tsx:39-77`、`training/sessions/[sessionId]/page.tsx:68,119`、`api/method/enroll/route.ts:13`、`api/onboarding/route.ts:18` | 文档 2（车道 A） |
 | 注册引导 | 引导里 `if p_join_method` 自动调用 `initialize_current_method_enrollment()`，该函数写死方法键 `ksw_tcy_three_split_2026` | **直接** | 首次体验随"选择/导入方法"改变 | 文档 2、4 |
 | 设置 / 档案目标 | 未发现与方法的耦合；导出的训练数据只来自 `workout_logs`（`api/export/route.ts:10`） | 否 | 导出不含逐组事实（数据可携带性缺口） | 文档 1 |
 | 营养 | 未发现与方法的耦合 | 否 | 后续若联动训练日类型再评估 | 非目标 |
@@ -160,10 +160,11 @@
 | 方法运行时测试 | `tests/method-runtime/minimum-p1-runtime.test.ts`、`workout-runtime.test.ts` 含 push/pull/legs 字面量（该目录另有 6 个测试文件未逐个核实） | 是 | 需要新方法的 fixture，同时保留旧用例 | 文档 6 |
 | 测试账户脚本（PR #12） | 假设首个处方为 Push，注册自动加入方法 | 是 | 注册引导变化后需更新或新增画像 | 文档 6 |
 
-**需优先处理的三个具体风险**
+**需优先处理的四个具体风险**
 - **A1 标签误标（高）**：完成训练 RPC 把分化键映射为日志类型时，`case split_key when 'push' then '推' when 'pull' then '拉' else '腿' end`（`20260925000500:469-474`）。任何新分化键会落入 `else`，被写成"腿"，直接污染历史、周报和复盘。
 - **A2 记录形状（中）**：`lib/workout/session-facts.ts` 仅理解两种持久化形状（方法路径、自由训练）。有氧日若没有新的形状，会被判为"信息不全"。
 - **A3 删除语义（中）**：删除历史里的日志只影响 `workout_logs`，不影响逐组事实表，复盘与方法进度可能不一致。需在文档 1 明确"哪一份是事实"。
+- **A4 名称回落为原始键（中，最终复扫补入）**：`SPLIT_LABELS` 只有三项，未知键回落为原始键，新方法会把 `chest` 这类英文内部值带进教练文案与日复盘证据。已列入文档 2 第 8 节与文档 7 的 A7。
 
 ## 附录 B：扫描命令（可复现）
 
@@ -203,10 +204,10 @@ git rev-list --count origin/master..<branch>
 - B 链：#6（B1）以 `claude/coach-patch-b-spec` 为基；#7（B2）→ #6，#8（B3）→ #7，#9（B4）→ #8，#10（B5）→ #9，#11（B6）→ #10。
 - `claude/coach-patch-b-spec` 包含 T0、T2、T4，不包含 T1（#5）。
 
-**尚未做的 Patch B 任务**：规格分支上另有 `PATCH_B_ADDENDUM_B8-B10.md`（晚于 B1 分支创建时间提交），内含 B8（开屏恢复卡）、B9（每日日志训练卡）、B10（每日日志饮食卡）。规格建议顺序为 B1 → B8 → B9 → B10 → B2 → …，已完成的 B2–B6 没有按此顺序，B8–B10 计划叠在 #11 之上。B7 仍待用户提供真实输出。
+**尚未做的 Patch B 任务**：规格分支上另有 `PATCH_B_ADDENDUM_B8-B10.md`（晚于 B1 分支创建时间提交），内含 B8（开屏恢复卡）、B9（每日日志训练卡）、B10（每日日志饮食卡）。规格建议顺序为 B1 → B8 → B9 → B10 → B2 → …，已完成的 B2–B6 没有按此顺序，B8–B10 计划叠在 #11 之上。B7 仍待用户提供真实输出。是否按 B8 → B9 → B10 各一个 PR 叠在 #11 之上来做，待用户确认（**O-35**）。
 
 **B8–B10 与本更新的耦合点**
 1. B8 把 `split_key → 显示名/部位` 写成三项对照表（push/pull/legs），并用 `next_split_key` 判断"是否同一组"。实现时应把对照集中在单一函数里，遇到未知 `split_key` 时整题不出现，便于本更新改为读取方法数据（`method_splits.primary_focus` 已存在）。
-2. B9 要求"和上次比较"取"同一 split 上一次完成的训练"。现有实现 `lib/coach/workout-context.ts:98-135`（`loadLastTime`）同样以 `split_key` 为范围，并且只在那一次训练里找同一动作。与 D-8、P2（数据跟动作走）不一致：用户"五选三"裁剪动作，或换方法后，会找不到上次。建议改为"该用户该动作最近一次已完成的执行"（待用户确认，属于对规格的偏离）。
+2. B9 要求"和上次比较"取"同一 split 上一次完成的训练"。现有实现 `lib/coach/workout-context.ts:98-135`（`loadLastTime`）同样以 `split_key` 为范围，并且只在那一次训练里找同一动作。与 D-8、P2（数据跟动作走）不一致：用户"五选三"裁剪动作，或换方法后，会找不到上次。建议改为"该用户该动作最近一次已完成的执行"（**O-34**，待用户确认，属于对规格的偏离）。
 3. B9 改为读取 `workout_sessions` + `exercise_executions` + `set_executions` + `set_prescriptions`，这与文档 1 要明确的"哪一份是事实"一致，B9 即是第一个把读取切到事实表的页面。
 4. B9、B10 修改 `app/history/[date]/page.tsx`，即复盘信息架构里"日"的详情页。

@@ -165,6 +165,7 @@ L4 副本与投影       workout_logs（已标注 deprecated；按动作名存 J
 - `app/api/training/today/route.ts:127`
 - `app/api/training/sessions/[sessionId]/route.ts:61`
 - `lib/coach/workout-context.ts`（Patch B 链，`loadLastTime` 及会话读取）
+- `app/api/workout/session-feedback/route.ts`（Patch B 链新增，读取 `workout_sessions`、`set_executions`；最终复扫时补入）
 - 各 RPC：开始训练、完成训练、更新时长、保存逐组（读取会话以校验归属和状态）
 - 新视图 `v_user_exercise_sets`（已含过滤）
 

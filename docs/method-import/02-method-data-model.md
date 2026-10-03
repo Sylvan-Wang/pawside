@@ -252,6 +252,8 @@ export const MethodManifest = z.object({
 | `lib/method-catalog.ts`（196 行手写副本） | 改为读库；原内容保留为回归测试 fixture |
 | `app/training/method/page.tsx`、`[exerciseKey]/page.tsx` | 数据来源由 catalog 改为读库 |
 | `app/workout/page.tsx:9` | 自由记录类型词表补充"腹肌" |
+| `app/api/method/current/progress/route.ts:32`（最终复扫补入） | 目前读取 `method_cycles` 的 `push_session_id / pull_session_id / legs_session_id`，新方法这三列为空。改为按 `session_prescriptions` 的状态按分化键汇总各天完成情况；保留原有返回字段与 `kind: 'not_enrolled'`（`tests/api/normal-state-http.test.ts` 对该文件文本有断言），只做增量。目前没有界面调用这个接口，只有测试引用 |
+| `lib/coach/display.ts:43`、`lib/coach/workout-context.ts:149,300`、`lib/evidence/daily-review.ts:19`（Patch B 链，最终复扫补入） | `SPLIT_LABELS` 写死 push/pull/legs 三项，并且未知键回落为**原始键**，会把 `chest` 这类英文内部值带进教练文案与日复盘证据。改为用 `method_splits.name_zh`（经 `workout_log_type_for_split`）取名，未知时宁可不显示也不显示原始键 |
 | Patch B 的 B8 | 酸痛部位对照集中成单一函数，后续改读 `method_splits.primary_focus` |
 
 ## 9. 已完成的本地实测
@@ -282,6 +284,8 @@ export const MethodManifest = z.object({
 | 账号删除流程 | 依赖 M13 对两个保护触发器的修改；纳入验收 |
 | 方法文案（`lib/method-availability.ts`） | 不再写死"三分化""推" |
 | 自由记录词表 | 补充"腹肌" |
+| 日复盘证据与教练上下文（Patch B 之后） | 读取 `method_enrollments.next_split_key` 并用写死的三项映射转成名称；新方法会显示原始键。改为读方法数据（见第 8 节） |
+| `/api/method/current/progress` | 读取三个旧列，新方法为空；改为按处方状态汇总 |
 
 ## 11. 待决事项
 
