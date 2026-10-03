@@ -1,0 +1,293 @@
+[
+  {
+    "text": "每组8至10次，做3组，组间休息60秒",
+    "expect": {
+      "sets": {
+        "min": 3,
+        "max": 3
+      },
+      "reps": {
+        "min": 8,
+        "max": 10
+      },
+      "restSeconds": {
+        "min": 60,
+        "max": 60
+      }
+    }
+  },
+  {
+    "text": "每组10至12次，做3组，组间休息45秒",
+    "expect": {
+      "sets": {
+        "min": 3,
+        "max": 3
+      },
+      "reps": {
+        "min": 10,
+        "max": 12
+      },
+      "restSeconds": {
+        "min": 45,
+        "max": 45
+      }
+    }
+  },
+  {
+    "text": "每组10至12次，做2至3组，组间休息45秒",
+    "expect": {
+      "sets": {
+        "min": 2,
+        "max": 3
+      },
+      "reps": {
+        "min": 10,
+        "max": 12
+      },
+      "restSeconds": {
+        "min": 45,
+        "max": 45
+      }
+    }
+  },
+  {
+    "text": "杠铃深蹲：每组 5 次，进行5 组",
+    "expect": {
+      "sets": {
+        "min": 5,
+        "max": 5
+      },
+      "reps": {
+        "min": 5,
+        "max": 5
+      }
+    }
+  },
+  {
+    "text": "罗马尼亚硬拉：每组 8 - 10 次，进行 3 - 4 组",
+    "expect": {
+      "sets": {
+        "min": 3,
+        "max": 4
+      },
+      "reps": {
+        "min": 8,
+        "max": 10
+      }
+    }
+  },
+  {
+    "text": "保加利亚分腿蹲：每组 8 - 10 次，左右腿各进行 3 - 4 组",
+    "expect": {
+      "sets": {
+        "min": 3,
+        "max": 4
+      },
+      "reps": {
+        "min": 8,
+        "max": 10
+      },
+      "perSide": true
+    }
+  },
+  {
+    "text": "哑铃提踵：每组 12 -16次，进行 4-6 组，（组间休息 1 -2分钟）",
+    "expect": {
+      "sets": {
+        "min": 4,
+        "max": 6
+      },
+      "reps": {
+        "min": 12,
+        "max": 16
+      },
+      "restSeconds": {
+        "min": 60,
+        "max": 120
+      }
+    }
+  },
+  {
+    "text": "器械髋内收： 3 - 4 组，每组 12 - 16 次，锻炼大腿内侧肌肉",
+    "expect": {
+      "sets": {
+        "min": 3,
+        "max": 4
+      },
+      "reps": {
+        "min": 12,
+        "max": 16
+      }
+    }
+  },
+  {
+    "text": "负重臀桥：每组 12 - 15 次，进行 3 - 4 组",
+    "expect": {
+      "sets": {
+        "min": 3,
+        "max": 4
+      },
+      "reps": {
+        "min": 12,
+        "max": 15
+      }
+    }
+  },
+  {
+    "text": "腿弯举：使每组 10 - 12 次，进行 3 - 4 组",
+    "expect": {
+      "sets": {
+        "min": 3,
+        "max": 4
+      },
+      "reps": {
+        "min": 10,
+        "max": 12
+      }
+    }
+  },
+  {
+    "text": "硬拉：4 组，每组 6 - 8 次",
+    "expect": {
+      "sets": {
+        "min": 4,
+        "max": 4
+      },
+      "reps": {
+        "min": 6,
+        "max": 8
+      }
+    }
+  },
+  {
+    "text": "坐姿器械划船或杠铃划船：4 组，每组 8 - 10 次",
+    "expect": {
+      "sets": {
+        "min": 4,
+        "max": 4
+      },
+      "reps": {
+        "min": 8,
+        "max": 10
+      }
+    }
+  },
+  {
+    "text": "高位下拉：4 组，每组 8 - 12 次",
+    "expect": {
+      "sets": {
+        "min": 4,
+        "max": 4
+      },
+      "reps": {
+        "min": 8,
+        "max": 12
+      }
+    }
+  },
+  {
+    "text": "面拉：4 组，每组 12 - 16 次",
+    "expect": {
+      "sets": {
+        "min": 4,
+        "max": 4
+      },
+      "reps": {
+        "min": 12,
+        "max": 16
+      }
+    }
+  },
+  {
+    "text": "每个动作之间休息 4-6 分钟，组间休息 2-3 分钟",
+    "expect": {
+      "restBetweenExercisesSeconds": {
+        "min": 240,
+        "max": 360
+      },
+      "restSeconds": {
+        "min": 120,
+        "max": 180
+      }
+    }
+  },
+  {
+    "text": "引体向上（辅助器械或弹力带辅助）：4 组，每组力竭",
+    "expect": {
+      "sets": {
+        "min": 4,
+        "max": 4
+      },
+      "reps": null,
+      "failure": "required_or_allowed"
+    }
+  },
+  {
+    "text": "平板杠铃卧推：4 组，每组 8-12 次（重量从热身组到极限重量递减）",
+    "expect": {
+      "sets": {
+        "min": 4,
+        "max": 4
+      },
+      "reps": {
+        "min": 8,
+        "max": 12
+      }
+    }
+  },
+  {
+    "text": "双杠臂屈伸（胸肌下束 + 三头肌）组数：3 组，每组力竭",
+    "expect": {
+      "sets": {
+        "min": 3,
+        "max": 3
+      },
+      "reps": null,
+      "failure": "required_or_allowed"
+    }
+  },
+  {
+    "text": "吊杠2-3组 30s",
+    "expect": {
+      "sets": {
+        "min": 2,
+        "max": 3
+      },
+      "duration": {
+        "min": 30,
+        "max": 30
+      }
+    }
+  },
+  {
+    "text": "有氧15min",
+    "expect": {
+      "duration": {
+        "min": 900,
+        "max": 900
+      }
+    }
+  },
+  {
+    "text": "五组，每组十二次",
+    "expect": {
+      "sets": {
+        "min": 5,
+        "max": 5
+      },
+      "reps": {
+        "min": 12,
+        "max": 12
+      }
+    }
+  },
+  {
+    "text": "动态拉伸 5 - 10 分钟",
+    "expect": {
+      "duration": {
+        "min": 300,
+        "max": 600
+      }
+    }
+  }
+]
