@@ -4,7 +4,7 @@
 -- 验证：2026-10-03 在本地 PostgreSQL 16 + master 全部 27 个迁移 + 01 + 02 草案的回放库中执行通过，
 --       并实测了：精确/别名命中已审核动作、新名称创建草稿且同一用户重复调用返回同一条、
 --       他人同名草稿不被复用（创建带后缀的新草稿）、草稿的可见性、导入配额触发器、
---       没有同意记录就无法创建导入、客户端不能把导入状态改成 published。
+--       没有同意记录就无法创建导入、客户端不能把导入状态改成 published、替他人写入时不泄露其配额状态。
 -- 线上执行前必须：用户明确同意（H8）→ 分支库演练。
 -- 所有语句只增加结构，不移动、不改写、不删除任何已有数据行。
 
@@ -105,6 +105,11 @@ security definer
 set search_path = ''
 as $$
 begin
+  -- 只对"本人写入"计数。替他人写入的请求交给行级安全拒绝；
+  -- 否则报错信息会泄露"该用户今天是否已导入 5 次"（触发器先于行级安全的检查执行）。
+  if new.user_id is distinct from (select auth.uid()) then
+    return new;
+  end if;
   if (select count(*) from public.user_method_imports i
        where i.user_id = new.user_id and i.created_at > now() - interval '24 hours') >= 5 then
     raise exception 'Import limit reached (5 per 24 hours)' using errcode = '54000';

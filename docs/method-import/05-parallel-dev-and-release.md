@@ -165,7 +165,7 @@
 | master 的 27 个迁移从空库回放 | 通过 |
 | 叠加 01–05 号草案 | 全部通过；`public` 表由 48 增至 58（正好 10 张新表） |
 | 仓库自带 SQL 合约（17 个） | **纯 master：16 个通过、1 个失败；叠加全部草案：16 个通过、同一个失败。草案没有破坏任何现有合约** |
-| 失败的那个 | `profile_target_runtime_contract.sql`，断言"body metric did not refresh target provenance"。纯 master 上同样失败，原因在桩环境里未能确定（可能是环境差异，也可能是该合约在 CI 里的前提未满足），**未核实 CI 中是否通过** |
+| 失败的那个 | `profile_target_runtime_contract.sql`，断言"body metric did not refresh target provenance"。纯 master 上同样失败，原因在桩环境里未能确定。已排除一种猜测：被测函数的生效日期是作为参数传入的（`save_body_metric_with_target_v1` 的 `p_target_effective_date`），所以不是简单的"依赖今天的日期"。可能是桩环境差异，也可能是该合约在 CI 里的前提未满足，**未核实 CI 中是否通过**；如果它在 CI 里也是红的，后续所有 PR 的 `database` 任务都会失败，需要先处理 |
 
 **局限**：没有 Supabase CLI，无法运行 CI 的 `supabase db lint`；桩环境没有 Supabase 的存储、实时、扩展；数据量只有少量种子，验证的是结构与行为，不代表线上耗时。
 

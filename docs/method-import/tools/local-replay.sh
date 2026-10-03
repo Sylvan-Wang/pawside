@@ -8,6 +8,7 @@
 #   docs/method-import/tools/local-replay.sh                 # 只回放 supabase/migrations
 #   docs/method-import/tools/local-replay.sh --with-drafts   # 再依次应用 sql/01..05 草案
 #   docs/method-import/tools/local-replay.sh --contracts     # 回放后运行 supabase/tests/*.sql（每个都在事务内回滚）
+#   docs/method-import/tools/local-replay.sh --draft-tests   # 叠加草案后运行 docs/method-import/sql/tests/*_contract.sql（rollback-only）
 #   docs/method-import/tools/local-replay.sh --keep          # 结束后保留数据库，打印连接方式
 #
 # 要求：PostgreSQL 16 的二进制（默认找 /usr/lib/postgresql/*/bin，可用 PGBIN 覆盖）；不能以 root 运行。
@@ -18,11 +19,12 @@
 
 set -euo pipefail
 
-WITH_DRAFTS=0; RUN_CONTRACTS=0; KEEP=0
+WITH_DRAFTS=0; RUN_CONTRACTS=0; DRAFT_TESTS=0; KEEP=0
 for arg in "$@"; do
   case "$arg" in
     --with-drafts) WITH_DRAFTS=1 ;;
     --contracts) RUN_CONTRACTS=1 ;;
+    --draft-tests) DRAFT_TESTS=1; WITH_DRAFTS=1 ;;
     --keep) KEEP=1 ;;
     *) echo "未知参数: $arg" >&2; exit 2 ;;
   esac
@@ -40,6 +42,7 @@ PGBIN="${PGBIN:-$(ls -d /usr/lib/postgresql/*/bin 2>/dev/null | sort -V | tail -
 WORK="$(mktemp -d)"
 PORT="${PGPORT:-54399}"
 DB="pawside_replay"
+DRAFT_FAILED=0
 export PGHOST="$WORK" PGPORT="$PORT"
 
 cleanup() {
@@ -125,6 +128,20 @@ if [ "$RUN_CONTRACTS" = "1" ]; then
   echo "OK    SQL 合约通过 $pass 个；失败：${failed_list:- 无}"
 fi
 
+if [ "$DRAFT_TESTS" = "1" ]; then
+  dpass=0; dfailed=""
+  for f in $(ls "$ROOT"/docs/method-import/sql/tests/*_contract.sql 2>/dev/null | sort); do
+    if "${PSQL[@]}" -f "$f" >/dev/null 2>"$WORK/contract.err"; then
+      dpass=$((dpass + 1)); echo "OK    草案合约 $(basename "$f")"
+    else
+      dfailed="$dfailed $(basename "$f")"
+      echo "FAIL  草案合约 $(basename "$f"): $(grep -m1 -i 'error' "$WORK/contract.err" | cut -c1-200)"
+    fi
+  done
+  echo "OK    草案合约通过 $dpass 个；失败：${dfailed:- 无}"
+  [ -z "$dfailed" ] || DRAFT_FAILED=1
+fi
+
 tables="$("$PGBIN/psql" -d "$DB" -Atc "select count(*) from information_schema.tables where table_schema='public' and table_type='BASE TABLE'")"
 echo "OK    public 表数量：$tables"
 
@@ -132,3 +149,5 @@ if [ "$KEEP" = "1" ]; then
   echo "已保留数据库。连接：PGHOST=$WORK PGPORT=$PORT $PGBIN/psql -d $DB"
   echo "结束后清理：$PGBIN/pg_ctl -D $WORK/data -m immediate stop && rm -rf $WORK"
 fi
+
+exit "$DRAFT_FAILED"

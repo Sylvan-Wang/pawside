@@ -106,6 +106,29 @@ L4 副本与投影       workout_logs（已标注 deprecated；按动作名存 J
 - `v_user_exercise_last_top`：每个动作最近一次训练里的最大重量。
 - 两个视图都是 `security_invoker`，沿用底层表的行级安全，没有新的写路径，风险最低。
 - **刻意不建 `user_exercise_state` 表**：现有的 `user_exercise_progression` 从未被写入，没有任何"要迁移的数据"；先用视图满足 B9 的"最近一次"和后续的起始重量建议，性能不足时再引入物化表。
+- **规模实测**（本地 PostgreSQL 16，合成数据：2000 个用户、12394 次训练、80561 个动作执行、322244 组，其中一个重度用户有 400 次训练、约 1 万组；行级安全开启，热缓存，无并发）：
+
+  | 查询 | 重度用户 | 普通用户（6 次训练） |
+  |---|---|---|
+  | `v_user_exercise_last_top`（全部动作） | 约 89 ms | 约 5 ms |
+  | `v_user_exercise_sets`（单个动作的全部历史） | 约 79 ms | — |
+  | `v_user_exercise_last_top` 加单个动作过滤 | 约 104 ms | — |
+  | 专用查询：某动作最近一次的最大重量（`order by … limit 1`） | **约 8 ms** | — |
+
+  结论：现有索引已够用，不需要为这两个视图新增索引。**不要**加 `set_executions(user_id)`：实测会让重度用户的视图查询从约 90 ms 变慢到约 160 ms（规划器选了低效的位图组合）。`exercise_executions(user_id, exercise_id)` 能把"视图加单动作过滤"从约 104 ms 降到约 26 ms，但专用查询本来只要 8 ms，所以只在确实需要走视图过滤的热点路径时才考虑，且要权衡对写入最频繁的表增加索引的代价。**B9 这类"取上次"请使用专用查询（下方），不要用带过滤的视图。**
+
+  ```sql
+  select ee.workout_session_id, max(se.actual_weight_kg) as top_weight
+  from public.exercise_executions ee
+  join public.workout_sessions ws on ws.id = ee.workout_session_id
+       and ws.status = 'completed' and ws.deleted_at is null
+  join public.set_executions se on se.exercise_execution_id = ee.id and se.status = 'completed'
+  where ee.user_id = $1 and ee.exercise_id = $2
+  group by ee.workout_session_id, ws.started_at
+  order by ws.started_at desc
+  limit 1;
+  ```
+  局限：合成数据、单机、无并发；线上数据分布不同，上线前在分支库用真实量级复测。
 
 ### 4.6 `workout_logs` 的定位（决策 D-11）
 - **继续双写，作为兼容投影**；首页、历史列表、周报、复盘仍读它，直到这些页面逐个切换到事实表。
