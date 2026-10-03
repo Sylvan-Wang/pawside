@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { FieldProvenanceSchema } from './authority.ts'
+import { MethodSplitKeySchema } from './manifest.ts'
 
 const RepRangeSchema = z.object({
   min: z.number().int().positive(),
@@ -10,7 +11,7 @@ const RepRangeSchema = z.object({
 const RuntimeExercisePrescriptionSchema = z.object({
   exerciseKey: z.string(),
   canonicalNameZh: z.string(),
-  splitKey: z.enum(['pull', 'legs']),
+  splitKey: MethodSplitKeySchema,
   sets: FieldProvenanceSchema,
   reps: FieldProvenanceSchema.extend({ value: RepRangeSchema }),
   failurePolicy: FieldProvenanceSchema,
