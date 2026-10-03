@@ -95,41 +95,57 @@ function num(value: unknown): number | null {
   return Number.isFinite(parsed) ? parsed : null
 }
 
-async function loadLastTime(
+export async function loadLastTime(
   supabase: SupabaseClient,
   userId: string,
-  session: { id: string; split_key: string; started_at: string },
+  session: { id: string; started_at: string },
+  exerciseIds: readonly string[],
 ): Promise<Map<string, { top_weight_kg: number; reps: number | null }>> {
   const result = new Map<string, { top_weight_kg: number; reps: number | null }>()
-  const { data: previous, error } = await supabase
-    .from('workout_sessions')
-    .select('id')
-    .eq('user_id', userId)
-    .eq('split_key', session.split_key)
-    .eq('status', 'completed')
-    .neq('id', session.id)
-    .lt('started_at', session.started_at)
-    .order('started_at', { ascending: false })
-    .limit(1)
-    .maybeSingle()
-  if (error || !previous) return result
+  const uniqueExerciseIds = [...new Set(exerciseIds)]
+  const rowsByExercise = await Promise.all(uniqueExerciseIds.map(async (exerciseId) => {
+    const { data, error } = await supabase
+      .from('exercise_executions')
+      .select(`
+        exercise_id,
+        session:workout_sessions!inner(id,started_at,status),
+        sets:set_executions(actual_weight_kg,actual_reps,status,is_extra)
+      `)
+      .eq('user_id', userId)
+      .eq('exercise_id', exerciseId)
+      .neq('workout_session_id', session.id)
+      .eq('session.status', 'completed')
+      .lt('session.started_at', session.started_at)
+    if (error || !data) return null
+    return data as unknown as Array<{
+      exercise_id: string
+      session: { started_at: string } | Array<{ started_at: string }> | null
+      sets: RawSetExecution[] | null
+    }>
+  }))
 
-  const { data: rows, error: rowsError } = await supabase
-    .from('exercise_executions')
-    .select('exercise_id, sets:set_executions(actual_weight_kg,actual_reps,status,is_extra)')
-    .eq('workout_session_id', previous.id)
-    .eq('user_id', userId)
-  if (rowsError || !rows) return result
-
-  for (const row of rows as Array<{ exercise_id: string; sets: RawSetExecution[] | null }>) {
-    let best: { top_weight_kg: number; reps: number | null } | null = null
-    for (const set of row.sets ?? []) {
-      if (set.status !== 'completed') continue
-      const weight = num(set.actual_weight_kg)
-      if (weight === null) continue
-      if (!best || weight > best.top_weight_kg) best = { top_weight_kg: weight, reps: set.actual_reps ?? null }
+  for (const rows of rowsByExercise) {
+    if (!rows || rows.length === 0) continue
+    const ordered = [...rows].sort((a, b) => {
+      const aSession = one(a.session)
+      const bSession = one(b.session)
+      return (bSession?.started_at ?? '').localeCompare(aSession?.started_at ?? '')
+    })
+    for (const row of ordered) {
+      let best: { top_weight_kg: number; reps: number | null } | null = null
+      for (const set of row.sets ?? []) {
+        if (set.status !== 'completed') continue
+        const weight = num(set.actual_weight_kg)
+        if (weight === null) continue
+        if (!best || weight > best.top_weight_kg || (weight === best.top_weight_kg && (set.actual_reps ?? -1) > (best.reps ?? -1))) {
+          best = { top_weight_kg: weight, reps: set.actual_reps ?? null }
+        }
+      }
+      if (best) {
+        result.set(row.exercise_id, best)
+        break
+      }
     }
-    if (best) result.set(row.exercise_id, best)
   }
   return result
 }
@@ -212,7 +228,12 @@ export async function loadMethodWorkoutContext(
       .order('order_index')
     if (executionsError || !executions) return null
 
-    const lastTime = await loadLastTime(supabase, userId, session).catch(() => new Map())
+    const lastTime = await loadLastTime(
+      supabase,
+      userId,
+      session,
+      (executions as unknown as RawExecution[]).map((execution) => execution.exercise_id),
+    ).catch(() => new Map())
     const allowed = new Set<number>()
     const setCompletedAts: string[] = []
     const exercises: ExerciseSummary[] = []

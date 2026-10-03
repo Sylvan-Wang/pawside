@@ -4,14 +4,17 @@ import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import PageHeader from '@/components/PageHeader'
 import { useToast } from '@/components/Toast'
-import { invalidateDayDerivedCache } from '@/lib/utils'
+import { invalidateDayDerivedCache, today } from '@/lib/utils'
 import CoachCard, { type CoachCardState } from '@/components/CoachCard'
+import DailyWorkoutCardView from '@/components/history/DailyWorkoutCard'
+import type { DailyWorkoutCard } from '@/lib/history/daily-workout-card'
 interface WorkoutLog {
   id: string
   type: string
   duration_minutes: number
   notes: string | null
   exercises: { name: string; sets?: number; reps?: string; weight?: number }[] | null
+  method_workout_session_id: string | null
 }
 
 interface FoodLog {
@@ -48,6 +51,7 @@ export default function HistoryDetailPage() {
   const [workouts, setWorkouts] = useState<WorkoutLog[]>([])
   const [foods, setFoods] = useState<FoodLog[]>([])
   const [metric, setMetric] = useState<BodyMetric | null>(null)
+  const [workoutCards, setWorkoutCards] = useState<DailyWorkoutCard[]>([])
   const [loading, setLoading] = useState(true)
   const [confirmDelete, setConfirmDelete] = useState<{ type: 'workout' | 'food' | 'metric'; id: string } | null>(null)
   const [aiReview, setAiReview] = useState<AIReview | null>(null)
@@ -60,14 +64,19 @@ export default function HistoryDetailPage() {
     const user = session?.user
     if (!user) { router.push('/auth'); return }
 
-    const [wRes, fRes, mRes] = await Promise.all([
+    const [wRes, fRes, mRes, dailyResponse] = await Promise.all([
       supabase.from('workout_logs').select('*').eq('user_id', user.id).eq('date', date),
       supabase.from('food_logs').select('*').eq('user_id', user.id).eq('date', date),
       supabase.from('body_metrics').select('id,weight_kg,body_fat_pct,muscle_mass,notes').eq('user_id', user.id).eq('date', date).maybeSingle(),
+      fetch(`/api/daily-log?date=${encodeURIComponent(date)}&today=${encodeURIComponent(today())}`, { cache: 'no-store' }),
     ])
     setWorkouts(wRes.data || [])
     setFoods(fRes.data || [])
     setMetric(mRes.data)
+    if (dailyResponse.ok) {
+      const payload = await dailyResponse.json()
+      setWorkoutCards(payload?.data?.workout_cards ?? [])
+    }
     setLoading(false)
   }, [date, router, supabase])
 
@@ -169,6 +178,9 @@ export default function HistoryDetailPage() {
     </div>
   )
 
+  const normalizedSessionIds = new Set(workoutCards.map((card) => card.session_id))
+  const legacyOnlyWorkouts = workouts.filter((workout) => !workout.method_workout_session_id || !normalizedSessionIds.has(workout.method_workout_session_id))
+
   return (
     <div className="min-h-screen bg-gray-50 pb-8">
       {ToastEl}
@@ -198,12 +210,11 @@ export default function HistoryDetailPage() {
       <div className="px-4 py-4 space-y-4">
         <p className="text-xs text-gray-400">{date}</p>
 
-        {/* Workout */}
-        <div className="bg-white rounded-2xl p-4">
+        {/* B9: normalized Method facts; free/legacy workouts retain their existing card. */}
+        {workoutCards.map((card) => <DailyWorkoutCardView key={card.session_id} card={card} />)}
+        {legacyOnlyWorkouts.length > 0 && <div className="bg-white rounded-2xl p-4">
           <h2 className="text-sm font-semibold mb-3">训练记录</h2>
-          {workouts.length === 0
-            ? <p className="text-sm text-gray-400">暂无训练记录</p>
-            : workouts.map(w => (
+          {legacyOnlyWorkouts.map(w => (
               <div key={w.id} className="mb-4 last:mb-0 pb-4 last:pb-0 border-b last:border-0 border-gray-50">
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
@@ -234,9 +245,11 @@ export default function HistoryDetailPage() {
                   </div>
                 </div>
               </div>
-            ))
-          }
-        </div>
+            ))}
+        </div>}
+        {workoutCards.length === 0 && legacyOnlyWorkouts.length === 0 && (
+          <div className="rounded-2xl bg-white p-4 text-sm text-gray-400">暂无训练记录</div>
+        )}
 
         {/* Food */}
         <div className="bg-white rounded-2xl p-4">

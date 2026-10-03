@@ -1,5 +1,6 @@
 import { apiError } from '@/lib/api/response'
 import { adjacentDates, buildDailyLog, toDashboardNutrition } from '@/lib/nutrition/daily-log'
+import { loadDailyWorkoutCards } from '@/lib/history/daily-workout-card'
 import { createClient } from '@/lib/supabase/server'
 import { dateKeyInTimeZone } from '@/lib/utils'
 import { NextRequest, NextResponse } from 'next/server'
@@ -50,11 +51,13 @@ export async function GET(request: NextRequest) {
 
   try {
     const dailyLog = await buildDailyLog(supabase, { userId: user.id, date, today })
+    const workoutCards = await loadDailyWorkoutCards(supabase, user.id, date)
 
     const response: Record<string, unknown> = {
       data: {
         ...dailyLog,
         dashboard_nutrition: toDashboardNutrition(dailyLog.nutrition),
+        workout_cards: workoutCards,
       },
     }
 
