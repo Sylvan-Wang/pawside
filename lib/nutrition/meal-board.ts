@@ -13,9 +13,23 @@ import type { NutrientTargets } from './types'
 
 const MEAL_ORDER: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack']
 
-export type MealBoard = Record<MealType, MealContext>
+export interface MealBoardItem {
+  name: string
+  weight_g: number | null
+  calories_kcal: number | null
+  protein_g: number | null
+  carbs_g: number | null
+  fat_g: number | null
+}
 
-function emptyMeal(mealType: MealType): MealContext {
+export type MealBoardEntry = MealContext & { items: MealBoardItem[] }
+export type MealBoard = Record<MealType, MealBoardEntry>
+
+function finiteOrNull(value: number | null): number | null {
+  return value !== null && Number.isFinite(value) ? value : null
+}
+
+function emptyMeal(mealType: MealType): MealBoardEntry {
   return {
     meal_type: mealType,
     meal_label: MEAL_LABELS[mealType],
@@ -25,6 +39,7 @@ function emptyMeal(mealType: MealType): MealContext {
     meal_ref: null,
     position: null,
     has_estimated_items: false,
+    items: [],
   }
 }
 
@@ -51,12 +66,22 @@ export async function buildMealBoard(
   for (const mealType of MEAL_ORDER) {
     const items = byMeal.get(mealType)
     board[mealType] = items
-      ? summarizeMeal({
+      ? {
+        ...summarizeMeal({
         mealType,
         saveCount: savesByMeal.get(mealType)?.size ?? 0,
         items: items.map((item) => ({ ...item, is_estimated: item.is_estimated ?? null })),
         target,
-      })
+        }),
+        items: items.map((item) => ({
+          name: (item.food_name_resolved || item.food_name_raw || '未命名食物').trim(),
+          weight_g: finiteOrNull(item.weight_g),
+          calories_kcal: finiteOrNull(item.energy_kcal),
+          protein_g: finiteOrNull(item.protein_g),
+          carbs_g: finiteOrNull(item.carb_g),
+          fat_g: finiteOrNull(item.fat_g),
+        })),
+      }
       : emptyMeal(mealType)
   }
   return board

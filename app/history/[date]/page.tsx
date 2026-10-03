@@ -7,7 +7,9 @@ import { useToast } from '@/components/Toast'
 import { invalidateDayDerivedCache, today } from '@/lib/utils'
 import CoachCard, { type CoachCardState } from '@/components/CoachCard'
 import DailyWorkoutCardView from '@/components/history/DailyWorkoutCard'
+import DailyMealCard from '@/components/history/DailyMealCard'
 import type { DailyWorkoutCard } from '@/lib/history/daily-workout-card'
+import type { MealBoard } from '@/lib/nutrition/meal-board'
 interface WorkoutLog {
   id: string
   type: string
@@ -43,6 +45,12 @@ interface BodyMetric {
   notes: string | null
 }
 
+interface NutritionCardData {
+  consumed: { calories_kcal: number | null; protein_g: number | null }
+  target: { calories_kcal: number | null; protein_g: number | null }
+  remaining: { calories_kcal: number | null; protein_g: number | null } | null
+}
+
 export default function HistoryDetailPage() {
   const { date } = useParams<{ date: string }>()
   const router = useRouter()
@@ -52,6 +60,8 @@ export default function HistoryDetailPage() {
   const [foods, setFoods] = useState<FoodLog[]>([])
   const [metric, setMetric] = useState<BodyMetric | null>(null)
   const [workoutCards, setWorkoutCards] = useState<DailyWorkoutCard[]>([])
+  const [mealBoard, setMealBoard] = useState<MealBoard | null>(null)
+  const [nutrition, setNutrition] = useState<NutritionCardData | null>(null)
   const [loading, setLoading] = useState(true)
   const [confirmDelete, setConfirmDelete] = useState<{ type: 'workout' | 'food' | 'metric'; id: string } | null>(null)
   const [aiReview, setAiReview] = useState<AIReview | null>(null)
@@ -76,6 +86,8 @@ export default function HistoryDetailPage() {
     if (dailyResponse.ok) {
       const payload = await dailyResponse.json()
       setWorkoutCards(payload?.data?.workout_cards ?? [])
+      setMealBoard(payload?.data?.meal_board ?? null)
+      setNutrition(payload?.data?.nutrition ?? null)
     }
     setLoading(false)
   }, [date, router, supabase])
@@ -180,6 +192,7 @@ export default function HistoryDetailPage() {
 
   const normalizedSessionIds = new Set(workoutCards.map((card) => card.session_id))
   const legacyOnlyWorkouts = workouts.filter((workout) => !workout.method_workout_session_id || !normalizedSessionIds.has(workout.method_workout_session_id))
+  const hasCanonicalMeals = mealBoard ? Object.values(mealBoard).some((meal) => meal.items.length > 0) : false
 
   return (
     <div className="min-h-screen bg-gray-50 pb-8">
@@ -251,12 +264,13 @@ export default function HistoryDetailPage() {
           <div className="rounded-2xl bg-white p-4 text-sm text-gray-400">暂无训练记录</div>
         )}
 
-        {/* Food */}
-        <div className="bg-white rounded-2xl p-4">
+        {/* B10: same canonical meal-type merge used by the B1 food page. */}
+        {mealBoard && nutrition && (hasCanonicalMeals || foods.length === 0) && (
+          <DailyMealCard date={date} board={mealBoard} consumed={nutrition.consumed} target={nutrition.target} remaining={nutrition.remaining} />
+        )}
+        {!hasCanonicalMeals && foods.length > 0 && <div className="bg-white rounded-2xl p-4">
           <h2 className="text-sm font-semibold mb-3">饮食记录</h2>
-          {foods.length === 0
-            ? <p className="text-sm text-gray-400">暂无饮食记录</p>
-            : foods.map(f => (
+          {foods.map(f => (
               <div key={f.id} className="mb-4 last:mb-0 pb-4 last:pb-0 border-b last:border-0 border-gray-50">
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
@@ -283,9 +297,8 @@ export default function HistoryDetailPage() {
                   </div>
                 </div>
               </div>
-            ))
-          }
-        </div>
+            ))}
+        </div>}
 
         {/* Body metrics */}
         <div className="bg-white rounded-2xl p-4">

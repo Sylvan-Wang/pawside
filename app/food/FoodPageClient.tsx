@@ -1,5 +1,6 @@
 'use client'
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { useSearchParams } from 'next/navigation'
 import PageHeader from '@/components/PageHeader'
 import CoachCard from '@/components/CoachCard'
 import { useToast } from '@/components/Toast'
@@ -592,9 +593,15 @@ function FoodRow({
 
 export default function FoodPage() {
   const { show, ToastEl } = useToast()
+  const searchParams = useSearchParams()
+  const initialSelectionApplied = useRef(false)
+  const requestedInitialDate = searchParams.get('date')
+  const initialDate = requestedInitialDate && /^\d{4}-\d{2}-\d{2}$/.test(requestedInitialDate)
+    ? requestedInitialDate
+    : today()
 
   const [userId, setUserId] = useState<string | null>(null)
-  const [date, setDate] = useState(today())
+  const [date, setDate] = useState(initialDate)
   const [daily, setDaily] = useState<DailyState | null>(null)
   const [dailyLoading, setDailyLoading] = useState(true)
   const [history, setHistory] = useState<FoodHistorySuggestion[]>([])
@@ -643,10 +650,10 @@ export default function FoodPage() {
 
   useEffect(() => { void Promise.resolve().then(loadDaily) }, [loadDaily])
 
-  function openMeal(mealType: MealType) {
+  const openMeal = useCallback((mealType: MealType, mealDate = date) => {
     setActiveMealType(mealType)
     if (userId) {
-      const draft = readMealDraft<FoodItem>(userId, date, mealType)
+      const draft = readMealDraft<FoodItem>(userId, mealDate, mealType)
       if (draft && draft.length > 0) {
         setFoods(draft)
         setRestoredDraft(true)
@@ -655,7 +662,15 @@ export default function FoodPage() {
     }
     setFoods([emptyFood()])
     setRestoredDraft(false)
-  }
+  }, [date, userId])
+
+  useEffect(() => {
+    if (initialSelectionApplied.current || !userId) return
+    const requestedMeal = searchParams.get('meal')
+    if (!MEAL_ORDER.includes(requestedMeal as MealType)) return
+    initialSelectionApplied.current = true
+    void Promise.resolve().then(() => openMeal(requestedMeal as MealType, date))
+  }, [date, openMeal, searchParams, userId])
 
   function closeMeal() {
     setActiveMealType(null)

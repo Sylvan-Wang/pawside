@@ -54,6 +54,11 @@ describe('buildMealBoard (Patch B B1)', () => {
 
     expect(board.lunch.save_count).toBe(2)
     expect(board.lunch.item_names).toEqual(['米饭', '苦瓜炒蛋', '可乐鸡翅'])
+    expect(board.lunch.items).toEqual([
+      { name: '米饭', weight_g: null, calories_kcal: 200, protein_g: 4, carbs_g: 44, fat_g: 1 },
+      { name: '苦瓜炒蛋', weight_g: null, calories_kcal: 180, protein_g: 10, carbs_g: 6, fat_g: 12 },
+      { name: '可乐鸡翅', weight_g: null, calories_kcal: 362, protein_g: 23.2, carbs_g: 28, fat_g: 16 },
+    ])
     expect(board.lunch.totals.calories_kcal).toBe(742)
     expect(board.lunch.totals.protein_g).toBeCloseTo(37.2)
     // Lunch is 30–40% of the daily target: 600–800 kcal, so 742 is within range.
