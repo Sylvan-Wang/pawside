@@ -164,9 +164,9 @@ export async function GET(request: Request) {
   ])
   if (methodSplitsError || !methodSplits?.length) return apiError('DATABASE_ERROR', '暂时无法读取训练日', 500)
   const programDays = methodSplits as Array<{ key: string; name_zh: string; order_index: number; is_required: boolean }>
-  const programDayOrder = programDays.map((day) => day.key)
+  const PROGRAM_DAY_ORDER = programDays.map((day) => day.key)
   const nameBySplit = new Map(programDays.map((day) => [day.key, day.name_zh]))
-  if (requestedSplit && !programDayOrder.includes(requestedSplit)) {
+  if (requestedSplit && !PROGRAM_DAY_ORDER.includes(requestedSplit)) {
     return apiError('VALIDATION_ERROR', '训练日无效', 400)
   }
 
@@ -194,12 +194,12 @@ export async function GET(request: Request) {
     if (!bySplit.has(row.split_key)) bySplit.set(row.split_key, row)
   }
 
-  const nextSplitKey = isProgramDaySplit(enrollment.next_split_key) && programDayOrder.includes(enrollment.next_split_key)
+  const nextSplitKey = isProgramDaySplit(enrollment.next_split_key) && PROGRAM_DAY_ORDER.includes(enrollment.next_split_key)
     ? enrollment.next_split_key
     : null
 
   function firstIncompleteSplit() {
-    for (const split of programDayOrder) {
+    for (const split of PROGRAM_DAY_ORDER) {
       if (!['completed', 'skipped'].includes(bySplit.get(split)?.status ?? '')) return split
     }
     return null
@@ -210,7 +210,7 @@ export async function GET(request: Request) {
     ?? nextSplitKey
     ?? firstIncompleteSplit()
     ?? programDays.find((day) => day.is_required)?.key
-    ?? programDayOrder[0]
+    ?? PROGRAM_DAY_ORDER[0]
 
   if (!targetSplit) return apiError('NOT_FOUND', '当前方法没有可用训练日', 404)
 
@@ -288,7 +288,7 @@ export async function GET(request: Request) {
     data: {
       program_day: {
         split_key: targetSplit,
-        day_index: programDayOrder.indexOf(targetSplit) + 1,
+         day_index: PROGRAM_DAY_ORDER.indexOf(targetSplit) + 1,
         name_zh: (prescription.method_split as { name_zh?: string } | null)?.name_zh
           ?? nameBySplit.get(targetSplit)
           ?? PROGRAM_DAY_FALLBACK_NAMES[targetSplit]

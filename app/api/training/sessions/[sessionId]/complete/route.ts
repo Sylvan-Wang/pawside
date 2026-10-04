@@ -35,13 +35,15 @@ export async function POST(
   }
 
   const { data: multiDayEnabled } = await supabase.rpc('feature_enabled', { p_key: 'multi_day_runtime' })
-  const rpcName = multiDayEnabled ? 'complete_method_session_v4' : 'complete_method_session_v2'
-  const { data, error } = await supabase.rpc(rpcName, {
+  const completionArgs = {
     p_session_id: sessionId,
     p_completion_request_id: parsed.data.completion_request_id,
     p_duration_minutes: parsed.data.duration_minutes ?? null,
     p_notes: parsed.data.notes ?? null,
-  })
+  }
+  const { data, error } = multiDayEnabled
+    ? await supabase.rpc('complete_method_session_v4', completionArgs)
+    : await supabase.rpc('complete_method_session_v2', completionArgs)
   if (error) return trainingDatabaseError(error)
 
   const result = data as Record<string, unknown> & { log_date?: string } | null
