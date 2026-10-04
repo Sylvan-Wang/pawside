@@ -176,10 +176,6 @@ export default function WeeklyPage() {
         {!loading && data && (
           <>
             {/* Hero summary */}
-            {/* Patch B · B3 (METHOD_RULES M008): duration is not judged, so
-                "总时长" and "训练时长趋势" are gone — replaced by which split
-                days were actually completed this week. Duration itself is
-                still stored, just not shown. */}
             <div className="bg-white rounded-2xl p-4">
               <h2 className="text-sm font-semibold mb-3">本周概览</h2>
               <div className="grid grid-cols-2 gap-3">
@@ -188,25 +184,52 @@ export default function WeeklyPage() {
                   <p className="text-sm font-semibold">{data.training.workout_count} 次</p>
                 </div>
                 <div>
+                  <p className="text-xs text-gray-400">总时长</p>
+                  <p className="text-sm font-semibold">{data.training.total_duration_minutes} 分钟</p>
+                </div>
+                <div>
                   <p className="text-xs text-gray-400">记录饮食天数</p>
                   <p className="text-sm font-semibold">{data.nutrition.days_logged} / 7 天</p>
                 </div>
+                <div>
+                  <p className="text-xs text-gray-400">训练时长趋势</p>
+                  <p className={`text-sm font-semibold ${TREND_CLASS[data.training.duration_trend.direction]}`}>
+                    {TREND_TEXT[data.training.duration_trend.direction]}
+                  </p>
+                </div>
               </div>
-              <p className="mt-3 text-xs text-gray-400">
-                完成的训练日：{data.training.types.length > 0 ? data.training.types.join('、') : '暂无'}
-              </p>
+              {data.training.types.length > 0 && (
+                <p className="mt-3 text-xs text-gray-400">训练类型：{data.training.types.join('、')}</p>
+              )}
             </div>
 
-            {/* Training volume — no duration, per M008. */}
+            {/* Training trend */}
             <div className="bg-white rounded-2xl p-4">
-              <h2 className="text-sm font-semibold mb-3">训练量</h2>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-sm font-semibold">训练趋势</h2>
+                <span className="text-xs text-gray-400">按天时长</span>
+              </div>
               {/* Product §23.1: report unavailable metrics instead of faking them. */}
               {data.training.unavailable_metrics.length > 0 && (
                 <p className="mb-2 text-xs leading-5 text-gray-400">
                   肌群训练量与计划依从性暂不可计算，需要可靠的动作—肌群映射与规则支持。
                 </p>
               )}
-              <div className="flex justify-between text-xs text-gray-400">
+              <ResponsiveContainer width="100%" height={90}>
+                <BarChart data={data.days.map((day) => ({
+                  day: dayLabel(day.date),
+                  minutes: day.duration_minutes,
+                }))}>
+                  <XAxis dataKey="day" hide />
+                  <Tooltip
+                    formatter={(value: number) => [`${value} 分钟`, '']}
+                    labelFormatter={() => ''}
+                    contentStyle={{ fontSize: 11, border: 'none', background: '#f5f5f5', borderRadius: 8 }}
+                  />
+                  <Bar dataKey="minutes" fill="#888" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+              <div className="mt-2 flex justify-between text-xs text-gray-400">
                 <span>完成组数 {data.training.total_completed_sets ?? '—'}</span>
                 <span>
                   总容量 {data.training.total_volume_kg === null
