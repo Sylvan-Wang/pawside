@@ -35,7 +35,7 @@ begin
     raise exception 'A2 failed: internal cycle materializer is client executable';
   end if;
   if not has_function_privilege('authenticated', 'public.create_program_day_prescription_v2(uuid,text,date)', 'execute')
-     or not has_function_privilege('authenticated', 'public.complete_method_session_v3(uuid,uuid)', 'execute')
+     or not has_function_privilege('authenticated', 'public.complete_method_session_v3(uuid,uuid,integer,text)', 'execute')
      or not has_function_privilege('authenticated', 'public.enroll_in_method_release_v1(uuid)', 'execute')
      or not has_function_privilege('authenticated', 'public.apply_adjustment_v1(uuid,text,uuid,text,jsonb,text)', 'execute')
      or not has_function_privilege('authenticated', 'public.revoke_adjustment_v1(uuid)', 'execute')
