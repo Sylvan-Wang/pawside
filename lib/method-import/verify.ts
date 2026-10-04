@@ -7,6 +7,29 @@ const INSTRUCTION_LIKE = /忽略(?:以上|之前).{0,8}指令|系统提示|syste
 
 export interface VerificationIssue { rule: `R${number}`; path: string; message: string }
 
+const PHRASE_KEYS = [
+  'sets_phrase', 'reps_phrase', 'rest_phrase', 'rest_between_exercises_phrase',
+  'duration_phrase', 'distance_phrase', 'failure_phrase', 'per_side_phrase',
+] as const
+
+function parsedNumbersInSourceUnits(parsed: ReturnType<typeof parseQuantities>, phrase: string): number[] {
+  const values: number[] = []
+  const addRange = (value: { min: number; max: number } | null, divisor = 1) => {
+    if (!value) return
+    values.push(value.min / divisor, value.max / divisor)
+  }
+  addRange(parsed.sets)
+  addRange(parsed.reps)
+  const timeDivisor = /分钟|(?:^|[^a-z])min(?:[^a-z]|$)|\d\s*分(?:[^钟]|$)/i.test(phrase) ? 60 : 1
+  addRange(parsed.restSeconds, timeDivisor)
+  addRange(parsed.restBetweenExercisesSeconds, timeDivisor)
+  addRange(parsed.duration, timeDivisor)
+  addRange(parsed.distanceM, /公里|km/i.test(phrase) ? 1000 : 1)
+  addRange(parsed.progressionPercent)
+  values.push(...(parsed.sequenceReps ?? []), ...(parsed.restPauseReps ?? []))
+  return [...new Set(values)]
+}
+
 export function verifyQuote(rawText: string, quote: string | null, path: string): VerificationIssue[] {
   if (!quoteExists(rawText, quote)) return [{ rule: 'R1', path, message: '引用不在原文中' }]
   if (quote && INSTRUCTION_LIKE.test(quote)) return [{ rule: 'R9', path, message: '引用包含指令样文本，已丢弃' }]
@@ -38,8 +61,9 @@ export function verifyDay(rawText: string, day: DayExtraction) {
       issues.push(...verifyQuote(rawText, phrase, `${base}.${key}`))
       const parsed = parseQuantities(phrase)
       if (!quantityWithinLimits(parsed)) issues.push({ rule: 'R3', path: `${base}.${key}`, message: '数量超出安全范围' })
-      for (const number of phrase.match(/\d+(?:\.\d+)?/g) ?? []) {
-        if (!normalizeMethodText(phrase).includes(number)) issues.push({ rule: 'R2', path: `${base}.${key}`, message: '解析数字不在对应短语中' })
+      const sourceNumbers = new Set((normalizeMethodText(phrase).match(/\d+(?:\.\d+)?/g) ?? []).map(Number))
+      for (const number of parsedNumbersInSourceUnits(parsed, phrase)) {
+        if (!sourceNumbers.has(number)) issues.push({ rule: 'R2', path: `${base}.${key}`, message: '解析数字不在对应短语中' })
       }
     }
     exercise.alternatives.forEach((alternative, alternativeIndex) => {
@@ -52,6 +76,46 @@ export function verifyDay(rawText: string, day: DayExtraction) {
   day.warmup_notes.forEach((item, index) => issues.push(...verifyQuote(rawText, item.quote, `warmup_notes.${index}.quote`)))
   day.cooldown_notes.forEach((item, index) => issues.push(...verifyQuote(rawText, item.quote, `cooldown_notes.${index}.quote`)))
   return issues
+}
+
+/**
+ * R1/R3/R9 are rejection rules, not advisory diagnostics.  Keep the exercise
+ * shell so the user can repair it, but remove every untrusted field before it
+ * can become a `method_explicit` value in the manifest.
+ */
+export function sanitizeDayExtraction(rawText: string, day: DayExtraction) {
+  const issues = verifyDay(rawText, day)
+  const rejected = new Set(issues
+    .filter((issue) => issue.rule === 'R1' || issue.rule === 'R3' || issue.rule === 'R9')
+    .map((issue) => issue.path))
+
+  const exercises = day.exercises.slice(0, 12).flatMap((exercise, index) => {
+    const name = exercise.name.trim().slice(0, 40)
+    if (!name) return []
+    const next = {
+      ...exercise,
+      name,
+      alternatives: exercise.alternatives.filter((_, child) =>
+        !rejected.has(`exercises.${index}.alternatives.${child}.quote`)),
+      cues: exercise.cues.filter((_, child) =>
+        !rejected.has(`exercises.${index}.cues.${child}.quote`)),
+    }
+    for (const key of PHRASE_KEYS) {
+      if (rejected.has(`exercises.${index}.${key}`)) next[key] = null
+    }
+    return [next]
+  })
+
+  return {
+    data: {
+      exercises,
+      warmup_notes: day.warmup_notes.filter((_, index) =>
+        !rejected.has(`warmup_notes.${index}.quote`)),
+      cooldown_notes: day.cooldown_notes.filter((_, index) =>
+        !rejected.has(`cooldown_notes.${index}.quote`)),
+    } satisfies DayExtraction,
+    issues,
+  }
 }
 
 export function verifyManifestSource(rawText: string, manifest: MethodManifest) {

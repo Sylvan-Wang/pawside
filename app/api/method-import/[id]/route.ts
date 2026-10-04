@@ -14,13 +14,14 @@ const patchSchema = z.object({
 async function context(id: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user || !idSchema.safeParse(id).success) return { supabase, user: null, item: null }
+  if (!user) return { supabase, user: null, item: null }
   const { data: item } = await supabase.from('user_method_imports').select('*').eq('id', id).eq('user_id', user.id).maybeSingle()
   return { supabase, user, item }
 }
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
+  if (!idSchema.safeParse(id).success) return apiError('VALIDATION_ERROR', '导入编号无效', 400)
   const { user, item } = await context(id)
   if (!user) return apiError('UNAUTHORIZED', '请先登录', 401)
   if (!item) return apiError('NOT_FOUND', '导入草稿不存在', 404)
@@ -29,6 +30,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
+  if (!idSchema.safeParse(id).success) return apiError('VALIDATION_ERROR', '导入编号无效', 400)
   const { supabase, user, item } = await context(id)
   if (!user) return apiError('UNAUTHORIZED', '请先登录', 401)
   if (!item) return apiError('NOT_FOUND', '导入草稿不存在', 404)

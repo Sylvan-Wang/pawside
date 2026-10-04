@@ -1,6 +1,7 @@
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
+  resolve: { tsconfigPaths: true },
   test: {
     // The repository root can also hold Codex scratch checkouts
     // (.codex-tmp/, minimum-p1-worktree/) that are not part of the product and

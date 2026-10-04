@@ -19,6 +19,51 @@ async function authenticatedClient() {
   return { supabase, user: error ? null : user }
 }
 
+async function importedSubstitutions(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  enrollmentId: string | null,
+  exerciseId: string | null,
+) {
+  if (!enrollmentId || !exerciseId) return []
+  const { data: enrollment, error: enrollmentError } = await supabase.from('method_enrollments')
+    .select('method_release_id').eq('id', enrollmentId).eq('user_id', userId).maybeSingle()
+  if (enrollmentError) throw new Error(enrollmentError.message)
+  if (!enrollment?.method_release_id) return []
+  const { data: splits, error: splitError } = await supabase.from('method_splits')
+    .select('id').eq('method_release_id', enrollment.method_release_id)
+  if (splitError) throw new Error(splitError.message)
+  const splitIds = (splits ?? []).map((split) => split.id)
+  if (splitIds.length === 0) return []
+  const { data: entries, error: entryError } = await supabase.from('method_split_exercises')
+    .select('substitution_rule_key').in('method_split_id', splitIds).eq('exercise_id', exerciseId)
+    .not('substitution_rule_key', 'is', null)
+  if (entryError) throw new Error(entryError.message)
+  const ruleKeys = [...new Set((entries ?? []).map((entry) => entry.substitution_rule_key).filter(Boolean))]
+  if (ruleKeys.length === 0) return []
+  const { data: rules, error: ruleError } = await supabase.from('method_rules')
+    .select('config_json').eq('method_release_id', enrollment.method_release_id).in('rule_key', ruleKeys)
+  if (ruleError) throw new Error(ruleError.message)
+  const refs = (rules ?? []).flatMap((rule) => {
+    const config = rule.config_json as { candidates?: unknown } | null
+    return Array.isArray(config?.candidates) ? config.candidates : []
+  }).filter((candidate): candidate is { exerciseId: string; name: string } => {
+    if (!candidate || typeof candidate !== 'object') return false
+    const value = candidate as Record<string, unknown>
+    return typeof value.exerciseId === 'string' && uuid.safeParse(value.exerciseId).success && typeof value.name === 'string'
+  })
+  const ids = [...new Set(refs.map((ref) => ref.exerciseId))]
+  if (ids.length === 0) return []
+  const { data: exercises, error: exerciseError } = await supabase.from('exercises')
+    .select('id,canonical_name_zh').in('id', ids)
+  if (exerciseError) throw new Error(exerciseError.message)
+  const names = new Map((exercises ?? []).map((exercise) => [exercise.id, exercise.canonical_name_zh]))
+  return refs.filter((ref) => names.has(ref.exerciseId)).map((ref) => ({
+    kind: 'method', note: '原方法提供的替代动作',
+    substitute: { id: ref.exerciseId, canonical_name_zh: names.get(ref.exerciseId) ?? ref.name },
+  }))
+}
+
 export async function GET(request: Request) {
   const { supabase, user } = await authenticatedClient()
   if (!user) return apiError('UNAUTHORIZED', '请先登录', 401)
@@ -50,7 +95,20 @@ export async function GET(request: Request) {
       : Promise.resolve({ data: [], error: null }),
   ])
   if (adjustments.error || substitutions.error) return apiError('DATABASE_ERROR', '暂时无法读取调整', 500)
-  return NextResponse.json({ data: { adjustments: adjustments.data ?? [], substitutions: substitutions.data ?? [] } })
+  let methodSubstitutions: Awaited<ReturnType<typeof importedSubstitutions>> = []
+  try {
+    methodSubstitutions = await importedSubstitutions(supabase, user.id, enrollmentId, exerciseId)
+  } catch {
+    return apiError('DATABASE_ERROR', '暂时无法读取方法替代动作', 500)
+  }
+  const seen = new Set<string>()
+  const merged = [...(substitutions.data ?? []), ...methodSubstitutions].filter((item) => {
+    const relation = Array.isArray(item.substitute) ? item.substitute[0] : item.substitute
+    if (!relation?.id || seen.has(relation.id)) return false
+    seen.add(relation.id)
+    return true
+  })
+  return NextResponse.json({ data: { adjustments: adjustments.data ?? [], substitutions: merged } })
 }
 
 export async function POST(request: Request) {

@@ -38,6 +38,30 @@ begin
        and not exists (select 1 from public.methods m where m.id = parent_method_id) then
       return old;
     end if;
+  elsif tg_table_name = 'method_rule_sources' then
+    select r.method_release_id, r.method_id
+    into release_id_to_check, parent_method_id
+    from public.method_rules r
+    where r.id = case when tg_op = 'DELETE' then old.method_rule_id else new.method_rule_id end;
+    if tg_op = 'DELETE' and parent_method_id is not null
+       and not exists (select 1 from public.methods m where m.id = parent_method_id) then
+      return old;
+    end if;
+  elsif tg_table_name = 'method_prescription_field_values' then
+    select s.method_release_id, s.method_id
+    into release_id_to_check, parent_method_id
+    from public.method_split_exercises mse
+    join public.method_splits s on s.id = mse.method_split_id
+    where mse.id = case
+      when tg_op = 'DELETE' then old.method_split_exercise_id
+      else new.method_split_exercise_id
+    end;
+    if tg_op = 'DELETE' and parent_method_id is not null
+       and not exists (select 1 from public.methods m where m.id = parent_method_id) then
+      return old;
+    end if;
+  elsif tg_table_name = 'method_release_issues' then
+    release_id_to_check := case when tg_op = 'DELETE' then old.method_release_id else new.method_release_id end;
   end if;
 
   if release_id_to_check is not null and exists (

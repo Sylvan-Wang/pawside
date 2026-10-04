@@ -1,0 +1,3 @@
+"approved","conflict","slug","canonical_name_en","canonical_name_zh","aliases","exercise_type","record_shape","equipment","primary_muscle","secondary_muscles","is_stretch","risk_flags","cues","review_status","beginner_sets_min","beginner_sets_max","beginner_reps_min","beginner_reps_max","beginner_rest_seconds_min","beginner_rest_seconds_max","duration_seconds","distance_m","failure_policy","substitutions"
+"true","","bench-press","Bench Press","杠铃卧推","卧推","weight_reps","weight_reps","Barbell","胸部","肱三头肌|肩部","false","","肩胛后缩|双脚踩稳","reviewed","3","4","8","12","60","90","","","avoid","push-up"
+"true","","push-up","Push Up","俯卧撑","标准俯卧撑","bodyweight_reps","reps","Bodyweight","胸部","肱三头肌|肩部","false","","身体保持直线","reviewed","3","3","8","15","45","60","","","avoid","bench-press"

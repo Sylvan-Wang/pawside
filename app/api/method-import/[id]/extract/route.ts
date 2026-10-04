@@ -1,8 +1,8 @@
 import { apiError } from '@/lib/api/response'
-import { buildMethodManifest } from '@/lib/method-import/build-manifest'
+import { applyExerciseDefaults, buildMethodManifest, type ManifestExerciseDefaultRow } from '@/lib/method-import/build-manifest'
 import { DayExtractionSchema, OutlineExtractionSchema, type DayExtraction } from '@/lib/method-import/extract-schema'
 import { extractDay, extractOutline } from '@/lib/method-import/extractor'
-import { verifyDay, verifyOutline } from '@/lib/method-import/verify'
+import { sanitizeDayExtraction, verifyOutline } from '@/lib/method-import/verify'
 import { sliceSourceSection } from '@/lib/method-import/source-section'
 import { alignExercise, type ExerciseLibraryRow } from '@/lib/method-import/align-exercises'
 import { createClient } from '@/lib/supabase/server'
@@ -68,18 +68,22 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const sourceText = sliceSourceSection(item.raw_text, targetDay.section_quote, selectedDays.slice(parsed.data.day_index + 1).map((day) => day.section_quote))
   const result = await extractDay({ userId: user.id, importId: id, dayName: targetDay.name_zh, sourceText })
   if (!result.ok) return providerError(result.reason)
-  const issues = verifyDay(sourceText, result.data)
+  const { data: sanitizedDay, issues } = sanitizeDayExtraction(sourceText, result.data)
   const days = [...(draft.days ?? [])]
-  days[parsed.data.day_index] = result.data
+  days[parsed.data.day_index] = sanitizedDay
+  const verificationIssues = [...(draft.verification_issues ?? []), ...issues]
+    .filter((issue, index, all) => all.findIndex((candidate) =>
+      JSON.stringify(candidate) === JSON.stringify(issue)) === index)
   const complete = selectedDays.every((_, index) => DayExtractionSchema.safeParse(days[index]).success)
-  let manifestDraft: unknown = { outline: outlineResult.data, days, selected_variant: selectedVariant, verification_issues: [...(draft.verification_issues ?? []), ...issues] }
+  let manifestDraft: unknown = { outline: outlineResult.data, days, selected_variant: selectedVariant, verification_issues: verificationIssues }
   let status: 'extracting' | 'review' = 'extracting'
   let openQuestionsCount = issues.length
   if (complete) {
-    const manifest = buildMethodManifest({
+    let manifest = buildMethodManifest({
       rawText: item.raw_text, checksumSha256: item.text_checksum_sha256,
       outline: outlineResult.data, days: days as DayExtraction[], selectedVariant,
       consent: { version: item.consent_version, acceptedAt: item.consented_at },
+      verificationIssues: verificationIssues as Array<{ path: string; message: string }>,
     })
     const { data: exerciseRows, error: exerciseError } = await supabase.from('exercises')
       .select('id,canonical_name_zh,canonical_name_en,aliases,review_status')
@@ -89,6 +93,21 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       const aligned = alignExercise(exercise.ref.name, library)
       exercise.ref.exerciseId = aligned.exerciseId
       exercise.ref.match = aligned.match
+      for (const substitution of exercise.substitutions) {
+        const substitute = alignExercise(substitution.name, library)
+        substitution.exerciseId = substitute.exerciseId
+        substitution.match = substitute.match
+      }
+    }
+    const exerciseIds = [...new Set(manifest.days.flatMap((day) => day.exercises)
+      .map((exercise) => exercise.ref.exerciseId).filter((id): id is string => Boolean(id)))]
+    if (exerciseIds.length > 0) {
+      const { data: defaults, error: defaultsError } = await supabase.from('exercise_defaults')
+        .select('exercise_id,sets_min,sets_max,reps_min,reps_max,rest_seconds_min,rest_seconds_max,duration_seconds,distance_m,failure_policy,review_status')
+        .in('exercise_id', exerciseIds)
+        .eq('level', outlineResult.data.level_hint ?? 'beginner')
+      if (defaultsError) return apiError('DATABASE_ERROR', '动作默认值读取失败', 500)
+      manifest = applyExerciseDefaults(manifest, (defaults ?? []) as ManifestExerciseDefaultRow[])
     }
     manifestDraft = manifest
     status = 'review'
@@ -99,5 +118,5 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     failure_reason: null, updated_at: new Date().toISOString(),
   }).eq('id', id)
   if (error) return apiError('DATABASE_ERROR', '识别结果保存失败', 500)
-  return NextResponse.json({ data: { import_id: id, status, day_index: parsed.data.day_index, day: result.data, issues, manifest: complete ? manifestDraft : null } })
+  return NextResponse.json({ data: { import_id: id, status, day_index: parsed.data.day_index, day: sanitizedDay, issues, manifest: complete ? manifestDraft : null } })
 }

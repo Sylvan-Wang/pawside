@@ -14,6 +14,7 @@
     "method:seed-library": "node --no-warnings --experimental-strip-types scripts/method-import/seed-library.mts",
     "method:build-seed-migration": "node --no-warnings --experimental-strip-types scripts/method-import/build-seed-migration.mts",
     "method:eval": "node --no-warnings --experimental-strip-types scripts/method-import/eval.mts",
+    "db:replay": "node scripts/local-pglite-replay.mjs",
     "backend:preflight": "node scripts/validate-backend-package.mjs",
     "ai:smoke": "node --no-warnings --env-file-if-exists=.env.local --env-file-if-exists=.env.proxy.local --use-env-proxy --experimental-strip-types scripts/verify-openai-provider.mts",
     "media:validate": "node scripts/validate-exercise-media.mjs"
@@ -23,7 +24,7 @@
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.49.4",
     "clsx": "^2.1.1",
-    "next": "^16.3.4",
+    "next": "16.3.8",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "read-excel-file": "^9.3.10",
@@ -31,12 +32,13 @@
     "zod": "^4.5.4"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "0.5.8",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "autoprefixer": "^10.0.1",
     "eslint": "^9.39.5",
-    "eslint-config-next": "^16.3.4",
+    "eslint-config-next": "16.3.8",
     "postcss": "^8.5.23",
     "tailwindcss": "^3.4.1",
     "typescript": "^5",

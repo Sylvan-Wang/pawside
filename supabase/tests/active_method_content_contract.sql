@@ -19,6 +19,10 @@ declare
   method_id uuid;
   release_id uuid;
   split_id uuid;
+  rule_id uuid;
+  split_exercise_id uuid;
+  source_document_id uuid;
+  source_chunk_id uuid;
   ex uuid;
   n integer;
   step text := 'fixture';
@@ -33,6 +37,14 @@ begin
     returning id into release_id;
   insert into public.method_splits (method_id, method_release_id, key, name_zh, order_index, is_required)
     values (method_id, release_id, 'day_1', '第1日', 1, true) returning id into split_id;
+  insert into public.method_rules (
+    method_id, method_release_id, rule_key, rule_type, version, config_json,
+    status, source_authority, runtime_status, confidence, canonical_status,
+    evidence_required, config_schema_version
+  ) values (
+    method_id, release_id, 'RX-CONTENT-GUARD', 'prescription', '1.0', '{}'::jsonb,
+    'active', 'method_explicit', 'active', 'high', 'active', true, 1
+  ) returning id into rule_id;
 
   select id into ex from public.exercises where review_status = 'reviewed' order by created_at limit 1;
   if ex is null then raise exception 'contract fixture failed: no reviewed exercise available'; end if;
@@ -40,7 +52,31 @@ begin
   -- The insert that used to raise SQLSTATE 42703.
   step := 'canonical split exercise insert';
   insert into public.method_split_exercises (method_split_id, exercise_id, order_index, method_role)
-    values (split_id, ex, 1, 'primary');
+    values (split_id, ex, 1, 'primary') returning id into split_exercise_id;
+  insert into public.method_source_documents (
+    method_id, source_key, source_type, title, version, checksum_sha256, status
+  ) values (
+    method_id, 'content-guard', 'product_patch', 'Content guard', '1.0', repeat('a', 64), 'ingested'
+  ) returning id into source_document_id;
+  insert into public.method_source_chunks (
+    source_document_id, method_id, chunk_key, ordinal, topic, content, content_checksum_sha256
+  ) values (
+    source_document_id, method_id, 'chunk-1', 1, 'prescription', '3 组', repeat('b', 64)
+  ) returning id into source_chunk_id;
+  insert into public.method_rule_sources (
+    method_rule_id, source_chunk_id, evidence_key, field_path, relationship, confidence
+  ) values (rule_id, source_chunk_id, 'E-CONTENT-GUARD', 'sets', 'explicit', 'high');
+  insert into public.method_prescription_field_values (
+    method_split_exercise_id, method_rule_id, field_key, value_json,
+    source_authority, runtime_status, confidence, evidence_key
+  ) values (
+    split_exercise_id, rule_id, 'sets', '3'::jsonb,
+    'method_explicit', 'active', 'high', 'E-CONTENT-GUARD'
+  );
+  insert into public.method_release_issues (
+    method_release_id, issue_key, scope, status,
+    blocks_v1_runtime_release, blocks_strict_method_release
+  ) values (release_id, 'content-guard', 'release', 'resolved', false, false);
 
   step := 'activate release';
   update public.method_releases set status = 'active', activated_at = now() where id = release_id;
@@ -66,6 +102,31 @@ begin
   begin
     delete from public.method_splits where id = split_id;
     raise exception 'guard failed: canonical split deleted from an active release';
+  exception when raise_exception then
+    if sqlerrm not like '%immutable%' then raise; end if;
+  end;
+
+  step := 'active rule source guard';
+  begin
+    update public.method_rule_sources set confidence = 'low' where method_rule_id = rule_id;
+    raise exception 'guard failed: rule source changed inside an active release';
+  exception when raise_exception then
+    if sqlerrm not like '%immutable%' then raise; end if;
+  end;
+
+  step := 'active prescription field guard';
+  begin
+    update public.method_prescription_field_values set value_json = '4'::jsonb
+    where method_split_exercise_id = split_exercise_id;
+    raise exception 'guard failed: prescription field changed inside an active release';
+  exception when raise_exception then
+    if sqlerrm not like '%immutable%' then raise; end if;
+  end;
+
+  step := 'active release issue guard';
+  begin
+    update public.method_release_issues set source_note = 'changed' where method_release_id = release_id;
+    raise exception 'guard failed: release issue changed inside an active release';
   exception when raise_exception then
     if sqlerrm not like '%immutable%' then raise; end if;
   end;
@@ -100,7 +161,7 @@ $test$;
 
 select jsonb_build_object(
   'contract', 'active-method-content-v1',
-  'covers', jsonb_build_array('canonical split exercise insert', 'active release immutability', 'account deletion cascade')
+  'covers', jsonb_build_array('all six canonical content tables', 'active release immutability', 'account deletion cascade')
 ) as active_method_content_contract;
 
 rollback;

@@ -52,7 +52,6 @@ export function buildWeeklyReviewInput(
   aggregate: WeeklyAggregate,
 ): WeeklyReviewInputContract {
   const trendEntries: Array<[string, string, TrendResult]> = [
-    ['training.duration', '训练时长', aggregate.training.duration_trend],
     ['nutrition.calories', '热量摄入', aggregate.nutrition.calories.trend],
     ['nutrition.protein', '蛋白质摄入', aggregate.nutrition.protein.trend],
     ['nutrition.carbs', '碳水摄入', aggregate.nutrition.carbs.trend],
@@ -80,7 +79,6 @@ export function buildWeeklyReviewInput(
     })),
     training_summary: {
       workout_count: aggregate.training.workout_count,
-      total_duration_minutes: aggregate.training.total_duration_minutes,
       types: aggregate.training.types,
       total_completed_sets: aggregate.training.total_completed_sets,
       total_volume_kg: aggregate.training.total_volume_kg,

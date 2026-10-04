@@ -8,6 +8,7 @@ import {
   type MealType,
 } from '@/lib/nutrition/persistence'
 import { createClient } from '@/lib/supabase/server'
+import { invalidateDayDerivedCache } from '@/lib/utils'
 import { NextRequest, NextResponse } from 'next/server'
 
 interface LegacyFood {
@@ -27,15 +28,10 @@ async function clearDerivedCaches(
   userId: string,
   dates: string[],
 ) {
-  const uniqueDates = [...new Set(dates)]
-  if (uniqueDates.length === 0) return
-  const { error } = await supabase
-    .from('ai_generated_content')
-    .delete()
-    .eq('user_id', userId)
-    .in('target_date', uniqueDates)
-    .in('content_type', ['daily_review_ai', 'daily_summary'])
-  if (error) throw new Error(error.message)
+  const results = await Promise.all([...new Set(dates)].map((date) =>
+    invalidateDayDerivedCache(supabase, userId, date)))
+  const error = results.find((result) => !result.ok)?.error
+  if (error) throw new Error(error)
 }
 
 export async function GET(

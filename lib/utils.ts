@@ -14,7 +14,8 @@ export function dayCacheKeys(date: string): string[] {
 }
 
 /**
- * Drops every cached artifact derived from a day's facts.
+ * Drops every cached artifact derived from a day's facts, including the week
+ * and month containing that day.
  *
  * Call after any create/update/delete on workout_logs, food_logs,
  * body_metrics, recovery, or the nutrition targets.
@@ -22,7 +23,7 @@ export function dayCacheKeys(date: string): string[] {
  * Product §21 requires that a mutation makes the day's Log stale rather than
  * leaving the pre-save result on screen. Two independent caches have to be
  * cleared, and previously only the DB one was:
- *   - `ai_generated_content` (both `daily_review_ai` and `daily_summary`)
+ *   - `ai_generated_content` (daily, weekly, and monthly derived reviews)
  *   - `sessionStorage` (`ai_review_<date>`, `ai_summary_<date>`)
  */
 export async function invalidateDayDerivedCache(
@@ -30,12 +31,20 @@ export async function invalidateDayDerivedCache(
   userId: string,
   date: string,
 ) {
-  const { error } = await supabase
+  const weekStart = getWeekStartKey(date)
+  const monthStart = `${date.slice(0, 7)}-01`
+  const targets = [
+    ...DAY_CACHE_CONTENT_TYPES.map((contentType) => ({ contentType, targetDate: date })),
+    { contentType: 'weekly_review_ai', targetDate: weekStart },
+    { contentType: 'monthly_review_ai', targetDate: monthStart },
+  ]
+  const results = await Promise.all(targets.map(({ contentType, targetDate }) => supabase
     .from('ai_generated_content')
     .delete()
     .eq('user_id', userId)
-    .eq('target_date', date)
-    .in('content_type', [...DAY_CACHE_CONTENT_TYPES])
+    .eq('content_type', contentType)
+    .eq('target_date', targetDate)))
+  const error = results.find((result) => result.error)?.error ?? null
 
   if (typeof window !== 'undefined') {
     for (const key of dayCacheKeys(date)) window.sessionStorage.removeItem(key)

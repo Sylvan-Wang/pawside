@@ -155,9 +155,9 @@ begin
     select 1 from public.nutrition_targets
     where user_id = fixture_user_id
       and effective_date = date '2026-09-27'
-      and calculation_basis->>'weight_kg' = '64.5'
+      and calculation_basis->>'weight_kg' = '64'
   ) then
-    raise exception 'body metric did not refresh target provenance';
+    raise exception 'body metric correction did not refresh target provenance';
   end if;
 end;
 $test$;

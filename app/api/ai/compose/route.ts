@@ -425,7 +425,7 @@ export async function POST(request: NextRequest) {
       context: reviewInput as unknown as Record<string, unknown>,
       instructions:
         '这是周复盘。趋势方向已经由规则引擎判定，你必须复用 computed_trends 中的描述，不得自行判断趋势。'
-        + '如果某个趋势为 insufficient，必须原样表达数据不足。不得复述七份每日复盘。',
+        + '如果某个趋势为 insufficient，必须原样表达数据不足。不得复述七份每日复盘。不得提及训练时长。',
     })
 
     if (!result.ok) return unavailable(result.reason, result.detail)

@@ -199,6 +199,9 @@ export async function loadMethodCatalog(requestedReleaseId?: string): Promise<Me
         const prescriptionRule = rules.get(String(row.prescription_rule_key))
         const progressionRule = rules.get(String(row.progression_rule_key))
         const config = asObject(prescriptionRule?.config_json)
+        const importedCues = Array.isArray(config.cues)
+          ? config.cues.filter((item): item is string => typeof item === 'string')
+          : []
         const summary = typeof config.summary_zh === 'string'
           ? config.summary_zh
           : prescriptionRule?.explanation_zh ?? String(row.method_notes ?? '')
@@ -216,7 +219,7 @@ export async function loadMethodCatalog(requestedReleaseId?: string): Promise<Me
           prescription: formatPrescription(fieldsByRow.get(String(row.id)) ?? [], summary),
           intensity: '以训练中的当日处方与余量提示为准',
           progression: progressionRule?.explanation_zh ?? '完成后按方法规则进入下一次处方',
-          cues: cuesByExercise.get(String(exercise.id)) ?? [],
+          cues: [...new Set([...importedCues, ...(cuesByExercise.get(String(exercise.id)) ?? [])])],
           why: String(row.method_notes ?? split.description ?? ''),
           media: mapping ? buildWorkoutGuideMedia(mapping) : null,
         } satisfies MethodLibraryExercise

@@ -24,16 +24,16 @@ function acceptSuggestions(value: unknown): unknown {
   if (!value || typeof value !== 'object') return value
   const next = Object.fromEntries(Object.entries(value).map(([key, item]) => [key, acceptSuggestions(item)]))
   if (next.authority === 'ai_inferred' && next.value != null) next.authority = 'user_corrected'
-  if ('openQuestions' in next && !containsUnresolvedSuggestion(next)) next.openQuestions = []
   return next
 }
 
-function containsUnresolvedSuggestion(value: unknown): boolean {
-  if (Array.isArray(value)) return value.some(containsUnresolvedSuggestion)
-  if (!value || typeof value !== 'object') return false
+function suggestionPaths(value: unknown, path = ''): string[] {
+  if (Array.isArray(value)) return value.flatMap((item, index) => suggestionPaths(item, path ? `${path}.${index}` : `${index}`))
+  if (!value || typeof value !== 'object') return []
   const record = value as Record<string, unknown>
-  if (record.authority === 'ai_inferred' && record.value == null) return true
-  return Object.values(record).some(containsUnresolvedSuggestion)
+  const current = record.authority === 'ai_inferred' && record.value != null ? [path] : []
+  return [...current, ...Object.entries(record).flatMap(([key, item]) =>
+    suggestionPaths(item, path ? `${path}.${key}` : key))]
 }
 
 export default function MethodImportPage() {
@@ -96,6 +96,9 @@ export default function MethodImportPage() {
     setBusy(true); setError('')
     try {
       const next = acceptSuggestions(manifest) as Manifest
+      const acceptedPaths = suggestionPaths(manifest)
+      next.openQuestions = next.openQuestions.filter((question) =>
+        !acceptedPaths.some((path) => path === question.path || path.startsWith(`${question.path}.`)))
       const data = await json(await fetch(`/api/method-import/${importId}`, {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ manifest_draft: next, status: 'review' }),
@@ -162,8 +165,8 @@ export default function MethodImportPage() {
             <div><p className="text-sm text-emerald-700">识别完成</p><h1 className="mt-1 text-xl font-semibold">「{manifest.method.nameZh}」· {manifest.days.length} 天 · {manifest.days.reduce((sum, day) => sum + day.exercises.length, 0)} 个动作</h1></div>
             {manifest.openQuestions.length > 0 && <button type="button" onClick={acceptAll} className="w-full rounded-xl bg-amber-50 p-3 text-left text-sm text-amber-900">{manifest.openQuestions.length} 项需要你看一眼 · 全部接受建议</button>}
             <div className="space-y-2">{manifest.days.map((day) => <details key={day.nameZh} className="rounded-xl border border-gray-100 p-3"><summary className="font-medium">{day.nameZh}（{day.exercises.length} 个动作）</summary><ul className="mt-2 space-y-1 text-sm text-gray-600">{day.exercises.map((exercise) => <li key={exercise.ref.name}>{exercise.ref.name} · {exercise.sets.length} 组</li>)}</ul></details>)}</div>
-            <button type="button" disabled={busy} onClick={() => publish(true)} className="w-full rounded-xl bg-black py-3 text-sm font-medium text-white disabled:opacity-40">开始使用这套方法</button>
-            <button type="button" disabled={busy} onClick={() => publish(false)} className="w-full py-2 text-sm text-gray-500">先保存，稍后再看</button>
+            <button type="button" disabled={busy || manifest.openQuestions.length > 0} onClick={() => publish(true)} className="w-full rounded-xl bg-black py-3 text-sm font-medium text-white disabled:opacity-40">开始使用这套方法</button>
+            <button type="button" disabled={busy || manifest.openQuestions.length > 0} onClick={() => publish(false)} className="w-full py-2 text-sm text-gray-500">先保存，稍后再看</button>
           </section>
         )}
 

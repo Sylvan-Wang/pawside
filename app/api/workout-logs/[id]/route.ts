@@ -1,5 +1,6 @@
 import { apiError } from '@/lib/api/response'
 import { createClient } from '@/lib/supabase/server'
+import { invalidateDayDerivedCache } from '@/lib/utils'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
@@ -15,7 +16,7 @@ export async function DELETE(_: Request, { params }: { params: Promise<{ id: str
 
   const { data: log, error: readError } = await supabase
     .from('workout_logs')
-    .select('id,method_workout_session_id')
+    .select('id,date,method_workout_session_id')
     .eq('id', id)
     .eq('user_id', user.id)
     .maybeSingle()
@@ -34,5 +35,6 @@ export async function DELETE(_: Request, { params }: { params: Promise<{ id: str
 
   const { error: deleteError } = await supabase.from('workout_logs').delete().eq('id', id).eq('user_id', user.id)
   if (deleteError) return apiError('DATABASE_ERROR', '暂时无法删除训练记录', 500)
-  return NextResponse.json({ data: { deleted: true } })
+  const cacheInvalidation = await invalidateDayDerivedCache(supabase, user.id, log.date)
+  return NextResponse.json({ data: { deleted: true, cache_invalidation: cacheInvalidation } })
 }
