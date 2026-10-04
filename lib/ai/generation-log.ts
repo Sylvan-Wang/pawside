@@ -24,7 +24,7 @@ import type { CheckFailure } from '../evidence/output-checks'
 
 /** Surfaces the log accepts. Includes two not yet wired to composeWithEvidence,
  * reserved so their tables/rows exist before the callers do. */
-export type AISurface = AiSurface | 'advisory_plan' | 'coach_chat'
+export type AISurface = AiSurface | 'advisory_plan' | 'coach_chat' | 'method_import'
 
 /**
  * Every reason composeWithEvidence can fail for. Defined here (not in

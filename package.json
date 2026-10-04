@@ -11,6 +11,9 @@
     "test": "vitest run",
     "test:method": "vitest run tests/method-import tests/method-rules",
     "method:validate": "node --no-warnings --experimental-strip-types scripts/method-import/cli.mts",
+    "method:seed-library": "node --no-warnings --experimental-strip-types scripts/method-import/seed-library.mts",
+    "method:build-seed-migration": "node --no-warnings --experimental-strip-types scripts/method-import/build-seed-migration.mts",
+    "method:eval": "node --no-warnings --experimental-strip-types scripts/method-import/eval.mts",
     "backend:preflight": "node scripts/validate-backend-package.mjs",
     "ai:smoke": "node --no-warnings --env-file-if-exists=.env.local --env-file-if-exists=.env.proxy.local --use-env-proxy --experimental-strip-types scripts/verify-openai-provider.mts",
     "media:validate": "node scripts/validate-exercise-media.mjs"

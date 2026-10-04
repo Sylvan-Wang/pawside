@@ -35,7 +35,7 @@ export async function POST(
   }
 
   const { data: multiDayEnabled } = await supabase.rpc('feature_enabled', { p_key: 'multi_day_runtime' })
-  const rpcName = multiDayEnabled ? 'complete_method_session_v3' : 'complete_method_session_v2'
+  const rpcName = multiDayEnabled ? 'complete_method_session_v4' : 'complete_method_session_v2'
   const { data, error } = await supabase.rpc(rpcName, {
     p_session_id: sessionId,
     p_completion_request_id: parsed.data.completion_request_id,

@@ -24,6 +24,7 @@ export default async function MethodOverviewPage({
           <p className="mt-2 text-sm leading-6 text-white/70">
             {catalog.description || '先理解今天为什么这样练。浏览动作不会写入训练记录，开始训练后才会保存实际完成情况。'}
           </p>
+          {catalog.importEnabled && <Link href="/training/method/import" className="mt-4 inline-flex min-h-11 items-center rounded-xl bg-white px-4 text-sm font-medium text-black">从文章导入方法</Link>}
         </header>
 
         {catalog.source === 'fixture' && <section className="rounded-2xl border border-amber-100 bg-amber-50 p-4">
