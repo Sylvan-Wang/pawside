@@ -42,6 +42,7 @@ const requiredFiles = [
   'supabase/migrations/20261004000300_multi_day_runtime_functions.sql',
   'supabase/migrations/20261004000400_four_split_method_release.sql',
   'supabase/migrations/20261004000500_switch_method_release.sql',
+  'supabase/migrations/20261004000600_four_split_exercise_media.sql',
   'supabase/cutover/README.md',
   'supabase/cutover/20260926000100_drop_prescription_uniqueness.sql',
   'supabase/tests/pawside_backend_contract.sql',

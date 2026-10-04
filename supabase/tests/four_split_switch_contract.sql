@@ -67,6 +67,16 @@ begin
   if n <> 24 then raise exception 'four-split has % exercises, expected 24', n; end if;
   select count(*) into n from public.method_runtime_set_templates where method_release_id = r4;
   if n <> 84 then raise exception 'four-split has % set templates, expected 84', n; end if;
+  -- every exercise of the four-split has an illustration, and the two back extensions share one slug
+  select count(*) into n from public.method_split_exercises se
+    join public.method_splits s on s.id = se.method_split_id
+   where s.method_release_id = r4
+     and not exists (select 1 from public.exercise_external_mappings m
+                      where m.exercise_id = se.exercise_id and m.mapping_status <> 'rejected');
+  if n <> 0 then raise exception '% four-split exercises have no media mapping', n; end if;
+  select count(distinct exercise_id) into n from public.exercise_external_mappings where external_slug = 'back-extension';
+  if n <> 2 then raise exception 'back-extension should be shared by 山羊挺身 and 罗马椅挺身, found % exercises', n; end if;
+
   -- the 1.2 release was not touched
   select count(*) into n from public.method_splits where method_release_id = r12;
   if n <> 3 then raise exception '1.2 release was changed (% splits)', n; end if;
