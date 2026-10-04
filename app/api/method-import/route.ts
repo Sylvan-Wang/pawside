@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
-export const HEALTH_CONSENT_VERSION = 'health-v1'
+const HEALTH_CONSENT_VERSION = 'health-v1'
 const createSchema = z.object({
   raw_text: z.string().trim().min(1).max(30000),
   consent_accepted: z.literal(true),
