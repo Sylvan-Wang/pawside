@@ -427,15 +427,14 @@ export async function loadDayItems(
 }
 
 /**
- * Same as {@link loadDayItems} but keeps the owning meal id and meal_type, so
- * a caller can group items per meal (or per meal_type, spec Patch B B1's meal
- * board) without issuing a second query (Guardrail §5).
+ * Same as {@link loadDayItems} but keeps the owning meal id, so a caller can
+ * group items per meal without issuing a second query (Guardrail §5).
  */
 export async function loadDayItemRows(
   supabase: SupabaseClient,
   userId: string,
   logDate: string,
-): Promise<Array<LoggedFoodItem & { food_log_id: string; meal_type: MealType }>> {
+): Promise<Array<LoggedFoodItem & { food_log_id: string }>> {
   const { data: logs, error: logsError } = await supabase
     .from('user_food_logs')
     .select('id, meal_type')
@@ -445,7 +444,6 @@ export async function loadDayItemRows(
   if (logsError) throw new Error(logsError.message)
   const logIds = (logs ?? []).map((row) => row.id as string)
   if (logIds.length === 0) return []
-  const mealTypeByLogId = new Map((logs ?? []).map((row) => [row.id as string, row.meal_type as MealType]))
 
   const { data: items, error: itemsError } = await supabase
     .from('user_food_log_items')
@@ -457,7 +455,6 @@ export async function loadDayItemRows(
 
   return (items ?? []).map((row) => ({
     food_log_id: row.food_log_id as string,
-    meal_type: mealTypeByLogId.get(row.food_log_id as string) ?? 'snack',
     food_id: row.food_id,
     food_name_raw: row.food_name_raw,
     food_name_resolved: row.food_name_resolved,

@@ -1,24 +1,17 @@
 import { apiError } from '@/lib/api/response'
 import { reconcileDailySummary, getDailyNutritionFacts, resolveNutrientTargets } from '@/lib/nutrition/persistence'
-import { buildMealBoard } from '@/lib/nutrition/meal-board'
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 
 /**
  * /api/nutrition/daily — daily nutrition facts for the logged-in user.
  *
- * GET   ?date=YYYY-MM-DD  -> { target, consumed, remaining, meal_count,
- *                              data_completeness, meal_board }
+ * GET   ?date=YYYY-MM-DD  -> { target, consumed, remaining, meal_count, data_completeness }
  * POST  { date }          -> recompute daily_nutrition_summary from normalized items
  *
  * This is the Phase A Fact layer that Meal Feedback / Daily Log / Home consume.
  * It never returns an AI value: Product §10.1 requires Facts first and
  * Product §27 requires an unset target to stay null.
- *
- * Patch B · B1: `meal_board` is the same per-meal-type merge the meal
- * feedback AI already uses (`lib/coach/meal-context.ts#summarizeMeal`), added
- * here so the food page can render "今日餐单" from the route it already
- * calls, instead of a new endpoint.
  */
 
 function validDate(value: string | null): value is string {
@@ -38,11 +31,8 @@ export async function GET(request: NextRequest) {
   try {
     // Target resolution is deterministic; AI Patch §12.1 owns the formula.
     const target = await resolveNutrientTargets(supabase, user.id, date)
-    const [facts, mealBoard] = await Promise.all([
-      getDailyNutritionFacts(supabase, user.id, date, target),
-      buildMealBoard(supabase, user.id, date, target),
-    ])
-    return NextResponse.json({ data: { ...facts, meal_board: mealBoard } })
+    const facts = await getDailyNutritionFacts(supabase, user.id, date, target)
+    return NextResponse.json({ data: facts })
   } catch (reason: unknown) {
     return apiError(
       'DATABASE_ERROR',
@@ -73,11 +63,8 @@ export async function POST(request: NextRequest) {
     // Used after an edit/delete so the cached summary cannot drift (Product §21).
     await reconcileDailySummary(supabase, user.id, date as string)
     const target = await resolveNutrientTargets(supabase, user.id, date as string)
-    const [facts, mealBoard] = await Promise.all([
-      getDailyNutritionFacts(supabase, user.id, date as string, target),
-      buildMealBoard(supabase, user.id, date as string, target),
-    ])
-    return NextResponse.json({ data: { ...facts, meal_board: mealBoard } })
+    const facts = await getDailyNutritionFacts(supabase, user.id, date as string, target)
+    return NextResponse.json({ data: facts })
   } catch (reason: unknown) {
     return apiError(
       'DATABASE_ERROR',
