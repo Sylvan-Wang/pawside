@@ -1,4 +1,5 @@
 'use client'
+import { splitLabel } from '@/lib/split-labels'
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -38,7 +39,7 @@ interface RecoveryPromptState {
 
 interface MethodContext {
   current_cycle_number: number
-  next_split_key: 'push' | 'pull' | 'legs'
+  next_split_key: string
   current_state: 'ready' | 'recovery_check' | 'rest' | 'session_in_progress'
   method: { name: string; version: string } | null
 }
@@ -49,7 +50,6 @@ interface MethodAvailability {
   message: string | null
 }
 
-const splitNames = { push: '推', pull: '拉', legs: '腿' } as const
 
 /** Display-only rounding. Persisted values stay unrounded (AI Patch §31). */
 function round(value: number, digits: number): number {
@@ -430,7 +430,7 @@ export default function HomePage() {
               <p className="text-xs text-white/60">{methodContext.method?.name || '官方三分化'} · 第 {methodContext.current_cycle_number} 轮</p>
               <div className="flex items-end justify-between mt-2">
                 <div>
-                  <p className="text-xl font-semibold">下一次：{splitNames[methodContext.next_split_key]}</p>
+                  <p className="text-xl font-semibold">下一次：{splitLabel(methodContext.next_split_key)}</p>
                   <p className="text-sm text-white/70 mt-1">训练顺序按方法推进，休息不会跳过下一练。</p>
                 </div>
                 <button onClick={() => router.push('/training/today')} className="bg-white text-black rounded-xl px-4 py-2 text-sm font-medium">

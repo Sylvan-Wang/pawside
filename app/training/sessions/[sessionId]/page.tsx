@@ -1,6 +1,7 @@
 'use client'
 
 import PageHeader from '@/components/PageHeader'
+import { splitLabel } from '@/lib/split-labels'
 import CoachCard from '@/components/CoachCard'
 import ExerciseMotion from '@/components/workout/ExerciseMotion'
 import type { ExerciseMedia } from '@/lib/exercise-media'
@@ -77,7 +78,7 @@ interface ExerciseExecution {
 
 interface TrainingSession {
   id: string
-  split_key: 'push' | 'pull' | 'legs'
+  split_key: string
   status: 'started' | 'completed'
   view_date: string
   performed_at: string
@@ -130,7 +131,7 @@ interface SetDraft {
 }
 
 interface CompletionResult {
-  next_split_key: 'push' | 'pull' | 'legs'
+  next_split_key: string
   current_cycle_number: number
   cycle_completed: boolean
   progression_advanced: boolean
@@ -173,7 +174,6 @@ interface SessionFeedbackView {
   rating: 'liked' | 'disliked' | null
 }
 
-const splitNames = { push: '推', pull: '拉', legs: '腿' }
 const WEIGHT_UNIT_STORAGE_KEY = 'pawside:training:weight-unit:v1'
 // Patch B · B5 (D1): a session left "started" this long triggers the
 // reopened-old-session banner. One place to change if the threshold moves.
@@ -820,7 +820,7 @@ export default function TrainingSessionPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-10">
-      <PageHeader title={`${splitNames[data.session.split_key]}训练`} back />
+      <PageHeader title={`${splitLabel(data.session.split_key)}训练`} back />
       {isStaleSession && !staleBannerDismissed && (
         <div className="mx-auto max-w-2xl px-4 pt-4">
           <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
@@ -861,7 +861,7 @@ export default function TrainingSessionPage() {
             <span>{isCompleted ? '本次训练已完成' : '实际训练记录'}</span>
             <span>动作 {activeExerciseIndex + 1} / {data.exercises.length}</span>
           </div>
-          <h1 className="mt-2 text-xl font-semibold">{splitNames[data.session.split_key]}训练</h1>
+          <h1 className="mt-2 text-xl font-semibold">{splitLabel(data.session.split_key)}训练</h1>
           <span className="sr-only" aria-live="polite">
             当前为第 {activeExerciseIndex + 1} 个动作，共 {data.exercises.length} 个动作
           </span>
@@ -1077,7 +1077,7 @@ export default function TrainingSessionPage() {
                 : completion
                   ? completion.cycle_completed
                   ? `第 ${completion.current_cycle_number - 1} 轮已完成，下一次从推训练开始。`
-                    : `下一次继续${splitNames[completion.next_split_key]}训练。`
+                    : `下一次继续${splitLabel(completion.next_split_key)}训练。`
                   : '本次实际训练已经保存。'}
             </p>
             {sessionFeedback && (

@@ -23,13 +23,16 @@ interface PrescriptionRow {
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 
-const PROGRAM_DAY_ORDER = ['push', 'pull', 'legs'] as const
-type ProgramDaySplit = (typeof PROGRAM_DAY_ORDER)[number]
+// Program Days are data: the splits of the enrollment's pinned Method release
+// (method_splits), in order. Nothing here knows about push/pull/legs.
+const SPLIT_KEY_PATTERN = /^[a-z][a-z0-9_]{1,31}$/
 
-const PROGRAM_DAY_FALLBACK_NAMES: Record<ProgramDaySplit, string> = {
-  push: '推',
-  pull: '拉',
-  legs: '腿',
+interface ReleaseSplit {
+  key: string
+  name_zh: string
+  order_index: number
+  is_required: boolean
+  day_type: string
 }
 
 const TODAY_PRESCRIPTION_SELECT = `
@@ -78,10 +81,6 @@ function dateInTimeZone(timeZone: string) {
   return `${values.year}-${values.month}-${values.day}`
 }
 
-function isProgramDaySplit(value: string | null): value is ProgramDaySplit {
-  return value != null && (PROGRAM_DAY_ORDER as readonly string[]).includes(value)
-}
-
 /**
  * Minimum P1 §1 / §2: the training page is Program Day navigation.
  *
@@ -104,17 +103,16 @@ export async function GET(request: Request) {
   const currentLogDate = dateInTimeZone(requestedTimeZone)
 
   const requestedSplitParam = url.searchParams.get('split')
-  if (requestedSplitParam != null && !isProgramDaySplit(requestedSplitParam)) {
+  if (requestedSplitParam != null && !SPLIT_KEY_PATTERN.test(requestedSplitParam)) {
     return apiError('VALIDATION_ERROR', '训练日无效', 400)
   }
-  const requestedSplit = isProgramDaySplit(requestedSplitParam) ? requestedSplitParam : null
 
   const requestedDate = url.searchParams.get('date') || currentLogDate
   if (!DATE_PATTERN.test(requestedDate)) return apiError('VALIDATION_ERROR', '训练日期无效', 400)
 
   const { data: enrollment, error: enrollmentError } = await supabase
     .from('method_enrollments')
-    .select('id,status,current_cycle_number,next_split_key,current_state')
+    .select('id,status,current_cycle_number,next_split_key,current_state,method_release_id')
     .eq('user_id', user.id)
     .eq('status', 'active')
     .order('started_at', { ascending: false })
@@ -154,6 +152,22 @@ export async function GET(request: Request) {
   if (cycleError) return apiError('DATABASE_ERROR', '暂时无法读取当前训练周期', 500)
   if (!cycle) return apiError('NOT_FOUND', '当前没有进行中的训练周期', 404)
 
+  const { data: splitRows, error: splitsError } = await supabase
+    .from('method_splits')
+    .select('key,name_zh,order_index,is_required,day_type')
+    .eq('method_release_id', enrollment.method_release_id)
+    .order('order_index', { ascending: true })
+  if (splitsError) return apiError('DATABASE_ERROR', '暂时无法读取训练方法', 500)
+  const releaseSplits = (splitRows ?? []) as ReleaseSplit[]
+  if (releaseSplits.length === 0) return apiError('NOT_FOUND', '当前训练方法没有训练日', 404)
+  const splitKeys = releaseSplits.map((split) => split.key)
+  const isProgramDaySplit = (value: string | null): value is string =>
+    value != null && splitKeys.includes(value)
+  if (requestedSplitParam != null && !isProgramDaySplit(requestedSplitParam)) {
+    return apiError('VALIDATION_ERROR', '训练日无效', 400)
+  }
+  const requestedSplit = requestedSplitParam
+
   // Minimum P1 §13.1: the duration selector defaults to the long-term preference.
   const { data: capability } = await supabase
     .from('onboarding_capability_profiles')
@@ -183,17 +197,18 @@ export async function GET(request: Request) {
     : null
 
   function firstIncompleteSplit() {
-    for (const split of PROGRAM_DAY_ORDER) {
-      if (bySplit.get(split)?.status !== 'completed') return split
+    for (const split of releaseSplits) {
+      if (!split.is_required) continue
+      if (bySplit.get(split.key)?.status !== 'completed') return split.key
     }
     return null
   }
 
-  const targetSplit: ProgramDaySplit = requestedSplit
-    ?? (activeSession && isProgramDaySplit(activeSession.split_key) ? activeSession.split_key as ProgramDaySplit : null)
+  const targetSplit: string = requestedSplit
+    ?? (activeSession && isProgramDaySplit(activeSession.split_key) ? activeSession.split_key : null)
     ?? nextSplitKey
     ?? firstIncompleteSplit()
-    ?? 'push'
+    ?? releaseSplits[0].key
 
   // PRD §2.3: adjacent Program Days must be queryable/generatable, idempotently.
   if (!bySplit.has(targetSplit) || !bySplit.has(nextSplitKey ?? targetSplit)) {
@@ -246,30 +261,30 @@ export async function GET(request: Request) {
     ? activeSession
     : null
 
-  const days = PROGRAM_DAY_ORDER.map((split, index) => {
-    const row = bySplit.get(split)
-    const nameZh = split === targetSplit
-      ? ((prescription.method_split as { name_zh?: string } | null)?.name_zh ?? PROGRAM_DAY_FALLBACK_NAMES[split])
-      : PROGRAM_DAY_FALLBACK_NAMES[split]
+  const days = releaseSplits.map((releaseSplit, index) => {
+    const row = bySplit.get(releaseSplit.key)
     return {
-      split_key: split,
+      split_key: releaseSplit.key,
       day_index: index + 1,
-      name_zh: nameZh,
+      name_zh: releaseSplit.name_zh,
+      required: releaseSplit.is_required,
+      day_type: releaseSplit.day_type,
       status: row?.status ?? 'unavailable',
       completed: row?.status === 'completed',
-      started: row?.status === 'started' || (activeSession?.split_key === split),
+      started: row?.status === 'started' || (activeSession?.split_key === releaseSplit.key),
       available: Boolean(row),
       prescription_id: row?.id ?? null,
     }
   })
+  const targetDay = days.find((day) => day.split_key === targetSplit)
 
   return NextResponse.json({
     data: {
       program_day: {
         split_key: targetSplit,
-        day_index: PROGRAM_DAY_ORDER.indexOf(targetSplit) + 1,
+        day_index: targetDay?.day_index ?? 1,
         name_zh: (prescription.method_split as { name_zh?: string } | null)?.name_zh
-          ?? PROGRAM_DAY_FALLBACK_NAMES[targetSplit],
+          ?? targetDay?.name_zh ?? '训练',
         cycle_number: cycle.cycle_number,
         prescription_id: prescription.id,
       },

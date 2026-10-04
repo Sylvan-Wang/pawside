@@ -27,7 +27,7 @@ export const COACH_SHARED_RULES = [
 ].join('\n')
 
 export const WORKOUT_FEEDBACK_INSTRUCTIONS_V2 = [
-  '这是一次训练刚结束时的教练反馈。用户练的是“三分化”（推 / 拉 / 腿）训练方法。',
+  '这是一次训练刚结束时的教练反馈。用户按自己选择的训练方法训练（三分化：推 / 拉 / 腿；四分化：胸 / 背 / 腿 / 肩，另有可选腹肌日）。',
   'context.method 里有这次训练每个动作的处方与实际记录；context.next_session 里有下一次训练的关键组（key_sets）。二者可能为 null，为 null 时只依据 facts 写。',
   '',
   '按下面的顺序写：',
@@ -71,7 +71,7 @@ export const DAILY_REVIEW_INSTRUCTIONS_V2 = [
   '只解释 supplied facts 与 computed signals，不得读取原始日志或自行计算。',
   '',
   '内容优先级：全天营养状态 > 今天的训练（练了什么，或今天是休息日）> 主观恢复 > 身体记录。数据完整性不参与排序，只放在 data_quality_tip。',
-  '- overall：一句话概括今天。休息日就按休息日写，不要暗示“该练了”。三分化不是固定的练三休一，不要催促训练。',
+  '- overall：一句话概括今天。休息日就按休息日写，不要暗示“该练了”。训练方法不是固定的练几休几，不要催促训练。',
   '- context.no_training_yet 为 true 表示今天还没有训练记录，一天还没结束：不要说今天是休息日，也不要催促训练，训练部分可以不写。',
   '- key_findings（最多 3 条）：不复述页面卡片上的数字，写数字背后的意思。',
   '- tomorrow_guidance（最多 2 条）：可以是明天的一个饮食方向；context.next_training 不为 null 时，可以说下次训练是哪一天的内容。',
@@ -104,7 +104,7 @@ export const COACH_OUTPUT_V1_SHARED_RULES = [
 ].join('\n')
 
 export const WORKOUT_FEEDBACK_INSTRUCTIONS_COACH_OUTPUT_V1 = [
-  '这是一次训练刚结束时的教练反馈。用户练的是“三分化”（推 / 拉 / 腿）训练方法。',
+  '这是一次训练刚结束时的教练反馈。用户按自己选择的训练方法训练（三分化：推 / 拉 / 腿；四分化：胸 / 背 / 腿 / 肩，另有可选腹肌日）。',
   'context.method 里有这次训练每个动作的处方与实际记录；context.next_session 里有下一次训练的关键组（key_sets）。二者可能为 null，为 null 时只依据 facts 写。',
   '',
   'headline：一句话说这次练得怎么样，尽量落在一个具体动作上。',
@@ -145,7 +145,7 @@ export const DAILY_REVIEW_INSTRUCTIONS_COACH_OUTPUT_V1 = [
   '只解释 supplied facts 与 computed signals，不得读取原始日志或自行计算。',
   '',
   '内容优先级：全天营养状态 > 今天的训练（练了什么，或今天是休息日）> 主观恢复 > 身体记录。数据完整性不参与排序，只放在 data_quality_tip。',
-  'headline：一句话概括今天。休息日就按休息日写，不要暗示“该练了”。三分化不是固定的练三休一，不要催促训练。',
+  'headline：一句话概括今天。休息日就按休息日写，不要暗示“该练了”。训练方法不是固定的练几休几，不要催促训练。',
   'context.no_training_yet 为 true 表示今天还没有训练记录，一天还没结束：不要说今天是休息日，也不要催促训练，训练部分可以不写。',
   'evidence（最多 2 条）：不复述页面卡片上的数字，写数字背后的意思。',
   'next_actions（最多 2 条）：可以是明天的一个饮食方向；context.next_training 不为 null 且 allowed_actions 包含 view_next_session 时，可以说下次训练是哪一天的内容。context.next_training 存在、当天又没有恢复记录时，可以建议记录一次恢复情况，action_type 用 add_recovery_checkin。',

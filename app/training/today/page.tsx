@@ -12,6 +12,7 @@ import {
   writeTodayTrainingCache,
 } from '@/lib/training-navigation-cache'
 import { useRouter } from 'next/navigation'
+import { splitLabel } from '@/lib/split-labels'
 import { useEffect, useRef, useState } from 'react'
 
 interface SetPrescription {
@@ -36,7 +37,7 @@ interface ExercisePrescription {
 
 interface TodayTraining {
   id: string
-  split_key: 'push' | 'pull' | 'legs'
+  split_key: string
   status: string
   method_split: { name_zh: string } | null
   exercises: ExercisePrescription[]
@@ -50,14 +51,15 @@ interface WorkoutActual {
 interface ActiveSessionRecovery {
   kind: 'active_session'
   session_id: string
-  split_key: 'push' | 'pull' | 'legs'
+  split_key: string
   session_prescription_id: string
 }
 
 interface ProgramDay {
-  split_key: 'push' | 'pull' | 'legs'
+  split_key: string
   day_index: number
   name_zh: string
+  required: boolean
   status: string
   completed: boolean
   started: boolean
@@ -67,14 +69,14 @@ interface ProgramDay {
 
 interface TodayTrainingPayload {
   program_day: {
-    split_key: 'push' | 'pull' | 'legs'
+    split_key: string
     day_index: number
     name_zh: string
     cycle_number: number
     prescription_id: string
   }
   days: ProgramDay[]
-  next_split_key: 'push' | 'pull' | 'legs' | null
+  next_split_key: string | null
   preferred_session_minutes: number
   current_log_date: string
   view_date: string
@@ -88,7 +90,6 @@ interface TrainingUnavailableState {
   message: string
 }
 
-const splitNames = { push: '推', pull: '拉', legs: '腿' }
 
 const setTypeNames: Record<string, string> = {
   warmup: '热身',
@@ -262,7 +263,7 @@ export default function TodayTrainingPage() {
       <PageHeader title="训练计划" back />
       <main className="mx-auto max-w-2xl space-y-4 px-4 py-5">
         {days.length > 0 && (
-          <nav className="grid grid-cols-3 gap-2" aria-label="训练日导航">
+          <nav className={`grid gap-2 ${days.length > 3 ? 'grid-cols-5' : 'grid-cols-3'}`} aria-label="训练日导航">
             {days.map((day) => {
               const active = programDay?.split_key === day.split_key
               return (
@@ -274,7 +275,7 @@ export default function TodayTrainingPage() {
                     active ? 'border-black bg-black text-white' : 'border-gray-200 bg-white text-gray-700'
                   }`}
                 >
-                  <p className="text-xs opacity-70">Day {day.day_index} · {day.name_zh}</p>
+                  <p className="text-xs opacity-70">{day.required ? `Day ${day.day_index}` : '可选'} · {day.name_zh}</p>
                   <p className="mt-1 text-sm font-semibold">{dayStatusLabel(day)}</p>
                 </button>
               )
@@ -287,7 +288,7 @@ export default function TodayTrainingPage() {
         {!loading && !error && unavailableState && (
           <section className="rounded-2xl bg-white p-5">
             <h2 className="text-base font-semibold text-gray-900">还没有启用训练方法</h2>
-            <p className="mt-2 text-sm leading-6 text-gray-500">{unavailableState.message}。启用后即可查看并执行 Push、Pull、Legs 训练日。</p>
+            <p className="mt-2 text-sm leading-6 text-gray-500">{unavailableState.message}。启用后即可查看并执行训练日。</p>
             <button
               type="button"
               onClick={() => router.push('/home')}
@@ -302,7 +303,7 @@ export default function TodayTrainingPage() {
           <>
             {recovery && !workoutActual && (
               <aside className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-                当前还有一条{splitNames[recovery.split_key]}训练未完成。你可以继续浏览这个训练日，但开始新训练前需要先处理当前训练。
+                当前还有一条{splitLabel(recovery.split_key)}训练未完成。你可以继续浏览这个训练日，但开始新训练前需要先处理当前训练。
               </aside>
             )}
             <header className="rounded-2xl bg-black p-5 text-white">
@@ -310,7 +311,7 @@ export default function TodayTrainingPage() {
                 Day {programDay?.day_index ?? '-'} · 第 {programDay?.cycle_number ?? '-'} 轮
               </p>
               <h1 className="mt-1 text-xl font-semibold">
-                {programDay?.name_zh || training.method_split?.name_zh || training.split_key}
+                {programDay?.name_zh || training.method_split?.name_zh || splitLabel(training.split_key)}
               </h1>
 
               {!recovery && (
@@ -345,7 +346,7 @@ export default function TodayTrainingPage() {
                 {starting
                   ? '正在开始…'
                   : recovery
-                    ? `继续当前${splitNames[recovery.split_key]}训练`
+                    ? `继续当前${splitLabel(recovery.split_key)}训练`
                     : '开始这个训练日'}
               </button>
             </header>

@@ -40,7 +40,10 @@ export function recordCompletenessLabel(value: string | null | undefined): strin
   return RECORD_COMPLETENESS_LABELS[value] ?? RECORD_COMPLETENESS_LABELS.unknown
 }
 
-export const SPLIT_LABELS: Record<string, string> = { push: '推', pull: '拉', legs: '腿' }
+export const SPLIT_LABELS: Record<string, string> = {
+  push: '推', pull: '拉', legs: '腿',
+  chest: '胸', back: '背', shoulders: '肩', core: '腹肌',
+}
 
 /**
  * Internal vocabulary that must never appear in user-facing text: patch

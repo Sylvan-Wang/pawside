@@ -27,7 +27,7 @@ export default function AboutPage() {
         <section className="rounded-2xl bg-white p-4">
           <h2 className="text-sm font-semibold text-gray-900">训练方法</h2>
           <p className="mt-2 text-sm leading-6 text-gray-700">
-            训练方法来自「凯圣王 × 谭成义 2026 三分化」。
+            三分化来自「凯圣王 × 谭成义 2026 三分化」。四分化整理自小黑盒作者「铁棍顶着门」的健身入门系列文章（胸、背、腿）和肩部入门文章，其中的腹肌日来自通用公开攻略。
           </p>
         </section>
 

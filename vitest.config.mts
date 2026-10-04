@@ -1,6 +1,11 @@
+import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
+  resolve: {
+    // Mirrors tsconfig's "@/*" so route handlers can be imported directly in tests.
+    alias: { '@': fileURLToPath(new URL('./', import.meta.url)) },
+  },
   test: {
     // The repository root can also hold Codex scratch checkouts
     // (.codex-tmp/, minimum-p1-worktree/) that are not part of the product and

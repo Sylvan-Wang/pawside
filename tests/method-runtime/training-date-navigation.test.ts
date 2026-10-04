@@ -10,7 +10,8 @@ const cutover = readFileSync(new URL('../../supabase/cutover/20260926000100_drop
 describe('training date navigation and attribution', () => {
   it('navigates Program Days instead of calendar dates (PRD §2.1)', () => {
     expect(page).toContain('aria-label="训练日导航"')
-    expect(page).toContain('Day {day.day_index} · {day.name_zh}')
+    expect(page).toContain('Day ${day.day_index}')
+    expect(page).toContain('{day.name_zh}')
     expect(page).toContain('selectDay(day.split_key)')
     // The superseded calendar-day navigation must be gone.
     expect(page).not.toContain('上一天')
@@ -19,7 +20,9 @@ describe('training date navigation and attribution', () => {
 
   it('resolves the Program Day independently from the calendar date (PRD §1)', () => {
     expect(todayRoute).toContain("url.searchParams.get('split')")
-    expect(todayRoute).toContain('PROGRAM_DAY_ORDER')
+    // Program Days are the pinned release's method_splits, not a hard-coded list.
+    expect(todayRoute).toContain("from('method_splits')")
+    expect(todayRoute).not.toContain('PROGRAM_DAY_ORDER')
     expect(todayRoute).not.toContain("eq('planned_for_date', effectiveViewDate)")
   })
 

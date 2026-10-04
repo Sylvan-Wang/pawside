@@ -291,6 +291,11 @@ export default function SettingsPage() {
 
         {/* Actions */}
         <div className="bg-white rounded-2xl overflow-hidden">
+          <Link href="/settings/method"
+            className="flex w-full items-center justify-between px-4 py-4 text-left text-sm text-gray-700 border-b border-gray-50">
+            <span>训练方法</span>
+            <span className="text-xs text-gray-400">三分化 / 四分化 ›</span>
+          </Link>
           <button onClick={handleExport} disabled={exporting}
             className="w-full px-4 py-4 text-left text-sm text-gray-700 border-b border-gray-50 disabled:opacity-50">
             {exporting ? '导出中…' : '导出数据（CSV）'}
