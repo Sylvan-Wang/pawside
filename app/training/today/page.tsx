@@ -13,6 +13,7 @@ import {
 } from '@/lib/training-navigation-cache'
 import { useRouter } from 'next/navigation'
 import { splitLabel } from '@/lib/split-labels'
+import { describeTimedTarget } from '@/lib/workout-log-summary'
 import { useEffect, useRef, useState } from 'react'
 
 interface SetPrescription {
@@ -21,6 +22,8 @@ interface SetPrescription {
   set_type: string
   target_reps_min: number | null
   target_reps_max: number | null
+  target_duration_seconds?: number | null
+  target_distance_m?: number | null
   target_rpe: number | null
   target_rir: number | null
   target_weight_kg: number | null
@@ -263,7 +266,7 @@ export default function TodayTrainingPage() {
       <PageHeader title="训练计划" back />
       <main className="mx-auto max-w-2xl space-y-4 px-4 py-5">
         {days.length > 0 && (
-          <nav className={`grid gap-2 ${days.length > 3 ? 'grid-cols-5' : 'grid-cols-3'}`} aria-label="训练日导航">
+          <nav className={`grid gap-2 ${days.length === 4 ? 'grid-cols-4' : 'grid-cols-3'}`} aria-label="训练日导航">
             {days.map((day) => {
               const active = programDay?.split_key === day.split_key
               return (
@@ -372,7 +375,7 @@ export default function TodayTrainingPage() {
                           <span>第 {set.set_index} 组 · {setTypeNames[set.set_type] || set.set_type}</span>
                           <span className="text-gray-500">
                             {set.target_reps_min == null
-                              ? '次数待定'
+                              ? describeTimedTarget(set) ?? '次数待定'
                               : set.target_reps_max && set.target_reps_max !== set.target_reps_min
                                 ? `${set.target_reps_min}–${set.target_reps_max} 次`
                                 : `${set.target_reps_min} 次`}

@@ -51,22 +51,39 @@ begin
    where m.key = 'ksw_tcy_three_split_2026' and r.version = '1.2';
   select r.id, r.method_id into r4, m4 from public.method_releases r
     join public.methods m on m.id = r.method_id
-   where m.key = 'four_split_2026' and r.version = '1.0';
+   where m.key = 'four_split_2026' and r.status = 'active';
   if r12 is null or r4 is null then raise exception 'fixture failed: releases missing (1.2 %, four-split %)', r12, r4; end if;
 
   -- ===== seed shape =====
   if (select status from public.method_releases where id = r4) <> 'active' then raise exception 'four-split release is not active'; end if;
   select count(*) into n from public.method_splits where method_release_id = r4;
-  if n <> 5 then raise exception 'four-split has % splits, expected 5', n; end if;
+  if n <> 6 then raise exception 'four-split has % splits, expected 6', n; end if;
   select count(*) into n from public.method_splits where method_release_id = r4 and is_required;
   if n <> 4 then raise exception 'four-split has % required days, expected 4', n; end if;
   if (select string_agg(key, ',' order by order_index) from public.method_splits where method_release_id = r4 and is_required) <> 'chest,back,legs,shoulders' then
     raise exception 'four-split day order is wrong';
   end if;
   select count(*) into n from public.method_split_exercises se join public.method_splits s on s.id = se.method_split_id where s.method_release_id = r4;
-  if n <> 24 then raise exception 'four-split has % exercises, expected 24', n; end if;
+  if n <> 26 then raise exception 'four-split has % exercises, expected 26', n; end if;
   select count(*) into n from public.method_runtime_set_templates where method_release_id = r4;
-  if n <> 84 then raise exception 'four-split has % set templates, expected 84', n; end if;
+  if n <> 88 then raise exception 'four-split has % set templates, expected 88', n; end if;
+  -- release 1.1: plank is timed, cardio is a time + distance day, 1.0 is retired
+  if (select r.status from public.method_releases r where r.method_id = m4 and r.version = '1.0') <> 'retired' then
+    raise exception 'four-split 1.0 should be retired';
+  end if;
+  if (select r.version from public.method_releases r where r.id = r4) <> '1.1' then raise exception 'the active four-split release should be 1.1'; end if;
+  if (select record_shape from public.exercises where canonical_name_zh = '平板支撑') <> 'duration' then raise exception 'plank should be a duration exercise'; end if;
+  if (select record_shape from public.exercises where canonical_name_zh = '跑步机慢跑') <> 'distance_duration' then raise exception 'running should be a distance_duration exercise'; end if;
+  if not exists (select 1 from public.method_splits where method_release_id = r4 and key = 'cardio' and day_type = 'cardio' and not is_required) then
+    raise exception 'the cardio day is missing or required';
+  end if;
+  select count(*) into n from public.method_split_exercises se join public.method_splits s on s.id = se.method_split_id
+   where s.method_release_id = r4 and s.key = 'core';
+  if n <> 4 then raise exception 'the core day has % exercises, expected 4', n; end if;
+  select count(*) into n from public.method_runtime_set_templates t join public.method_rules r on r.id = t.method_rule_id
+   where r.method_release_id = r4 and r.rule_key = 'FS-CORE-04' and t.target_duration_seconds = 60;
+  if n <> 3 then raise exception 'plank templates should be 3 sets of 60 seconds, found %', n; end if;
+
   -- every exercise of the four-split has an illustration, and the two back extensions share one slug
   select count(*) into n from public.method_split_exercises se
     join public.method_splits s on s.id = se.method_split_id

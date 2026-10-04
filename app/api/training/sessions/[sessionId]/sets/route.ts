@@ -29,17 +29,19 @@ export async function PUT(
 
   const parsed = saveSetActualSchema.safeParse(body)
   if (!parsed.success) {
-    return apiError('VALIDATION_ERROR', '请检查重量、次数和剩余次数', 400, parsed.error.flatten())
+    return apiError('VALIDATION_ERROR', '请检查重量、次数、时间和距离', 400, parsed.error.flatten())
   }
 
   const input = parsed.data
-  const { data, error } = await supabase.rpc('save_method_set_actual', {
+  const { data, error } = await supabase.rpc('save_method_set_actual_v2', {
     p_session_id: sessionId,
     p_exercise_execution_id: input.exercise_execution_id,
     p_set_index: input.set_index,
     p_actual_weight_kg: input.actual_weight_kg ?? null,
-    p_actual_reps: input.actual_reps,
+    p_actual_reps: input.actual_reps ?? null,
     p_actual_rir: input.actual_rir ?? null,
+    p_actual_duration_seconds: input.actual_duration_seconds ?? null,
+    p_actual_distance_m: input.actual_distance_m ?? null,
   })
   if (error) return trainingDatabaseError(error)
 

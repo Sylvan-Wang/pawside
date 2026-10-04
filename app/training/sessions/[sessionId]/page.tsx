@@ -2,6 +2,7 @@
 
 import PageHeader from '@/components/PageHeader'
 import { splitLabel } from '@/lib/split-labels'
+import { describeTimedTarget } from '@/lib/workout-log-summary'
 import CoachCard from '@/components/CoachCard'
 import ExerciseMotion from '@/components/workout/ExerciseMotion'
 import type { ExerciseMedia } from '@/lib/exercise-media'
@@ -39,6 +40,8 @@ interface PlannedSet {
   target_reps_min: number | null
   target_reps_max: number | null
   target_weight_kg: number | null
+  target_duration_seconds?: number | null
+  target_distance_m?: number | null
   // Coach patch 2026-09-27: already returned by set_prescriptions(*), now rendered.
   set_type?: string | null
   target_rpe?: number | null
@@ -56,6 +59,8 @@ interface ActualSet {
   actual_weight_kg: number | null
   actual_reps: number | null
   actual_rir: number | null
+  actual_duration_seconds?: number | null
+  actual_distance_m?: number | null
   status: string
   is_extra: boolean
 }
@@ -64,7 +69,7 @@ interface ExerciseExecution {
   id: string
   order_index: number
   status: string
-  exercise: { canonical_name_zh: string } | null
+  exercise: { canonical_name_zh: string; record_shape?: RecordShape } | null
   prescription: {
     target_summary_zh: string | null
     target_weight_kg: number | null
@@ -123,6 +128,10 @@ interface SetDraft {
   weightKg: number | null
   reps: string
   rir: string
+  /** Seconds for a timed set, minutes for a cardio set (as typed). */
+  duration: string
+  /** Kilometres (as typed). */
+  distance: string
   saved: boolean
   isExtra: boolean
   pending: boolean
@@ -188,6 +197,41 @@ function preferredWeightUnit(profileUnit: TrainingWeightUnit) {
   }
 }
 
+type RecordShape = 'weight_reps' | 'bodyweight_reps' | 'duration' | 'distance_duration'
+
+function shapeOf(exercise: ExerciseExecution): RecordShape {
+  return exercise.exercise?.record_shape ?? 'weight_reps'
+}
+
+/** Timed sets are typed in seconds, cardio in minutes. */
+function secondsToInput(shape: RecordShape, seconds: number | null | undefined) {
+  if (seconds == null) return ''
+  return shape === 'distance_duration' ? String(Math.round((seconds / 60) * 10) / 10) : String(seconds)
+}
+
+function inputToSeconds(shape: RecordShape, text: string) {
+  if (text === '') return null
+  const value = Number(text)
+  if (!Number.isFinite(value) || value <= 0) return null
+  return Math.round(shape === 'distance_duration' ? value * 60 : value)
+}
+
+function metersToInput(meters: number | null | undefined) {
+  if (meters == null) return ''
+  return String(Math.round((Number(meters) / 1000) * 100) / 100)
+}
+
+function inputToMeters(text: string) {
+  if (text === '') return null
+  const value = Number(text)
+  if (!Number.isFinite(value) || value < 0) return null
+  return Math.round(value * 1000 * 100) / 100
+}
+
+function formatTarget(set: PlannedSet, shape: RecordShape) {
+  return shape === 'duration' || shape === 'distance_duration' ? describeTimedTarget(set) : null
+}
+
 function restorePendingDrafts(
   base: SetDraft[],
   exercise: ExerciseExecution,
@@ -204,8 +248,10 @@ function restorePendingDrafts(
       setIndex: pending.payload.set_index,
       weight: kgToWeightInput(pending.payload.actual_weight_kg ?? null, weightUnit),
       weightKg: pending.payload.actual_weight_kg ?? null,
-      reps: String(pending.payload.actual_reps),
+      reps: pending.payload.actual_reps == null ? '' : String(pending.payload.actual_reps),
       rir: pending.payload.actual_rir == null ? '' : String(pending.payload.actual_rir),
+      duration: secondsToInput(shapeOf(exercise), pending.payload.actual_duration_seconds),
+      distance: metersToInput(pending.payload.actual_distance_m),
       saved: false,
       isExtra: true,
       pending: true,
@@ -232,6 +278,8 @@ function overlayStoredDraft(
     weightKg: stored.weightKg,
     reps: stored.reps,
     rir: stored.rir,
+    duration: stored.duration ?? '',
+    distance: stored.distance ?? '',
     restored: true,
   }
 }
@@ -254,10 +302,17 @@ function initialDrafts(
             weightUnit,
           ),
           weightKg: pending ? pending.payload.actual_weight_kg ?? null : set.actual_weight_kg,
-          reps: pending ? String(pending.payload.actual_reps) : set.actual_reps == null ? '' : String(set.actual_reps),
+          reps: pending
+            ? pending.payload.actual_reps == null ? '' : String(pending.payload.actual_reps)
+            : set.actual_reps == null ? '' : String(set.actual_reps),
           rir: pending
             ? pending.payload.actual_rir == null ? '' : String(pending.payload.actual_rir)
             : set.actual_rir == null ? '' : String(set.actual_rir),
+          duration: secondsToInput(
+            shapeOf(exercise),
+            pending ? pending.payload.actual_duration_seconds : set.actual_duration_seconds,
+          ),
+          distance: metersToInput(pending ? pending.payload.actual_distance_m : set.actual_distance_m),
           saved: !pending && set.status === 'completed',
           isExtra: set.is_extra,
           pending: Boolean(pending),
@@ -278,8 +333,10 @@ function initialDrafts(
             weightUnit,
           ),
           weightKg: pending ? pending.payload.actual_weight_kg ?? null : set.target_weight_kg,
-          reps: pending ? String(pending.payload.actual_reps) : '',
+          reps: pending?.payload.actual_reps == null ? '' : String(pending.payload.actual_reps),
           rir: pending?.payload.actual_rir == null ? '' : String(pending.payload.actual_rir),
+          duration: secondsToInput(shapeOf(exercise), pending?.payload.actual_duration_seconds),
+          distance: metersToInput(pending?.payload.actual_distance_m),
           saved: false,
           isExtra: false,
           pending: Boolean(pending),
@@ -400,7 +457,7 @@ export default function TrainingSessionPage() {
     return () => window.clearTimeout(timer)
   }, [activeExerciseIndex, data])
 
-  function updateDraft(executionId: string, position: number, field: 'weight' | 'reps' | 'rir', value: string) {
+  function updateDraft(executionId: string, position: number, field: 'weight' | 'reps' | 'rir' | 'duration' | 'distance', value: string) {
     const current = drafts[executionId][position]
     const setIndex = current.setIndex
     if (data) {
@@ -413,6 +470,8 @@ export default function TrainingSessionPage() {
           : current.weightKg,
         reps: next.reps,
         rir: next.rir,
+        duration: next.duration,
+        distance: next.distance,
       })
     }
     setDrafts((current) => ({
@@ -465,6 +524,8 @@ export default function TrainingSessionPage() {
           weightKg: null,
           reps: '',
           rir: '',
+          duration: '',
+          distance: '',
           saved: false,
           isExtra: true,
           pending: false,
@@ -482,6 +543,28 @@ export default function TrainingSessionPage() {
 
   function buildSetPayload(executionId: string, position: number): SaveSetActualInput | null {
     const draft = drafts[executionId][position]
+    const shape = data ? shapeOf(data.exercises.find((item) => item.id === executionId) as ExerciseExecution) : 'weight_reps'
+    if (shape === 'duration' || shape === 'distance_duration') {
+      const seconds = inputToSeconds(shape, draft.duration)
+      if (seconds == null) {
+        setError(shape === 'duration' ? '请填写这一组坚持的秒数' : '请填写这一组的运动时间')
+        return null
+      }
+      const distanceMeters = shape === 'distance_duration' ? inputToMeters(draft.distance) : null
+      if (shape === 'distance_duration' && draft.distance !== '' && distanceMeters == null) {
+        setError('距离需要是不小于 0 的数字')
+        return null
+      }
+      return {
+        exercise_execution_id: executionId,
+        set_index: draft.setIndex,
+        actual_reps: null,
+        actual_duration_seconds: seconds,
+        actual_distance_m: distanceMeters,
+        actual_weight_kg: shape === 'duration' ? draft.weightKg : null,
+        actual_rir: null,
+      }
+    }
     const reps = Number(draft.reps)
     if (draft.reps === '' || !Number.isInteger(reps) || reps < 0) {
       setError('请填写这一组实际完成的次数')
@@ -784,6 +867,8 @@ export default function TrainingSessionPage() {
 
   const isCompleted = data.session.status === 'completed'
   const exerciseName = exercise.exercise?.canonical_name_zh || `动作 ${exercise.order_index}`
+  const activeShape = shapeOf(exercise)
+  const isTimedShape = activeShape === 'duration' || activeShape === 'distance_duration'
   const exerciseDrafts = drafts[exercise.id] ?? []
   const savedSetCount = exerciseDrafts.filter((draft) => draft.saved).length
   const isLastExercise = activeExerciseIndex === data.exercises.length - 1
@@ -968,7 +1053,7 @@ export default function TrainingSessionPage() {
             <ExerciseMotion key={exercise.id} name={exerciseName} media={exercise.media} loading="eager" />
           )}
 
-          <div className="mt-4 flex items-center justify-between rounded-xl bg-gray-50 px-3 py-2">
+          {!isTimedShape && <div className="mt-4 flex items-center justify-between rounded-xl bg-gray-50 px-3 py-2">
             <span className="text-xs text-gray-500">重量单位</span>
             <div className="flex rounded-lg bg-white p-0.5" role="group" aria-label="重量单位">
               {(['kg', 'lb'] as const).map((unit) => (
@@ -979,7 +1064,7 @@ export default function TrainingSessionPage() {
                 </button>
               ))}
             </div>
-          </div>
+          </div>}
 
           <div className="mt-4 space-y-3">
             {exerciseDrafts.length === 0 && (
@@ -996,6 +1081,7 @@ export default function TrainingSessionPage() {
                       ? null
                       : exercise.prescription?.sets.find((set) => set.set_index === draft.setIndex) ?? null
                     const guidance = planned ? describePlannedSet(planned) : null
+                    const timedTarget = planned ? formatTarget(planned, activeShape) : null
                     return (
                       <div className="mb-2">
                         <div className="flex items-center justify-between">
@@ -1007,9 +1093,9 @@ export default function TrainingSessionPage() {
                             {draft.pending ? '待同步' : draft.saved ? '已保存' : draft.restored ? '已恢复未保存的输入' : '待保存'}
                           </span>
                         </div>
-                        {guidance && (guidance.target || guidance.effort || guidance.note) && (
+                        {guidance && (guidance.target || timedTarget || guidance.effort || guidance.note) && (
                           <p className={`mt-1 text-xs leading-5 ${guidance.emphasis ? 'font-medium text-gray-900' : 'text-gray-500'}`}>
-                            {[guidance.target && `目标 ${guidance.target}`, guidance.effort, guidance.note]
+                            {[(timedTarget ?? guidance.target) && `目标 ${timedTarget ?? guidance.target}`, timedTarget ? null : guidance.effort, guidance.note]
                               .filter(Boolean)
                               .join(' · ')}
                           </p>
@@ -1017,26 +1103,52 @@ export default function TrainingSessionPage() {
                       </div>
                     )
                   })()}
-                  <div className="grid grid-cols-3 gap-2">
-                    <label className="text-xs text-gray-500">
-                      重量 {weightUnit}
-                      <input type="number" min="0" step={weightUnit === 'lb' ? '1' : '0.5'} value={draft.weight} disabled={isCompleted || exercise.status === 'skipped'}
-                        onChange={(event) => updateDraft(exercise.id, position, 'weight', event.target.value)}
-                        className="mt-1 w-full rounded-lg border border-gray-200 px-2 py-2 text-gray-900 outline-none focus:border-gray-500 disabled:bg-gray-50" />
-                    </label>
-                    <label className="text-xs text-gray-500">
-                      实际次数
-                      <input type="number" min="0" step="1" value={draft.reps} disabled={isCompleted || exercise.status === 'skipped'}
-                        onChange={(event) => updateDraft(exercise.id, position, 'reps', event.target.value)}
-                        className="mt-1 w-full rounded-lg border border-gray-200 px-2 py-2 text-gray-900 outline-none focus:border-gray-500 disabled:bg-gray-50" />
-                    </label>
-                    <label className="text-xs text-gray-500">
-                      还能再做
-                      <input type="number" min="0" max="20" step="1" value={draft.rir} disabled={isCompleted || exercise.status === 'skipped'}
-                        onChange={(event) => updateDraft(exercise.id, position, 'rir', event.target.value)}
-                        className="mt-1 w-full rounded-lg border border-gray-200 px-2 py-2 text-gray-900 outline-none focus:border-gray-500 disabled:bg-gray-50" />
-                    </label>
-                  </div>
+                  {activeShape === 'duration' ? (
+                    <div className="grid grid-cols-1 gap-2">
+                      <label className="text-xs text-gray-500">
+                        坚持时间（秒）
+                        <input type="number" inputMode="numeric" min="1" max="86400" step="1" value={draft.duration} disabled={isCompleted || exercise.status === 'skipped'}
+                          onChange={(event) => updateDraft(exercise.id, position, 'duration', event.target.value)}
+                          className="mt-1 w-full rounded-lg border border-gray-200 px-2 py-2 text-gray-900 outline-none focus:border-gray-500 disabled:bg-gray-50" />
+                      </label>
+                    </div>
+                  ) : activeShape === 'distance_duration' ? (
+                    <div className="grid grid-cols-2 gap-2">
+                      <label className="text-xs text-gray-500">
+                        时间（分钟）
+                        <input type="number" inputMode="decimal" min="0" step="0.5" value={draft.duration} disabled={isCompleted || exercise.status === 'skipped'}
+                          onChange={(event) => updateDraft(exercise.id, position, 'duration', event.target.value)}
+                          className="mt-1 w-full rounded-lg border border-gray-200 px-2 py-2 text-gray-900 outline-none focus:border-gray-500 disabled:bg-gray-50" />
+                      </label>
+                      <label className="text-xs text-gray-500">
+                        距离（公里，可不填）
+                        <input type="number" inputMode="decimal" min="0" step="0.1" value={draft.distance} disabled={isCompleted || exercise.status === 'skipped'}
+                          onChange={(event) => updateDraft(exercise.id, position, 'distance', event.target.value)}
+                          className="mt-1 w-full rounded-lg border border-gray-200 px-2 py-2 text-gray-900 outline-none focus:border-gray-500 disabled:bg-gray-50" />
+                      </label>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-3 gap-2">
+                      <label className="text-xs text-gray-500">
+                        重量 {weightUnit}
+                        <input type="number" min="0" step={weightUnit === 'lb' ? '1' : '0.5'} value={draft.weight} disabled={isCompleted || exercise.status === 'skipped'}
+                          onChange={(event) => updateDraft(exercise.id, position, 'weight', event.target.value)}
+                          className="mt-1 w-full rounded-lg border border-gray-200 px-2 py-2 text-gray-900 outline-none focus:border-gray-500 disabled:bg-gray-50" />
+                      </label>
+                      <label className="text-xs text-gray-500">
+                        实际次数
+                        <input type="number" min="0" step="1" value={draft.reps} disabled={isCompleted || exercise.status === 'skipped'}
+                          onChange={(event) => updateDraft(exercise.id, position, 'reps', event.target.value)}
+                          className="mt-1 w-full rounded-lg border border-gray-200 px-2 py-2 text-gray-900 outline-none focus:border-gray-500 disabled:bg-gray-50" />
+                      </label>
+                      <label className="text-xs text-gray-500">
+                        还能再做
+                        <input type="number" min="0" max="20" step="1" value={draft.rir} disabled={isCompleted || exercise.status === 'skipped'}
+                          onChange={(event) => updateDraft(exercise.id, position, 'rir', event.target.value)}
+                          className="mt-1 w-full rounded-lg border border-gray-200 px-2 py-2 text-gray-900 outline-none focus:border-gray-500 disabled:bg-gray-50" />
+                      </label>
+                    </div>
+                  )}
                   {!isCompleted && (
                     <button type="button" onClick={() => saveSet(exercise.id, position)} disabled={savingKey === key || exercise.status === 'skipped'}
                       className="mt-3 w-full rounded-lg border border-gray-200 py-2 text-sm font-medium disabled:opacity-50">

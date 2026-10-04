@@ -1,4 +1,5 @@
 'use client'
+import { describeLoggedExercise, type LoggedExercise } from '@/lib/workout-log-summary'
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -11,7 +12,7 @@ interface WorkoutLog {
   type: string
   duration_minutes: number
   notes: string | null
-  exercises: { name: string; sets?: number; reps?: string; weight?: number }[] | null
+  exercises: LoggedExercise[] | null
 }
 
 interface FoodLog {
@@ -216,7 +217,7 @@ export default function HistoryDetailPage() {
                       <div className="mt-1.5 space-y-0.5">
                         {w.exercises.map((ex, i) => (
                           <p key={i} className="text-xs text-gray-600">
-                            {ex.name}{ex.sets ? ` · ${ex.sets} 组` : ''}{ex.reps ? ` × ${ex.reps}` : ''}{ex.weight ? ` · ${ex.weight} kg` : ''}
+                            {describeLoggedExercise(ex)}
                           </p>
                         ))}
                       </div>

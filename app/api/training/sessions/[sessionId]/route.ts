@@ -10,6 +10,7 @@ const idSchema = z.string().uuid()
 
 interface RawExercise {
   canonical_name_zh: string
+  record_shape?: string | null
   media_mappings: ExerciseMediaMapping[] | null
 }
 
@@ -72,6 +73,7 @@ export async function GET(
         status,
         exercise:exercises(
           canonical_name_zh,
+          record_shape,
           media_mappings:exercise_external_mappings(
             provider,external_slug,source_version,license,attribution,
             source_url,mapping_status,mapping_notes
@@ -85,7 +87,7 @@ export async function GET(
         ),
         sets:set_executions(
           id,set_prescription_id,set_index,actual_weight_kg,actual_reps,
-          actual_rir,status,is_extra,completed_at
+          actual_rir,actual_duration_seconds,actual_distance_m,status,is_extra,completed_at
         )
       `)
       .eq('workout_session_id', sessionId)
@@ -111,7 +113,7 @@ export async function GET(
     const sets = execution.sets ?? []
     return {
       ...execution,
-      exercise: exercise ? { canonical_name_zh: exercise.canonical_name_zh } : null,
+      exercise: exercise ? { canonical_name_zh: exercise.canonical_name_zh, record_shape: exercise.record_shape ?? 'weight_reps' } : null,
       media: mapping ? buildWorkoutGuideMedia(mapping) : null,
       sets,
       fully_completed: exerciseIsFullyCompleted(sets),

@@ -15,6 +15,10 @@ export interface StoredSetDraft {
   weightKg: number | null
   reps: string
   rir: string
+  /** As typed: seconds for a timed set, minutes for a cardio set. */
+  duration?: string
+  /** As typed, in kilometres. */
+  distance?: string
   updatedAt: string
 }
 
@@ -69,7 +73,7 @@ export function writeSetDraft(
 ) {
   const map = readAll()
   const key = draftKey(userId, sessionId, executionId, setIndex)
-  if (draft.weight === '' && draft.reps === '' && draft.rir === '') delete map[key]
+  if (draft.weight === '' && draft.reps === '' && draft.rir === '' && !draft.duration && !draft.distance) delete map[key]
   else map[key] = { ...draft, updatedAt: new Date().toISOString() }
   writeAll(map)
 }
