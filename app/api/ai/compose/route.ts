@@ -11,10 +11,11 @@ import { computeMealFeedbackStatus } from '@/lib/nutrition/meal-feedback'
 import { getDailyNutritionFacts, resolveNutrientTargets } from '@/lib/nutrition/persistence'
 import { buildWeeklyAggregate } from '@/lib/nutrition/weekly-log'
 import { buildWeeklyReviewInput } from '@/lib/nutrition/weekly-review'
+import { buildMonthlyAggregate, buildMonthlyReviewInput } from '@/lib/review/monthly'
 import { loadRecoveryCheckin } from '@/lib/recovery-persistence'
 import { describeSelfReport } from '@/lib/recovery'
 import { EVIDENCE_REGISTRY_VERSION } from '@/lib/evidence/registry'
-import { getWeekStartKey, today } from '@/lib/utils'
+import { getWeekStartKey, shiftDateKey, today } from '@/lib/utils'
 import { coachFlag, coachOutputV1Enabled } from '@/lib/coach/flags'
 import {
   COACH_PROMPT_VERSION_SUFFIX,
@@ -59,10 +60,11 @@ import { z } from 'zod'
  */
 
 const bodySchema = z.object({
-  surface: z.enum(['workout_session_feedback', 'meal_feedback', 'daily_review', 'weekly_review']),
+  surface: z.enum(['workout_session_feedback', 'meal_feedback', 'daily_review', 'weekly_review', 'monthly_review']),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   workout_log_id: z.string().uuid().optional(),
   week_start: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  month_start: z.string().regex(/^\d{4}-\d{2}-01$/).optional(),
   // Coach patch 2026-09-27: lets meal feedback judge the whole meal (all saves
   // of this date + meal_type), not only the latest save. Optional for old clients.
   meal_type: z.enum(['breakfast', 'lunch', 'dinner', 'snack']).optional(),
@@ -364,10 +366,54 @@ export async function POST(request: NextRequest) {
       })
     }
 
+    if (surface === 'monthly_review') {
+      const monthStart = parsed.data.month_start ?? `${today(parsed.data.time_zone ?? 'UTC').slice(0, 7)}-01`
+      const { data: cached } = await supabase.from('ai_generated_content')
+        .select('content_json,prompt_version').eq('user_id', user.id)
+        .eq('content_type', 'monthly_review_ai').eq('target_date', monthStart).eq('is_stale', false).maybeSingle()
+      if (cached?.content_json) return NextResponse.json({
+        data: { ai: cached.content_json, prompt_version: cached.prompt_version, cached: true },
+        ai_status: { available: true, reason: null, detail: null },
+      })
+      const nextMonth = new Date(`${monthStart}T00:00:00Z`)
+      nextMonth.setUTCMonth(nextMonth.getUTCMonth() + 1)
+      const monthEnd = shiftDateKey(nextMonth.toISOString().slice(0, 10), -1)
+      const weekStarts: string[] = []
+      for (let cursor = getWeekStartKey(monthStart); cursor <= monthEnd; cursor = shiftDateKey(cursor, 7)) weekStarts.push(cursor)
+      const weeks = await Promise.all(weekStarts.map((start) => buildWeeklyAggregate(supabase, user.id, start)))
+      const aggregate = buildMonthlyAggregate(weeks, monthStart)
+      if (aggregate.record_days < 10) return unavailable('insufficient_data', `本月只记录了 ${aggregate.record_days} 天`)
+      const reviewInput = buildMonthlyReviewInput(aggregate)
+      const result = await composeWithEvidence({
+        surface, facts: [], signals: [], userId: user.id, scopeId: monthStart,
+        context: reviewInput as unknown as Record<string, unknown>,
+        instructions: '这是月复盘。趋势方向已经由规则引擎判定，只解释 computed_trends，不得自行判断趋势。不得提及训练时长。',
+      })
+      if (!result.ok) return unavailable(result.reason, result.detail)
+      const { error: cacheError } = await supabase.from('ai_generated_content').upsert({
+        user_id: user.id, content_type: 'monthly_review_ai', target_date: monthStart,
+        content_json: result.data, prompt_version: result.promptVersion,
+      }, { onConflict: 'user_id,content_type,target_date' })
+      if (cacheError) throw new Error(cacheError.message)
+      return NextResponse.json({
+        data: { ai: result.data, review_input: reviewInput, prompt_version: result.promptVersion, model: result.model, evidence_registry_version: EVIDENCE_REGISTRY_VERSION, input_snapshot_id: result.inputSnapshotId },
+        ai_status: { available: true, reason: null, detail: null },
+      })
+    }
+
     // surface === 'weekly_review'
     const weekStart = parsed.data.week_start
       ?? getWeekStartKey(new Date(), parsed.data.time_zone ?? 'UTC')
+    const { data: cached } = await supabase.from('ai_generated_content')
+      .select('content_json,prompt_version').eq('user_id', user.id)
+      .eq('content_type', 'weekly_review_ai').eq('target_date', weekStart).eq('is_stale', false).maybeSingle()
+    if (cached?.content_json) return NextResponse.json({
+      data: { ai: cached.content_json, prompt_version: cached.prompt_version, cached: true },
+      ai_status: { available: true, reason: null, detail: null },
+    })
     const aggregate = await buildWeeklyAggregate(supabase, user.id, weekStart)
+    const recordDays = aggregate.days.filter((day) => day.workout_count > 0 || day.nutrition_logged || day.weight_kg !== null).length
+    if (recordDays < 3) return unavailable('insufficient_data', `本周只记录了 ${recordDays} 天`)
     const reviewInput = buildWeeklyReviewInput(aggregate)
 
     const result = await composeWithEvidence({
@@ -383,6 +429,12 @@ export async function POST(request: NextRequest) {
     })
 
     if (!result.ok) return unavailable(result.reason, result.detail)
+
+    const { error: cacheError } = await supabase.from('ai_generated_content').upsert({
+      user_id: user.id, content_type: 'weekly_review_ai', target_date: weekStart,
+      content_json: result.data, prompt_version: result.promptVersion,
+    }, { onConflict: 'user_id,content_type,target_date' })
+    if (cacheError) throw new Error(cacheError.message)
 
     return NextResponse.json({
       data: {

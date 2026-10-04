@@ -6,7 +6,7 @@ import PageHeader from '@/components/PageHeader'
 import { useToast } from '@/components/Toast'
 import { today, invalidateDayDerivedCache } from '@/lib/utils'
 
-const WORKOUT_TYPES = ['胸', '背', '腿', '肩', '手臂', '有氧', '拉伸', '其他']
+const WORKOUT_TYPES = ['胸', '背', '腿', '肩', '手臂', '腹肌', '有氧', '拉伸', '其他']
 
 interface Exercise {
   name: string

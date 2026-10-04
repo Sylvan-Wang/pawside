@@ -262,6 +262,7 @@ export const AI_PROMPT_VERSIONS = {
   meal_feedback: 'openai_meal_feedback_v1',
   daily_review: 'openai_daily_review_v3',
   weekly_review: 'openai_weekly_review_v1',
+  monthly_review: 'openai_monthly_review_v1',
 } as const
 
 /**
@@ -294,6 +295,12 @@ export const AI_SCHEMAS = {
     schema: weeklyReviewSchema,
     maxOutputTokens: 900,
     promptVersion: AI_PROMPT_VERSIONS.weekly_review,
+  },
+  monthly_review: {
+    name: 'pawside_monthly_review',
+    schema: weeklyReviewSchema,
+    maxOutputTokens: 900,
+    promptVersion: AI_PROMPT_VERSIONS.monthly_review,
   },
 } as const satisfies Record<string, AiSchemaBundle>
 

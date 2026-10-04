@@ -1,16 +1,21 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-
-const navItems = [
-  { href: '/home', label: '首页', icon: '🏠' },
-  { href: '/history', label: '历史', icon: '📋' },
-  { href: '/weekly', label: '周报', icon: '📊' },
-  { href: '/settings', label: '设置', icon: '⚙️' },
-]
+import { useEffect, useState } from 'react'
 
 export default function BottomNav() {
   const pathname = usePathname()
+  const [reviewHub, setReviewHub] = useState(false)
+  useEffect(() => {
+    void fetch('/api/features').then((response) => response.ok ? response.json() : null)
+      .then((payload) => setReviewHub(payload?.data?.review_hub === true)).catch(() => undefined)
+  }, [])
+  const navItems = [
+    { href: '/home', label: '首页', icon: '🏠' },
+    { href: '/history', label: '历史', icon: '📋' },
+    reviewHub ? { href: '/review', label: '复盘', icon: '📊' } : { href: '/weekly', label: '周报', icon: '📊' },
+    { href: '/settings', label: '设置', icon: '⚙️' },
+  ]
   return (
     <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] bg-white border-t border-gray-100 z-40">
       <div className="flex">

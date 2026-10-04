@@ -53,6 +53,7 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(false)
   const [exporting, setExporting] = useState(false)
   const [weightUnit, setWeightUnit] = useState<'kg' | 'lb'>('kg')
+  const [reviewHub, setReviewHub] = useState(false)
 
   const load = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession()
@@ -76,6 +77,10 @@ export default function SettingsPage() {
   }, [router, supabase])
 
   useEffect(() => { void Promise.resolve().then(load) }, [load])
+  useEffect(() => {
+    void fetch('/api/features').then((response) => response.ok ? response.json() : null)
+      .then((payload) => setReviewHub(payload?.data?.review_hub === true)).catch(() => undefined)
+  }, [])
 
   async function handleSave() {
     setLoading(true)
@@ -291,6 +296,10 @@ export default function SettingsPage() {
 
         {/* Actions */}
         <div className="bg-white rounded-2xl overflow-hidden">
+          {reviewHub && <Link href="/settings/review"
+            className="block w-full px-4 py-4 text-left text-sm text-gray-700 border-b border-gray-50">
+            复盘设置
+          </Link>}
           <button onClick={handleExport} disabled={exporting}
             className="w-full px-4 py-4 text-left text-sm text-gray-700 border-b border-gray-50 disabled:opacity-50">
             {exporting ? '导出中…' : '导出数据（CSV）'}

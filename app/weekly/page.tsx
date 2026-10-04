@@ -2,6 +2,7 @@
 
 import PageHeader from '@/components/PageHeader'
 import BottomNav from '@/components/BottomNav'
+import CoachCard from '@/components/CoachCard'
 import { getWeekStartKey, shiftDateKey, today } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useState } from 'react'
@@ -118,17 +119,39 @@ export default function WeeklyPage() {
   const [weekOffset, setWeekOffset] = useState(0)
   const [data, setData] = useState<WeeklyAggregate | null>(null)
   const [loading, setLoading] = useState(true)
+  const [reviewEnabled, setReviewEnabled] = useState(false)
+  const [review, setReview] = useState<Record<string, unknown> | null>(null)
+  const [reviewState, setReviewState] = useState<'loading' | 'ai' | 'basic' | 'insufficient'>('loading')
 
   const load = useCallback(async (offset: number) => {
     setLoading(true)
     try {
       const ws = shiftDateKey(getWeekStartKey(today()), -offset * 7)
 
-      const response = await fetch(`/api/weekly-log?week_start=${ws}`, { cache: 'no-store' })
+      const [response, featureResponse] = await Promise.all([
+        fetch(`/api/weekly-log?week_start=${ws}`, { cache: 'no-store' }),
+        fetch('/api/features', { cache: 'no-store' }),
+      ])
       if (response.status === 401) { router.push('/auth'); return }
       if (!response.ok) throw new Error('读取失败')
       const payload = await response.json()
       setData(payload.data)
+      const features = featureResponse.ok ? await featureResponse.json() : null
+      const enabled = features?.data?.review_hub === true
+      setReviewEnabled(enabled)
+      setReview(null)
+      if (enabled && offset > 0) {
+        const recordDays = payload.data.days.filter((day: WeeklyAggregate['days'][number]) => day.workout_count > 0 || day.nutrition_logged || day.weight_kg !== null).length
+        if (recordDays < 3) setReviewState('insufficient')
+        else {
+          setReviewState('loading')
+          const reviewResponse = await fetch('/api/ai/compose', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ surface: 'weekly_review', week_start: ws }) })
+          const reviewPayload = await reviewResponse.json()
+          if (reviewResponse.ok && reviewPayload.ai_status?.available && reviewPayload.data?.ai) {
+            setReview(reviewPayload.data.ai); setReviewState('ai')
+          } else setReviewState('basic')
+        }
+      } else if (enabled) setReviewState('basic')
     } catch (reason) {
       console.error('[weekly] load failed', reason)
       setData(null)
@@ -321,12 +344,16 @@ export default function WeeklyPage() {
               )}
             </div>
 
-            {/* Weekly Review — AI later; Product §24 slots */}
+            {/* Weekly Review — only enabled for the review_hub allowlist. */}
             <div className="bg-white rounded-2xl p-4">
               <h2 className="text-sm font-semibold mb-2">本周复盘</h2>
-              <p className="text-xs leading-5 text-gray-400">
-                趋势判断由规则引擎给出，文字复盘将在 AI Composer 阶段接入。
-              </p>
+              {!reviewEnabled ? <p className="text-xs leading-5 text-gray-400">趋势判断由规则引擎给出，文字复盘将在 AI Composer 阶段接入。</p> : weekOffset === 0 ? <CoachCard state="basic" headline={`本周已记录 ${data.days.filter((day) => day.workout_count > 0 || day.nutrition_logged || day.weight_kg !== null).length} 天，训练 ${data.training.workout_count} 次`} basicLabel="进行中的周期 · 只显示事实" /> : <CoachCard
+                state={reviewState}
+                headline={review ? String(review.what_happened ?? '') : `本周已记录 ${data.nutrition.days_logged} 天饮食，训练 ${data.training.workout_count} 次`}
+                bullets={review && Array.isArray(review.worth_noting) ? review.worth_noting.flatMap((item) => item && typeof item === 'object' && typeof (item as { text?: unknown }).text === 'string' ? [(item as { text: string }).text] : []) : []}
+                actions={review && Array.isArray(review.next_week) ? review.next_week.flatMap((item) => item && typeof item === 'object' && typeof (item as { text?: unknown }).text === 'string' ? [(item as { text: string }).text] : []) : []}
+                insufficientText={`本周只记录了 ${data.days.filter((day) => day.workout_count > 0 || day.nutrition_logged || day.weight_kg !== null).length} 天，暂不生成复盘。`}
+              />}
             </div>
           </>
         )}
