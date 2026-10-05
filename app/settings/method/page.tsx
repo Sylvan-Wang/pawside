@@ -22,10 +22,6 @@ interface MethodOption {
   days: MethodDay[]
 }
 
-function firstDayName(method: MethodOption) {
-  return (method.days.find((day) => day.required) ?? method.days[0])?.name_zh ?? ''
-}
-
 export default function MethodSettingsPage() {
   const router = useRouter()
   const { show, ToastEl } = useToast()
@@ -34,6 +30,7 @@ export default function MethodSettingsPage() {
   const [pending, setPending] = useState<MethodOption | null>(null)
   const [switching, setSwitching] = useState(false)
   const [switchError, setSwitchError] = useState<string | null>(null)
+  const [startDay, setStartDay] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     try {
@@ -60,7 +57,7 @@ export default function MethodSettingsPage() {
       const response = await fetch('/api/method/switch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ method_release_id: pending.release_id }),
+        body: JSON.stringify({ method_release_id: pending.release_id, start_split_key: startDay }),
       })
       const payload = await response.json()
       if (!response.ok) throw new Error(payload?.error?.message ?? '暂时无法切换训练方法')
@@ -107,7 +104,7 @@ export default function MethodSettingsPage() {
             {!method.is_current && (
               <button
                 type="button"
-                onClick={() => { setSwitchError(null); setPending(method) }}
+                onClick={() => { setSwitchError(null); setStartDay((method.days.find((day) => day.required) ?? method.days[0])?.key ?? null); setPending(method) }}
                 className="mt-4 w-full rounded-xl bg-black py-3 text-sm font-medium text-white"
               >
                 切换到{method.short_name}
@@ -126,9 +123,19 @@ export default function MethodSettingsPage() {
             </p>
             <ul className="mt-3 space-y-1.5 text-sm leading-6 text-gray-700">
               <li>• 你过往的训练记录不会丢失</li>
-              <li>• 之后会按新的方法安排训练，从「{firstDayName(pending)}」开始</li>
+              <li>• 之后会按新的方法安排训练</li>
+              <li>• 正在进行的训练会按已记录的部分保存并结束</li>
               <li>• 随时可以在这里切换回来</li>
             </ul>
+            <p className="mt-4 text-sm font-medium text-gray-900">从哪一天开始？</p>
+            <div className="mt-2 flex flex-wrap gap-2" role="group" aria-label="起始训练日">
+              {pending.days.map((day) => (
+                <button key={day.key} type="button" onClick={() => setStartDay(day.key)} aria-pressed={startDay === day.key}
+                  className={`rounded-full border px-3 py-1.5 text-sm ${startDay === day.key ? 'border-black bg-black text-white' : 'border-gray-200 text-gray-700'}`}>
+                  {day.name_zh}{day.required ? '' : '（可选）'}
+                </button>
+              ))}
+            </div>
             {switchError && <p className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">{switchError}</p>}
             <div className="mt-5 grid grid-cols-2 gap-3">
               <button

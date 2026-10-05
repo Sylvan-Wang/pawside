@@ -44,6 +44,7 @@ declare
   n integer; n2 integer;
   sessions_before integer; sets_before integer; logs_before integer;
   t text;
+  open_session_id uuid;
 begin
   insert into auth.users (id, email) values (u, 'u@contract.test'), (u2, 'u2@contract.test');
   select r.id, r.method_id into r12, m12 from public.method_releases r
@@ -99,8 +100,8 @@ begin
   if n <> 3 then raise exception '1.2 release was changed (% splits)', n; end if;
 
   -- ===== privileges =====
-  if has_function_privilege('anon', 'public.switch_method_release_v1(uuid)', 'execute')
-     or not has_function_privilege('authenticated', 'public.switch_method_release_v1(uuid)', 'execute') then
+  if has_function_privilege('anon', 'public.switch_method_release_v1(uuid,text)', 'execute')
+     or not has_function_privilege('authenticated', 'public.switch_method_release_v1(uuid,text)', 'execute') then
     raise exception 'switch_method_release_v1 privileges are wrong';
   end if;
   if has_function_privilege('authenticated', 'public.first_required_split_key(uuid)', 'execute')
@@ -157,18 +158,13 @@ begin
   res := public.switch_method_release_v1(r12);
   if res->>'status' <> 'unchanged' then raise exception 'switching to the current release was not a no-op'; end if;
 
-  -- a session in progress blocks switching
+  -- a session in progress no longer blocks switching: it is closed early, nothing is lost
   declare rx uuid; s jsonb;
   begin
     select sp1.id into rx from public.session_prescriptions sp1 where sp1.enrollment_id = e12 and sp1.status in ('ready','upcoming') limit 1;
     s := public.start_method_session_v2(rx, current_date, 'UTC', gen_random_uuid(), 60::smallint, 'user_override');
-    begin
-      perform public.switch_method_release_v1(r4);
-      raise exception 'switching during a session in progress was accepted';
-    exception when sqlstate '55000' then null;
-    end;
-    update public.workout_sessions set status = 'completed', completed_at = now() where id = (s->>'session_id')::uuid;
     if (s->>'session_id') is null then raise exception 'fixture failed: start result %', s; end if;
+    open_session_id := (s->>'session_id')::uuid;
   end;
 
   -- ===== switching: success, history untouched =====
@@ -177,6 +173,10 @@ begin
   select count(*) into logs_before from public.workout_logs where user_id = u;
   res := public.switch_method_release_v1(r4);
   if res->>'status' <> 'switched' then raise exception 'switch failed: %', res; end if;
+  if (res->>'ended_open_sessions')::int <> 1 then raise exception 'the open session was not closed by the switch: %', res; end if;
+  if (select completion_policy_version from public.workout_sessions where id = open_session_id) <> 'ended_early_v1' then
+    raise exception 'the open session was not closed as ended early';
+  end if;
   e4 := (res->>'enrollment_id')::uuid;
   c4 := (res->>'cycle_id')::uuid;
   if res->>'next_split_key' <> 'chest' then raise exception 'first day of the four-split is %', res->>'next_split_key'; end if;

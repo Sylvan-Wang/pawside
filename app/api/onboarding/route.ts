@@ -120,7 +120,7 @@ export async function POST(request: NextRequest) {
       ? '基础设置已保存。当前三分化仅支持完整健身房器械；自由训练仍可使用。'
       : result.method.reason === 'METHOD_NOT_READY'
         ? '基础设置已保存。训练方法通过发布校验后即可启用。'
-        : '基础设置已保存，请完成 Method 启用条件。'
+        : '基础设置已保存。训练方法的启用条件还没满足，自由训练仍可使用。'
   return NextResponse.json(
     {
       data: result,

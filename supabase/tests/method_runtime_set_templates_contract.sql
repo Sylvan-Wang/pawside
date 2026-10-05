@@ -16,16 +16,25 @@ begin
 
   select count(*) into template_count
   from public.method_runtime_set_templates where method_release_id = target_release_id;
-  if template_count <> 49 then
-    raise exception 'expected 49 runtime set templates, found %', template_count;
+  -- 49 original + 3 added by 20261005000100 for the open-elbow row
+  if template_count <> 52 then
+    raise exception 'expected 52 runtime set templates, found %', template_count;
   end if;
 
-  if exists (
+  -- The open-elbow row has no author-specified sets. Its sets exist only as a labelled
+  -- product default, never as author instruction (decision 2026-10-05).
+  if (
+    select count(*) filter (where template.source_authority = 'product_execution_default')
+    from public.method_runtime_set_templates template
+    join public.method_rules rule on rule.id = template.method_rule_id
+    where template.method_release_id = target_release_id and rule.rule_key = 'RX-DAY2-04'
+  ) <> 3 or exists (
     select 1 from public.method_runtime_set_templates template
     join public.method_rules rule on rule.id = template.method_rule_id
     where template.method_release_id = target_release_id and rule.rule_key = 'RX-DAY2-04'
+      and template.source_authority <> 'product_execution_default'
   ) then
-    raise exception 'open-elbow row must not receive fabricated structured sets';
+    raise exception 'open-elbow sets must be exactly 3 labelled product defaults';
   end if;
 
   if not exists (

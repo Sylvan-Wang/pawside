@@ -79,7 +79,7 @@ export default function ExerciseMotion({
       <figcaption className="mt-2 text-[11px] leading-5 text-neutral-300">
         <span>{media.provider_name}</span>
         {media.mapping_status === 'candidate' && (
-          <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-amber-800">素材待动作审核</span>
+          <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-amber-800">近似动作示意</span>
         )}
       </figcaption>
     </figure>

@@ -2,6 +2,7 @@ import { apiError } from '@/lib/api/response'
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
+const SPLIT_KEY_PATTERN = /^[a-z][a-z0-9_]{1,31}$/
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 interface SwitchResult {
@@ -31,14 +32,24 @@ export async function POST(request: Request) {
   if (typeof releaseId !== 'string' || !UUID_PATTERN.test(releaseId)) {
     return apiError('VALIDATION_ERROR', '训练方法无效', 400)
   }
+  const startSplitKey = (body as { start_split_key?: unknown } | null)?.start_split_key
+  if (startSplitKey != null && (typeof startSplitKey !== 'string' || !SPLIT_KEY_PATTERN.test(startSplitKey))) {
+    return apiError('VALIDATION_ERROR', '起始训练日无效', 400)
+  }
 
-  const { data, error } = await supabase.rpc('switch_method_release_v1', { p_release_id: releaseId })
+  const { data, error } = await supabase.rpc('switch_method_release_v1', {
+    p_release_id: releaseId,
+    p_start_split_key: startSplitKey ?? null,
+  })
   if (error) {
     if (error.code === '55000') {
       return apiError('CONFLICT', '还有一条进行中的训练，请先完成或退出后再切换。', 409)
     }
     if (error.code === 'P0002') {
       return apiError('NOT_FOUND', '这个训练方法暂时不可用。', 404)
+    }
+    if (error.code === '22023') {
+      return apiError('VALIDATION_ERROR', '这个起始训练日不在所选方法里。', 400)
     }
     return apiError('DATABASE_ERROR', '暂时无法切换训练方法', 500)
   }

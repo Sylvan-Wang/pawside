@@ -1,5 +1,5 @@
 import { apiError } from '@/lib/api/response'
-import { methodShortName } from '@/lib/method-display'
+import { methodDescription, methodShortName } from '@/lib/method-display'
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
@@ -62,7 +62,7 @@ export async function GET() {
       method_key: method?.key ?? null,
       short_name: methodShortName(method?.key, method?.name),
       name: method?.name ?? null,
-      description: method?.description ?? null,
+      description: methodDescription(method?.key, method?.description),
       version: release.version,
       is_current: release.id === currentReleaseId,
       days,

@@ -107,22 +107,15 @@ function ThreeSplitOverview() {
       <PageHeader title="训练方法" back />
       <main className="space-y-5 px-4 py-5">
         <header className="rounded-2xl bg-black p-5 text-white">
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-xs text-white/60">Canonical Workbook · v1.2</p>
-            <span className="rounded-full bg-white/10 px-2.5 py-1 text-[11px] text-white/80">计划预览</span>
-          </div>
-          <h1 className="mt-4 text-2xl font-semibold tracking-tight">推 · 拉 · 腿</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">推 · 拉 · 腿</h1>
           <p className="mt-2 text-sm leading-6 text-white/70">
             先理解今天为什么这样练。浏览动作不会写入训练记录，开始训练后才会保存实际完成情况。
           </p>
         </header>
 
-        <section className="rounded-2xl border border-amber-100 bg-amber-50 p-4">
-          <p className="text-xs font-medium text-amber-900">当前状态</p>
-          <p className="mt-1 text-sm leading-6 text-amber-800">
-            Method v1.2 已按 internal beta 运行；当前采用 v1 runtime 默认值，仍有 2 项严格来源证据待补，因此暂不标记 Strict Method 认证。
-          </p>
-        </section>
+        <Link href="/settings/method" className="block rounded-2xl bg-white p-4 text-sm text-gray-700">
+          切换训练方法 <span className="text-gray-400">›</span>
+        </Link>
 
         {METHOD_SPLITS.map((split) => (
           <section key={split.key} className="space-y-3">

@@ -14,6 +14,7 @@ import {
 import { useRouter } from 'next/navigation'
 import { splitLabel } from '@/lib/split-labels'
 import { describeTimedTarget } from '@/lib/workout-log-summary'
+import { friendlyTargetSummary } from '@/lib/training-copy'
 import { useEffect, useRef, useState } from 'react'
 
 interface SetPrescription {
@@ -360,7 +361,7 @@ export default function TodayTrainingPage() {
                 <section key={item.id} className="rounded-2xl bg-white p-4">
                   <p className="text-xs text-gray-400">动作 {item.order_index}</p>
                   <h2 className="mt-1 font-semibold text-gray-900">{exerciseName}</h2>
-                  {item.target_summary_zh && <p className="mt-1 text-sm text-gray-500">{item.target_summary_zh}</p>}
+                  {friendlyTargetSummary(item.target_summary_zh, item.sets) && <p className="mt-1 text-sm text-gray-500">{friendlyTargetSummary(item.target_summary_zh, item.sets)}</p>}
 
                   {item.media ? (
                     <ExerciseMotion name={exerciseName} media={item.media} animate={false} loading="lazy" />

@@ -3,6 +3,7 @@
 import PageHeader from '@/components/PageHeader'
 import { splitLabel } from '@/lib/split-labels'
 import { describeTimedTarget } from '@/lib/workout-log-summary'
+import { friendlyTargetSummary, NO_PRESET_SETS_NOTICE } from '@/lib/training-copy'
 import CoachCard from '@/components/CoachCard'
 import ExerciseMotion from '@/components/workout/ExerciseMotion'
 import type { ExerciseMedia } from '@/lib/exercise-media'
@@ -381,6 +382,8 @@ export default function TrainingSessionPage() {
   const [loading, setLoading] = useState(true)
   const [savingKey, setSavingKey] = useState('')
   const [finishing, setFinishing] = useState(false)
+  const [confirmEnd, setConfirmEnd] = useState(false)
+  const [endingEarly, setEndingEarly] = useState(false)
   const [changingDuration, setChangingDuration] = useState(false)
   const [exerciseActionId, setExerciseActionId] = useState('')
   const [error, setError] = useState('')
@@ -682,6 +685,30 @@ export default function TrainingSessionPage() {
       setError(reason instanceof Error ? reason.message : '动作状态更新失败')
     } finally {
       setExerciseActionId('')
+    }
+  }
+
+  async function endEarly() {
+    if (endingEarly) return
+    setEndingEarly(true)
+    setError('')
+    try {
+      await syncPendingSetActuals()
+      if (data && listPendingSetActuals(data.viewer_id, sessionId).length > 0) {
+        throw new Error('仍有训练记录等待联网同步，请联网后再结束本次训练')
+      }
+      const response = await fetch(`/api/training/sessions/${sessionId}/end`, { method: 'POST' })
+      const payload = await response.json()
+      if (!response.ok) throw new Error(payload?.error?.message || '暂时无法结束训练')
+      if (data) clearSessionDrafts(data.viewer_id, sessionId)
+      clearTrainingSessionCache(sessionId)
+      clearTodayTrainingCache()
+      router.push('/training/today')
+    } catch (reason: unknown) {
+      setConfirmEnd(false)
+      setError(reason instanceof Error ? reason.message : '暂时无法结束训练')
+    } finally {
+      setEndingEarly(false)
     }
   }
 
@@ -1020,8 +1047,8 @@ export default function TrainingSessionPage() {
             </div>
           </div>
 
-          {exercise.prescription?.target_summary_zh && (
-            <p className="mt-1 text-sm text-gray-500">今天建议：{exercise.prescription.target_summary_zh}</p>
+          {friendlyTargetSummary(exercise.prescription?.target_summary_zh, exercise.prescription?.sets ?? []) && (
+            <p className="mt-1 text-sm text-gray-500">今天建议：{friendlyTargetSummary(exercise.prescription?.target_summary_zh, exercise.prescription?.sets ?? [])}</p>
           )}
 
           {!isCompleted && (
@@ -1069,7 +1096,7 @@ export default function TrainingSessionPage() {
           <div className="mt-4 space-y-3">
             {exerciseDrafts.length === 0 && (
               <p className="rounded-xl bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-800">
-                该动作暂缺可执行的原始组模板，因此不会自动计入完成动作数。你仍可按实际训练记录额外组。
+                {NO_PRESET_SETS_NOTICE}
               </p>
             )}
             {exerciseDrafts.map((draft, position) => {
@@ -1161,7 +1188,7 @@ export default function TrainingSessionPage() {
           </div>
 
           {!isCompleted && (
-            <button type="button" onClick={() => addSet(exercise.id)} className="mt-3 text-sm font-medium text-gray-700">
+            <button type="button" onClick={() => { if (exercise.status === 'skipped') void setExerciseStatus(exercise.id, 'resume'); addSet(exercise.id) }} className="mt-3 text-sm font-medium text-gray-700">
               + 记录额外一组
             </button>
           )}
@@ -1257,6 +1284,12 @@ export default function TrainingSessionPage() {
               className="mt-2 w-full rounded-xl border border-gray-200 py-3 text-sm font-medium text-gray-700">
               稍后继续
             </button>
+            {!canComplete && (
+              <button type="button" onClick={() => setConfirmEnd(true)}
+                className="mt-1 w-full rounded-xl py-3 text-sm text-gray-500">
+                结束本次训练
+              </button>
+            )}
             {!isLastExercise && (
               <p className="mt-3 text-center text-xs text-gray-400">
                 下一动作素材正在后台准备，已填写内容会保留在本次训练中。
@@ -1265,6 +1298,28 @@ export default function TrainingSessionPage() {
           </section>
         )}
       </main>
+
+      {confirmEnd && (
+        <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/40 px-4 pb-6 sm:items-center" role="dialog" aria-modal="true" aria-labelledby="end-title">
+          <div className="w-full max-w-md rounded-2xl bg-white p-5">
+            <h2 id="end-title" className="text-base font-semibold text-gray-900">结束本次训练？</h2>
+            <ul className="mt-3 space-y-1.5 text-sm leading-6 text-gray-700">
+              <li>• 已经记录的动作和组数都会保留，并计入历史</li>
+              <li>• 这一天不算完成，之后还可以重新练</li>
+            </ul>
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              <button type="button" onClick={() => setConfirmEnd(false)} disabled={endingEarly}
+                className="rounded-xl border border-gray-200 py-3 text-sm text-gray-700 disabled:opacity-50">
+                继续训练
+              </button>
+              <button type="button" onClick={endEarly} disabled={endingEarly}
+                className="rounded-xl bg-black py-3 text-sm font-medium text-white disabled:opacity-50">
+                {endingEarly ? '正在结束…' : '结束训练'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

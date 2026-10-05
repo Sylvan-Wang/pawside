@@ -125,10 +125,17 @@ export async function GET(
   // public.complete_method_session_v2 exactly.
   const session = sessionResult.data
   const originalExerciseCount = session.original_exercise_count ?? executions.length
+  // An exercise with no set prescription can never count, so it must not raise the
+  // bar either (mirrors countable_exercise_count in complete_method_session_v2).
+  const countableExerciseCount = executions.filter((execution) => {
+    const prescription = Array.isArray(execution.prescription) ? execution.prescription[0] : execution.prescription
+    const prescribedSets = (prescription as { sets?: unknown[] } | null | undefined)?.sets
+    return Array.isArray(prescribedSets) && prescribedSets.length > 0
+  }).length
   const selectedSessionMinutes = session.selected_session_minutes ?? null
   const requiredExerciseCount = effectiveRequiredExerciseCount({
     executionMode: session.execution_mode,
-    originalExerciseCount,
+    originalExerciseCount: Math.min(originalExerciseCount, countableExerciseCount || originalExerciseCount),
     snapshotRequiredExerciseCount: session.required_exercise_count,
     selectedSessionMinutes,
   })
