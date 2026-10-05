@@ -26,6 +26,21 @@ describe('timed and distance set display', () => {
 })
 
 describe('describeLoggedExercise', () => {
+  it('shows pace for a free-workout run', () => {
+    expect(describeLoggedExercise({
+      name: '跑步',
+      sets: [{ set: 1, duration_seconds: 1800, distance_m: 5000 }],
+    })).toBe('跑步 · 30 分钟 · 5 公里 · 配速 6\'00"/公里')
+    expect(describeLoggedExercise({
+      name: '骑行',
+      sets: [{ set: 1, duration_seconds: 3600, distance_m: 24000 }],
+    })).toBe('骑行 · 60 分钟 · 24 公里 · 配速 24 公里/小时')
+    expect(describeLoggedExercise({
+      name: '椭圆机',
+      sets: [{ set: 1, duration_seconds: 1200, distance_m: null }],
+    })).toBe('椭圆机 · 20 分钟')
+  })
+
   it('keeps the legacy single-line shape', () => {
     expect(describeLoggedExercise({ name: '深蹲', sets: 3, reps: '8', weight: 60 })).toBe('深蹲 · 3 组 × 8 · 60 kg')
     expect(describeLoggedExercise({ name: '跑步' })).toBe('跑步')
@@ -51,6 +66,6 @@ describe('describeLoggedExercise', () => {
     expect(describeLoggedExercise({
       name: '跑步机慢跑',
       sets: [{ set: 1, duration_seconds: 1500, distance_m: 4200 }],
-    })).toBe('跑步机慢跑 · 25 分钟 · 4.2 公里')
+    })).toBe('跑步机慢跑 · 25 分钟 · 4.2 公里 · 配速 5\'57"/公里')
   })
 })

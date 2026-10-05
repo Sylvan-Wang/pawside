@@ -5,6 +5,8 @@ import { createClient } from '@/lib/supabase/client'
 import PageHeader from '@/components/PageHeader'
 import { useToast } from '@/components/Toast'
 import { invalidateDayDerivedCache } from '@/lib/utils'
+import CardioEntries from '@/components/CardioEntries'
+import { draftsToStored, emptyCardioDraft, looksLikeCardio, storedToDrafts, type CardioDraft } from '@/lib/cardio'
 
 const WORKOUT_TYPES = ['胸', '背', '腿', '肩', '手臂', '有氧', '拉伸', '其他']
 
@@ -29,6 +31,10 @@ export default function EditWorkoutPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [originalDate, setOriginalDate] = useState('')
+  const [cardio, setCardio] = useState<CardioDraft[]>([emptyCardioDraft()])
+  // An old 有氧 log that carries strength-style exercise rows keeps the plain editor.
+  const [keepPlainEditor, setKeepPlainEditor] = useState(false)
+  const isCardio = type === '有氧' && !keepPlainEditor
 
   useEffect(() => {
     async function loadData() {
@@ -39,6 +45,13 @@ export default function EditWorkoutPage() {
       setType(data.type)
       setDuration(String(data.duration_minutes))
       setNotes(data.notes || '')
+      if (data.type === '有氧' && (looksLikeCardio(data.exercises) || !data.exercises)) {
+        setCardio(storedToDrafts(data.exercises, data.duration_minutes))
+        setExercises([])
+        setLoading(false)
+        return
+      }
+      if (data.type === '有氧') setKeepPlainEditor(true)
       setExercises(
         (data.exercises || []).map((ex: { name: string; sets?: number; reps?: string; weight?: number }) => ({
           name: ex.name || '',
@@ -66,7 +79,9 @@ export default function EditWorkoutPage() {
 
   async function handleSave() {
     if (!type) return show('请选择训练类型', 'error')
-    if (!duration || Number(duration) <= 0) return show('训练时长须大于 0', 'error')
+    const cardioResult = isCardio ? draftsToStored(cardio) : null
+    if (cardioResult && 'error' in cardioResult) return show(cardioResult.error, 'error')
+    if (!isCardio && (!duration || Number(duration) <= 0)) return show('训练时长须大于 0', 'error')
     setSaving(true)
     try {
       const exData = exercises.filter(e => e.name).map(e => ({
@@ -78,9 +93,11 @@ export default function EditWorkoutPage() {
       const { error } = await supabase.from('workout_logs').update({
         date,
         type,
-        duration_minutes: Number(duration),
+        duration_minutes: cardioResult && !('error' in cardioResult) ? cardioResult.durationMinutes : Number(duration),
         notes: notes || null,
-        exercises: exData.length > 0 ? exData : null,
+        exercises: cardioResult && !('error' in cardioResult)
+          ? cardioResult.exercises
+          : exData.length > 0 ? exData : null,
         updated_at: new Date().toISOString(),
       }).eq('id', id)
       if (error) throw error
@@ -123,7 +140,7 @@ export default function EditWorkoutPage() {
           <label className="block text-sm font-medium text-gray-700 mb-2">训练类型</label>
           <div className="flex flex-wrap gap-2">
             {WORKOUT_TYPES.map(t => (
-              <button key={t} onClick={() => setType(t)}
+              <button key={t} onClick={() => { setType(t); setKeepPlainEditor(false) }}
                 className={`px-4 py-1.5 rounded-full text-sm border transition-colors
                   ${type === t ? 'bg-black text-white border-black' : 'border-gray-200 text-gray-600'}`}>
                 {t}
@@ -132,6 +149,10 @@ export default function EditWorkoutPage() {
           </div>
         </div>
 
+        {isCardio ? (
+          <CardioEntries entries={cardio} onChange={setCardio} />
+        ) : (
+        <>
         <div className="bg-white rounded-2xl p-4">
           <label className="block text-sm text-gray-600 mb-1">训练时长（分钟）</label>
           <input type="number" value={duration} onChange={e => setDuration(e.target.value)}
@@ -166,6 +187,8 @@ export default function EditWorkoutPage() {
             ))}
           </div>
         </div>
+        </>
+        )}
 
         <div className="bg-white rounded-2xl p-4">
           <label className="block text-sm text-gray-600 mb-1">备注（可选）</label>

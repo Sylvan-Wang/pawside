@@ -5,6 +5,8 @@ import { createClient } from '@/lib/supabase/client'
 import PageHeader from '@/components/PageHeader'
 import { useToast } from '@/components/Toast'
 import { today, invalidateDayDerivedCache } from '@/lib/utils'
+import CardioEntries from '@/components/CardioEntries'
+import { draftsToStored, emptyCardioDraft, type CardioDraft } from '@/lib/cardio'
 
 const WORKOUT_TYPES = ['胸', '背', '腿', '肩', '手臂', '有氧', '拉伸', '其他']
 
@@ -27,6 +29,8 @@ export default function WorkoutPage() {
   const [exercises, setExercises] = useState<Exercise[]>([])
   const [loading, setLoading] = useState(false)
   const [weightUnit, setWeightUnit] = useState<'kg' | 'lb'>('kg')
+  const [cardio, setCardio] = useState<CardioDraft[]>([emptyCardioDraft()])
+  const isCardio = type === '有氧'
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -51,7 +55,9 @@ export default function WorkoutPage() {
 
   async function handleSave() {
     if (!type) return show('请选择训练类型', 'error')
-    if (!duration || Number(duration) <= 0) return show('训练时长须大于 0', 'error')
+    const cardioResult = isCardio ? draftsToStored(cardio) : null
+    if (cardioResult && 'error' in cardioResult) return show(cardioResult.error, 'error')
+    if (!isCardio && (!duration || Number(duration) <= 0)) return show('训练时长须大于 0', 'error')
     setLoading(true)
     try {
       const { data: { user } } = await supabase.auth.getUser()
@@ -66,9 +72,11 @@ export default function WorkoutPage() {
         user_id: user.id,
         date,
         type,
-        duration_minutes: Number(duration),
+        duration_minutes: cardioResult && !('error' in cardioResult) ? cardioResult.durationMinutes : Number(duration),
         notes: notes || null,
-        exercises: exData.length > 0 ? exData : null,
+        exercises: cardioResult && !('error' in cardioResult)
+          ? cardioResult.exercises
+          : exData.length > 0 ? exData : null,
       })
       if (error) throw error
       await invalidateDayDerivedCache(supabase, user.id, date)
@@ -108,6 +116,10 @@ export default function WorkoutPage() {
           </div>
         </div>
 
+        {isCardio ? (
+          <CardioEntries entries={cardio} onChange={setCardio} />
+        ) : (
+        <>
         {/* Duration */}
         <div className="bg-white rounded-2xl p-4">
           <label className="block text-sm text-gray-600 mb-1">训练时长（分钟）</label>
@@ -156,6 +168,8 @@ export default function WorkoutPage() {
             ))}
           </div>
         </div>
+        </>
+        )}
 
         {/* Notes */}
         <div className="bg-white rounded-2xl p-4">

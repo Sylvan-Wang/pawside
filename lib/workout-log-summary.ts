@@ -1,3 +1,5 @@
+import { formatPace, kindForName } from './cardio'
+
 // Display helpers for time-based and distance sets, and for the exercise lines
 // stored in workout_logs.exercises (both the legacy {sets, reps, weight} shape and
 // the Method shape {sets: [{set, weight_kg, reps, rir, duration_seconds, distance_m}]}).
@@ -55,10 +57,14 @@ export function describeLoggedExercise(exercise: LoggedExercise): string {
   const withDuration = sets.filter((set) => set.duration_seconds != null)
   const parts = [exercise.name]
 
-  if (withDuration.length > 0 && withDistance.length > 0) {
+  const cardioKind = kindForName(exercise.name)
+  if (withDuration.length > 0 && (withDistance.length > 0 || cardioKind)) {
     const seconds = withDuration.reduce((sum, set) => sum + (set.duration_seconds ?? 0), 0)
     const meters = withDistance.reduce((sum, set) => sum + (set.distance_m ?? 0), 0)
-    parts.push(formatDurationSeconds(seconds), formatDistanceMeters(meters))
+    parts.push(formatDurationSeconds(seconds))
+    if (meters > 0) parts.push(formatDistanceMeters(meters))
+    const pace = formatPace(cardioKind?.pace ?? null, seconds, meters)
+    if (pace) parts.push(`配速 ${pace}`)
   } else if (withDuration.length > 0) {
     parts.push(`${sets.length} 组`, withDuration.map((set) => set.duration_seconds).join('/') + ' 秒')
   } else {
