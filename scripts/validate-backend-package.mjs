@@ -46,6 +46,7 @@ const requiredFiles = [
   'supabase/migrations/20261004000700_set_record_shapes.sql',
   'supabase/migrations/20261004000800_four_split_release_1_1.sql',
   'supabase/migrations/20261005000100_unblock_and_end_early.sql',
+  'supabase/migrations/20261005000200_fix_ai_generations_insert_policy.sql',
   'supabase/cutover/README.md',
   'supabase/cutover/20260926000100_drop_prescription_uniqueness.sql',
   'supabase/tests/pawside_backend_contract.sql',

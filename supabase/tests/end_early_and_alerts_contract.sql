@@ -156,6 +156,19 @@ begin
     raise exception 'the start day has no prescription';
   end if;
 
+  -- ===== AI generation log: a user can write their own rows and nobody else's =====
+  execute 'set local role authenticated';
+  perform set_config('request.jwt.claim.sub', owner::text, true);
+  insert into public.ai_generations (user_id, surface, input_snapshot_id, prompt_version, model, payload, status)
+    values (owner, 'daily_review', 'x', 'p', 'm', '{}'::jsonb, 'ok');
+  begin
+    insert into public.ai_generations (user_id, surface, input_snapshot_id, prompt_version, model, payload, status)
+      values (stranger, 'daily_review', 'x', 'p', 'm', '{}'::jsonb, 'ok');
+    raise exception 'a user wrote an AI log row for someone else';
+  exception when insufficient_privilege then null;
+  end;
+  execute 'reset role';
+
   -- ===== 5. alerts are visible only to the owner =====
   execute 'set local role authenticated';
   perform set_config('request.jwt.claim.sub', stranger::text, true);
