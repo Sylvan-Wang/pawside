@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 }
 
 const UPDATED_AT = '2026 年 10 月 6 日'
-const CONTACT_EMAIL = 'zichenwang209@gmail.com'
+const CONTACT_EMAIL = 'refrigerium@qq.com'
 
 function Section({
   title,
