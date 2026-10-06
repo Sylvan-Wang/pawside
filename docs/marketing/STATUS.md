@@ -1,0 +1,21 @@
+# 官网与对外内容：进度记录（内部）
+
+更新：2026-10-06。下次接手的人（或 Claude）先读这一页，再读 `MESSAGE_HOUSE.md`。
+
+## 现在的状态
+- 分支 `claude/laughing-hamilton-5q6nmi`，**未合并、未部署**。master 连着 Netlify 自动部署，合并由 Sylvan 决定。
+- 官网已做出一版（`app/welcome/`、`components/site/`），**Sylvan 的反馈：定位不对，视觉和 UI 文字没有找到 niche 的感觉。** 内容信息屋（`MESSAGE_HOUSE.md`）的结构是对的，需要调整的是语气和视觉。
+- **等 Sylvan 补材料后再重做**：目标人群的具体画像、3–5 个「就是这个感觉」的参考、他自己安利产品的原话、他讨厌的风格。拿到后先出 2–3 个首屏方向的小样，选定后再做整站，不要直接重做全站。
+- 可以保留的：功能状态清单与角标机制（`lib/site/features.ts`）、SEO 骨架（robots、sitemap、canonical、结构化数据）、测试护栏（`tests/site`）、手机框演示的做法。
+- 奶牛猫是确认的形象（黑皮白袜、黄色头带），但画风可能要随新定位调整。
+
+## 同一分支上、与官网无关、可以单独合并的内容
+- 账号删除与完整导出（`app/api/account/`，设置页入口）。上线条件：Netlify 配好 `SUPABASE_SERVICE_ROLE_KEY`，并用测试账号实测删除。
+- 隐私政策、服务条款（`/privacy`、`/terms`）及其入口，联系邮箱 `refrigerium@qq.com`。
+- 功能状态规则已写进 `CLAUDE.md`。
+
+## 待决
+- 首页「连续打卡」与「休息不是失败」的产品矛盾。
+- Supabase 区域、OpenAI 训练设置、Netlify 是否开了 Analytics（隐私政策第二、四节依赖）。
+- 访问统计方案（Netlify Analytics、Search Console 等）；加脚本类统计要同步改隐私政策。
+- 「导出全部数据、删除账号」要等删除实测后才能对外说。
