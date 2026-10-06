@@ -29,7 +29,7 @@ export default function PrivacyPage() {
       <h2 className="font-semibold">你的选择</h2>
       <ul className="list-disc space-y-1 pl-5">
         <li>在「我的 → 运动健康设备」断开后，我们不再读取该设备的新数据，并可删除已同步的数据。</li>
-        <li>需要导出或删除账号及全部数据，请联系 zhenyuca@usc.edu。</li>
+        <li>需要导出或删除账号及全部数据，请联系 zichenwang209@gmail.com。</li>
       </ul>
 
       <h2 className="font-semibold">非医疗声明</h2>

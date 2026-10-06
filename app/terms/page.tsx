@@ -21,7 +21,7 @@ export default function TermsPage() {
       <p>连接 Oura 等设备时，数据获取受对应服务商条款约束。你可以随时在应用内断开。</p>
 
       <h2 className="font-semibold">变更与联系</h2>
-      <p>条款更新后会在本页公布。问题请联系 zhenyuca@usc.edu。</p>
+      <p>条款更新后会在本页公布。问题请联系 zichenwang209@gmail.com。</p>
     </main>
   )
 }
