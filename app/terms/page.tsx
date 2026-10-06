@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import PageHeader from '@/components/PageHeader'
 
 export const metadata: Metadata = {
@@ -47,6 +48,7 @@ export default function TermsPage() {
       <PageHeader title="服务条款" />
 
       <div className="px-4 py-4 space-y-4">
+        <Link href="/" className="inline-block text-xs text-gray-400 underline">← 返回爪边</Link>
         <div className="bg-white rounded-2xl p-4">
           <p className="text-sm text-gray-700 leading-relaxed">
             本条款是你和爪边之间关于使用本应用的全部约定。注册或继续使用，即表示你同意本条款。
@@ -116,10 +118,10 @@ export default function TermsPage() {
         <Section
           title="七、第三方设备和服务"
           paragraphs={[
-            '如果你连接 Oura，你从 Oura 读到的数据受 Oura 自己的条款和隐私政策约束。',
+            '目前爪边还没有开放设备连接。以后如果支持 Oura，你从 Oura 读到的数据受 Oura 自己的条款和隐私政策约束。',
             'Oura 对数据的准确性、完整性和可用性负责，我们不对它的数据做担保。',
             '爪边与 Oura 没有官方合作关系，不使用 Oura 的标识。',
-            '你可以随时断开连接，断开后我们不再读取 Oura 数据，并删除已同步的部分。',
+            '连接是可选的。开放后你可以随时断开，断开后我们不再读取 Oura 数据，并删除已同步的部分。',
           ]}
         />
 

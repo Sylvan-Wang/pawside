@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import PageHeader from '@/components/PageHeader'
 import {
   WORKOUT_GUIDE_ATTRIBUTION_TEXT,
@@ -42,6 +43,18 @@ export default function AboutPage() {
             <a className="underline" href={WORKOUT_GUIDE_GENERAL_SOURCE_URL} target="_blank" rel="noreferrer">
               素材来源
             </a>
+          </p>
+        </section>
+
+        <section className="rounded-2xl bg-white p-4">
+          <h2 className="text-sm font-semibold text-gray-900">隐私与条款</h2>
+          <p className="mt-2 text-sm leading-6 text-gray-700">
+            我们收集什么、给谁、怎么处理，以及使用爪边的约定，都写在下面。
+          </p>
+          <p className="mt-2 text-sm">
+            <Link className="underline" href="/privacy">隐私政策</Link>
+            {' · '}
+            <Link className="underline" href="/terms">服务条款</Link>
           </p>
         </section>
 

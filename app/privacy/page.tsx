@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import PageHeader from '@/components/PageHeader'
 
 export const metadata: Metadata = {
@@ -47,6 +48,7 @@ export default function PrivacyPage() {
       <PageHeader title="隐私政策" />
 
       <div className="px-4 py-4 space-y-4">
+        <Link href="/" className="inline-block text-xs text-gray-400 underline">← 返回爪边</Link>
         <div className="bg-white rounded-2xl p-4">
           <p className="text-sm text-gray-700 leading-relaxed">
             本政策说明爪边收集哪些信息、用来做什么，以及你可以怎样查看、更正或删除它们。
@@ -105,6 +107,7 @@ export default function PrivacyPage() {
         <Section
           title="五、连接 Oura 后会读取什么"
           paragraphs={[
+            '目前爪边还没有开放 Oura 连接，下面写的是开放之后的做法。',
             '连接 Oura 是可选的。只有你在应用里主动授权之后，我们才会读取。',
             '我们申请的读取范围只有每日摘要：睡眠、准备度和活动。我们不读取你的年龄、性别、身高、体重，也不读取运动明细。',
             '这些数据只用来在应用里向你展示趋势。我们不会把 Oura 的数据发给 OpenAI 或任何 AI 模型，也不会用它生成文字反馈、训练建议或休息建议。',
