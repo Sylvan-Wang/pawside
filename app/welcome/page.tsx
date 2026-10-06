@@ -5,7 +5,7 @@ import PhoneDemo, { type DemoStep } from '@/components/site/PhoneDemo'
 import Reveal from '@/components/site/Reveal'
 import StatusBadge from '@/components/site/StatusBadge'
 import {
-  CatWithDumbbell,
+  CowCatWithDumbbell,
   IconCamera,
   IconBowl,
   IconChat,
@@ -116,7 +116,7 @@ export default function WelcomePage() {
             </div>
             <p className="hero__note">手机浏览器打开即可，也能添加到主屏幕。</p>
           </div>
-          <CatWithDumbbell className="hero__art" />
+          <CowCatWithDumbbell className="hero__art" />
         </div>
         <PawTrail className="hero__trail" />
       </section>

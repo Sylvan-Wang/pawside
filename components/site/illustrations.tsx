@@ -28,44 +28,59 @@ export function PawMark({ size = 28, ...rest }: { size?: number } & Props) {
   )
 }
 
-/** Hero: a cat sitting next to a dumbbell. */
-export function CatWithDumbbell(props: Props) {
+/**
+ * Hero mascot: a black-and-white "cow cat" (black coat, white socks) in a yellow
+ * sweatband, sitting next to a dumbbell. Flat-coloured; the only artwork with colour.
+ */
+export function CowCatWithDumbbell(props: Props) {
   return (
-    <svg viewBox="0 0 340 280" aria-hidden="true" focusable="false" {...line} {...props}>
-      {/* floor */}
-      <path d="M12 246H328" />
+    <svg viewBox="0 0 340 280" aria-hidden="true" focusable="false" {...props}>
+      <path d="M12 246H328" stroke="#111" strokeWidth="1.75" fill="none"/>
       {/* dumbbell */}
-      <rect x="28" y="200" width="16" height="46" rx="5" />
-      <rect x="44" y="209" width="11" height="28" rx="4" />
-      <path d="M55 223H117" />
-      <rect x="117" y="209" width="11" height="28" rx="4" />
-      <rect x="128" y="200" width="16" height="46" rx="5" />
+      <rect x="26" y="198" width="17" height="48" rx="5" fill="#111"/>
+      <rect x="43" y="208" width="11" height="28" rx="4" fill="#fff" stroke="#111" strokeWidth="1.75"/>
+      <path d="M54 222H112" stroke="#111" strokeWidth="3"/>
+      <rect x="112" y="208" width="11" height="28" rx="4" fill="#fff" stroke="#111" strokeWidth="1.75"/>
+      <rect x="123" y="198" width="17" height="48" rx="5" fill="#111"/>
       {/* tail */}
-      <path d="M252 240C292 240 304 204 288 182C280 171 268 174 271 185" />
+      <path d="M258 240C298 240 312 204 296 176" stroke="#111" strokeWidth="14" fill="none" strokeLinecap="round"/>
       {/* body */}
-      <path d="M186 246C172 214 180 176 214 164C248 176 256 214 242 246" />
-      {/* head */}
-      <path d="M186 130C186 108 198 96 214 96C230 96 242 108 242 130C242 150 230 160 214 160C198 160 186 150 186 130Z" />
+      <path d="M172 246C156 208 168 166 214 158C260 166 272 208 256 246Z" fill="#111"/>
+      {/* white flank patch */}
+      <path d="M176 226C170 212 176 198 188 196C196 204 196 220 192 230Z" fill="#fff"/>
+      {/* white chest + front legs */}
+      <path d="M193 246C190 214 198 190 214 184C230 190 238 214 235 246Z" fill="#fff"/>
+      <path d="M214 190V228" stroke="#111" strokeWidth="1.5" fill="none" strokeLinecap="round" opacity=".35"/>
+      {/* white socks */}
+      <path d="M193 246V232C193 224 214 224 214 232V246Z" fill="#fff" stroke="#111" strokeWidth="1.75" strokeLinejoin="round"/>
+      <path d="M214 246V232C214 224 235 224 235 232V246Z" fill="#fff" stroke="#111" strokeWidth="1.75" strokeLinejoin="round"/>
+      <path d="M203 246V238M225 246V238" stroke="#111" strokeWidth="1.5" strokeLinecap="round"/>
+      {/* white tail tip */}
+      <path d="M299 186L296 177" stroke="#fff" strokeWidth="14" fill="none" strokeLinecap="round"/>
       {/* ears */}
-      <path d="M190 108L186 76L208 94" />
-      <path d="M238 108L242 76L220 94" />
-      {/* face: closed, content eyes */}
-      <path d="M198 128Q203 133 208 128" />
-      <path d="M220 128Q225 133 230 128" />
-      <path d="M211.5 138H216.5L214 142Z" />
-      <path d="M214 142Q209 148 203 145" />
-      <path d="M214 142Q219 148 225 145" />
+      <path d="M180 104L172 62L208 84Z" fill="#111" stroke="#111" strokeWidth="3" strokeLinejoin="round"/>
+      <path d="M248 104L256 62L220 84Z" fill="#111" stroke="#111" strokeWidth="3" strokeLinejoin="round"/>
+      <path d="M182 92L178 74L196 84Z" fill="#f4b3bd"/>
+      <path d="M246 92L250 74L232 84Z" fill="#f4b3bd"/>
+      {/* head */}
+      <ellipse cx="214" cy="120" rx="42" ry="35" fill="#111"/>
+      {/* white blaze + muzzle */}
+      <path d="M214 90C209 102 205 112 199 124C197 140 205 154 214 154C223 154 231 140 229 124C223 112 219 102 214 90Z" fill="#fff"/>
+      {/* eyes */}
+      <circle cx="193" cy="118" r="10" fill="#fff"/><circle cx="235" cy="118" r="10" fill="#fff"/>
+      <circle cx="194" cy="119" r="6" fill="#111"/><circle cx="234" cy="119" r="6" fill="#111"/>
+      <circle cx="196" cy="116.5" r="2" fill="#fff"/><circle cx="236" cy="116.5" r="2" fill="#fff"/>
+      {/* nose, mouth, blush */}
+      <path d="M209.5 132H218.5L214 137.5Z" fill="#f08c9b"/>
+      <path d="M214 137.5V141M214 141Q208 146 201.5 142M214 141Q220 146 226.5 142" stroke="#111" strokeWidth="1.6" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+      <ellipse cx="184" cy="136" rx="6" ry="3.6" fill="#f4a3b0" opacity=".85"/><ellipse cx="244" cy="136" rx="6" ry="3.6" fill="#f4a3b0" opacity=".85"/>
       {/* whiskers */}
-      <path d="M180 138L164 134" />
-      <path d="M180 144L165 148" />
-      <path d="M248 138L264 134" />
-      <path d="M248 144L263 148" />
-      {/* front paws */}
-      <path d="M200 246Q200 232 208 232Q216 232 216 246" />
-      <path d="M214 246Q214 232 222 232Q230 232 230 246" />
-      {/* a few sparkles */}
-      <path d="M78 150V162M72 156H84" />
-      <path d="M296 112V120M292 116H300" />
+      <path d="M173 132L156 128M173 138L157 142M255 132L272 128M255 138L271 142" stroke="#111" strokeWidth="1.6" fill="none" strokeLinecap="round"/>
+      {/* sweatband */}
+      <path d="M173 100C190 80 238 80 255 100L252 111C236 96 192 96 176 111Z" fill="#ffe45c" stroke="#111" strokeWidth="1.75" strokeLinejoin="round"/>
+      <path d="M251 98L268 90L266 104L253 107" fill="#ffe45c" stroke="#111" strokeWidth="1.75" strokeLinejoin="round"/>
+      {/* sparkles */}
+      <path d="M78 148V160M72 154H84M300 118V126M296 122H304" stroke="#111" strokeWidth="1.75" strokeLinecap="round" fill="none"/>
     </svg>
   )
 }
