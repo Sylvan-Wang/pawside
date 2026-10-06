@@ -155,13 +155,13 @@ export function generateWeeklySummary(
      */
     lines.push(workoutCount > 0
       ? `本周完成了 ${workoutCount} 次训练`
-      : '本周暂无训练记录，下周加油！')
+      : '本周暂无训练记录')
   } else if (workoutCount >= target) {
-    lines.push(`本周你完成了 ${workoutCount} 次训练，达成目标 👍`)
+    lines.push(`本周完成了 ${workoutCount} 次训练，已达到目标`)
   } else if (workoutCount > 0) {
-    lines.push(`本周完成了 ${workoutCount} 次训练，距目标还差 ${target - workoutCount} 次`)
+    lines.push(`本周完成了 ${workoutCount} 次训练，目标是 ${target} 次，休息日按身体状态安排即可`)
   } else {
-    lines.push('本周暂无训练记录，下周加油！')
+    lines.push('本周暂无训练记录')
   }
 
   if (foodLogCount >= 14) {
