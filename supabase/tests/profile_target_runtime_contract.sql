@@ -116,6 +116,15 @@ begin
     array['E-NUT-PROTEIN-OP', 'E-NUT-MACRO-DIST']
   );
 
+  if not exists (
+    select 1 from public.nutrition_targets
+    where user_id = fixture_user_id
+      and effective_date = date '2026-09-27'
+      and calculation_basis->>'weight_kg' = '64.5'
+  ) then
+    raise exception 'first body metric save did not write its target provenance';
+  end if;
+
   correction_result := public.save_body_metric_with_target_v1(
     correction_request_id,
     jsonb_build_object('date', '2026-09-27', 'weight_kg', 64),
@@ -151,11 +160,14 @@ begin
     raise exception 'body metric request idempotency failed';
   end if;
 
+  -- The correction (64 kg) is the last accepted write for this date; the retry of the
+  -- first request id (weight 1) is ignored. The saved metric above is 64, so the target
+  -- provenance written by the same call must be 64 too (not the first save's 64.5).
   if not exists (
     select 1 from public.nutrition_targets
     where user_id = fixture_user_id
       and effective_date = date '2026-09-27'
-      and calculation_basis->>'weight_kg' = '64.5'
+      and calculation_basis->>'weight_kg' = '64'
   ) then
     raise exception 'body metric did not refresh target provenance';
   end if;
