@@ -41,6 +41,14 @@ export const SITE_FEATURES: SiteFeature[] = [
   { id: 'more-devices', name: '更多设备接入', summary: '把智能戒指、手表里的睡眠和活动，放进同一个地方看。', status: 'planned', public: true },
   { id: 'seed-credits', name: '种子用户免费使用额度', summary: '留下邮箱的种子用户，我们计划给一部分免费使用额度。具体内容还没定。', status: 'planned', public: true },
   {
+    id: 'oura-trends',
+    name: 'Oura 睡眠 / 准备度 / 活动趋势',
+    summary: '连接 Oura，在设置里查看每天的睡眠、准备度和活动摘要。只展示，不进 AI。',
+    status: 'beta',
+    public: false,
+    heldBackBecause: '官网不提 Oura（避免暗示合作，Oura 协议限制）；只对被授权的内测用户开放',
+  },
+  {
     id: 'data-control',
     name: '导出全部数据、删除账号',
     summary: '在设置里导出自己的全部数据，或者删除账号。',
