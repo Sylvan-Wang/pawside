@@ -36,6 +36,7 @@ const FORBIDDEN: [RegExp, string][] = [
   [/治愈|治疗效果|帮你(治疗|诊断)|(可以|能)(治疗|诊断)/, '不做医疗声明（免责声明里的“不做诊断”是允许的）'],
   [/自学健身/, '定位不是教程：解决的是“下次打开知道从哪继续”，不是教你学'],
   [/收掉|等你回来/, '不拟人、不鸡汤：写产品机制，不写情绪'],
+  [/订阅制|token|代币/i, '商业模式还没定，不对外承诺（免费额度只能以带「规划中」的方式出现）'],
   [/用户数|已有\s*\d+\s*(位|名|个)?用户|好评|评分/, '没有真实数据，不写'],
 ]
 
@@ -52,7 +53,7 @@ describe('public site copy', () => {
   it('uses only the product contact email', () => {
     for (const path of SITE_FILES) {
       const emails = readFileSync(path, 'utf8').match(/[\w.+-]+@[\w-]+\.[\w.]+/g) ?? []
-      for (const email of emails) expect(email).toBe('refrigerium@qq.com')
+      for (const email of emails.filter((address) => !address.endsWith('@example.com'))) expect(email).toBe('refrigerium@qq.com') // example.com = input placeholder
     }
   })
 

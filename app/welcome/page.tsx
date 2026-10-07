@@ -1,10 +1,12 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import JsonLd from '@/components/site/JsonLd'
+import SeedForm from '@/components/site/SeedForm'
 import PhoneDemo, { type DemoStep } from '@/components/site/PhoneDemo'
 import Reveal from '@/components/site/Reveal'
 import StatusBadge from '@/components/site/StatusBadge'
 import {
+  CowCatPeek,
   CowCatWithDumbbell,
   IconCamera,
   IconBowl,
@@ -52,6 +54,8 @@ const DECISIONS = [
   { when: '每次回来', ask: '上次练到哪了？', icon: <IconMoon /> },
   { when: '吃饭的时候', ask: '今天吃得够不够？', icon: <IconBowl /> },
 ]
+
+const seedCredits = featureById('seed-credits')
 
 const PLANNED = [
   { feature: featureById('food-photo'), icon: <IconCamera /> },
@@ -265,12 +269,28 @@ export default function WelcomePage() {
         </div>
       </section>
 
-      {/* closing */}
-      <section className="sec sec--ink on-ink" style={{ textAlign: 'center' }} aria-labelledby="go">
-        <div className="wrap">
-          <h2 className="title" id="go" style={{ fontSize: 'clamp(30px, 5vw, 52px)' }}>今天，就从第一组开始。</h2>
-          <p className="lede" style={{ marginInline: 'auto', maxWidth: 520 }}>目前是内测阶段，可以直接注册使用。</p>
-          <p style={{ marginTop: 28 }}><Link href="/auth" className="btn btn--white">开始使用</Link></p>
+      {/* seed users + closing */}
+      <section className="sec sec--ink on-ink" aria-labelledby="go">
+        <div className="wrap seed">
+          <div className="seed__copy">
+            <h2 className="title" id="go">今天，就从第一组开始。</h2>
+            <p className="lede">目前是内测阶段，现在就可以直接注册使用。</p>
+            <p style={{ marginTop: 24 }}><Link href="/auth" className="btn btn--white">开始使用</Link></p>
+            <div className="seed__perks">
+              <p className="seed__perks-title">想早一点知道后续？留个邮箱，成为种子用户。</p>
+              <ul className="list">
+                <li>有新的内测安排和更新，优先发邮件告诉你。</li>
+                <li>
+                  {seedCredits.name}：{seedCredits.summary}
+                  <span className="seed__tag">规划中</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div className="seed__card">
+            <CowCatPeek className="seed__cat" />
+            <SeedForm />
+          </div>
         </div>
       </section>
     </>

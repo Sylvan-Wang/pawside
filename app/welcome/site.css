@@ -358,3 +358,32 @@ body:has(.site-shell) {
 
 /* On black, a highlighter bar would hide the glyphs: colour the words instead. */
 .site-shell .sec--ink .hl { background: none; color: var(--hl); padding: 0; }
+
+/* ---- seed-user sign-up ---- */
+.site-shell .seed { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 48px; align-items: center; }
+.site-shell .seed__perks { margin-top: 36px; padding-top: 24px; border-top: 1px solid rgba(255, 255, 255, 0.2); }
+.site-shell .seed__perks-title { margin: 0; font-size: 18px; font-weight: 800; }
+.site-shell .seed__perks .list li::before { background: var(--hl); }
+.site-shell .seed__perks .list { color: rgba(255, 255, 255, 0.86); }
+.site-shell .seed__tag { display: inline-block; margin-left: 8px; padding: 1px 10px; border: 1.5px dashed rgba(255, 255, 255, 0.7); border-radius: 999px; font-size: 13px; font-weight: 700; vertical-align: 1px; }
+.site-shell .seed__card { position: relative; margin-top: 56px; padding: 28px; background: #fff; color: var(--ink); border-radius: 22px; }
+.site-shell .seed__cat { position: absolute; top: -66px; right: 28px; width: 104px; height: auto; }
+.site-shell .seed__form { display: grid; gap: 8px; }
+.site-shell .seed__label { font-size: 14px; font-weight: 700; margin-top: 6px; }
+.site-shell .seed__input {
+  width: 100%; min-height: 48px; padding: 0 14px; border: 2px solid var(--line); border-radius: 12px;
+  font: inherit; font-size: 16px; color: var(--ink); background: #fff;
+}
+.site-shell .seed__input:focus { border-color: var(--ink); outline: none; }
+.site-shell .seed__btn { width: 100%; margin-top: 10px; }
+.site-shell .seed__fine { margin: 6px 0 0; font-size: 13px; line-height: 1.7; color: var(--muted); }
+.site-shell .seed__fine a, .site-shell .seed__error a { font-weight: 700; text-underline-offset: 4px; }
+.site-shell .seed__error { margin: 6px 0 0; font-size: 14px; color: #b42318; }
+.site-shell .seed__trap { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.site-shell .seed__done { padding: 12px 0; }
+.site-shell .seed__done-title { margin: 0; font-size: 26px; font-weight: 800; }
+.site-shell .seed__done p:last-child { margin: 8px 0 0; color: var(--ink-soft); }
+@media (max-width: 767px) {
+  .site-shell .seed { grid-template-columns: 1fr; gap: 28px; }
+  .site-shell .seed__card { margin-top: 48px; padding: 22px; }
+}

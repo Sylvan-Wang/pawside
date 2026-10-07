@@ -85,6 +85,30 @@ export function CowCatWithDumbbell(props: Props) {
   )
 }
 
+/** The cow cat's head peeking over the top edge of a card (replaces a QR code). */
+export function CowCatPeek(props: Props) {
+  return (
+    <svg viewBox="170 56 90 94" aria-hidden="true" focusable="false" {...props}>
+      <path d="M180 104L172 62L208 84Z" fill="#111" stroke="#111" strokeWidth="3" strokeLinejoin="round" />
+      <path d="M248 104L256 62L220 84Z" fill="#111" stroke="#111" strokeWidth="3" strokeLinejoin="round" />
+      <path d="M182 92L178 74L196 84Z" fill="#f4b3bd" />
+      <path d="M246 92L250 74L232 84Z" fill="#f4b3bd" />
+      <ellipse cx="214" cy="120" rx="42" ry="35" fill="#111" />
+      <path d="M214 90C209 102 205 112 199 124C197 140 205 154 214 154C223 154 231 140 229 124C223 112 219 102 214 90Z" fill="#fff" />
+      <circle cx="193" cy="118" r="10" fill="#fff" /><circle cx="235" cy="118" r="10" fill="#fff" />
+      <circle cx="194" cy="119" r="6" fill="#111" /><circle cx="234" cy="119" r="6" fill="#111" />
+      <circle cx="196" cy="116.5" r="2" fill="#fff" /><circle cx="236" cy="116.5" r="2" fill="#fff" />
+      <path d="M209.5 132H218.5L214 137.5Z" fill="#f08c9b" />
+      <path d="M214 137.5V141M214 141Q208 146 201.5 142M214 141Q220 146 226.5 142" stroke="#111" strokeWidth="1.6" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      <ellipse cx="184" cy="136" rx="6" ry="3.6" fill="#f4a3b0" opacity=".85" /><ellipse cx="244" cy="136" rx="6" ry="3.6" fill="#f4a3b0" opacity=".85" />
+      <path d="M173 100C190 80 238 80 255 100L252 111C236 96 192 96 176 111Z" fill="#ffe45c" stroke="#111" strokeWidth="1.75" strokeLinejoin="round" />
+      <path d="M251 98L268 90L266 104L253 107" fill="#ffe45c" stroke="#111" strokeWidth="1.75" strokeLinejoin="round" />
+      <ellipse cx="196" cy="147" rx="11" ry="6.5" fill="#fff" stroke="#111" strokeWidth="1.75" />
+      <ellipse cx="232" cy="147" rx="11" ry="6.5" fill="#fff" stroke="#111" strokeWidth="1.75" />
+    </svg>
+  )
+}
+
 export function IconDumbbell(props: Props) {
   return (
     <svg viewBox="0 0 32 32" width={32} height={32} aria-hidden="true" focusable="false" {...line} {...props}>
