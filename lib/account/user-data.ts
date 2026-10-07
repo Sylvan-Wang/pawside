@@ -36,6 +36,7 @@ export const USER_DATA_TABLES: UserDataTable[] = [
   { table: 'daily_nutrition_summary', userColumn: 'user_id' },
   { table: 'weekly_summary', userColumn: 'user_id' },
   { table: 'ai_plans', userColumn: 'user_id' },
+  { table: 'device_daily_metrics', userColumn: 'user_id' },
   { table: 'ai_generated_content', userColumn: 'user_id' },
   { table: 'ai_generations', userColumn: 'user_id' },
   { table: 'ai_feedback', userColumn: 'user_id' },
@@ -44,4 +45,5 @@ export const USER_DATA_TABLES: UserDataTable[] = [
 /** Owned rows that are deliberately not exported (still deleted with the account). */
 export const NOT_EXPORTED: Record<string, string> = {
   user_features: '内部功能开关，不是用户内容',
+  device_connections: '设备授权凭据，绝不导出；用户断开或删除账号时删除',
 }

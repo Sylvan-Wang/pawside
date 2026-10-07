@@ -58,6 +58,7 @@ export default function SettingsPage() {
   const [accountEmail, setAccountEmail] = useState('')
   const [weightUnit, setWeightUnit] = useState<'kg' | 'lb'>('kg')
   const [isOwner, setIsOwner] = useState(false)
+  const [hasDevices, setHasDevices] = useState(false)
 
   const load = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession()
@@ -65,6 +66,7 @@ export default function SettingsPage() {
     if (!user) { router.push('/auth'); return }
     setAccountEmail(user.email ?? '')
     void Promise.resolve(supabase.rpc('feature_enabled', { p_key: 'owner_console' })).then(({ data: owner }) => setIsOwner(owner === true), () => setIsOwner(false))
+    void Promise.resolve(supabase.rpc('feature_enabled', { p_key: 'oura_beta' })).then(({ data: on }) => setHasDevices(on === true), () => setHasDevices(false))
     const { data } = await supabase.from('user_profiles').select('*').eq('id', user.id).single()
     if (data) {
       setProfile(data)
@@ -298,6 +300,13 @@ export default function SettingsPage() {
             <span>训练方法</span>
             <span className="text-xs text-gray-400">三分化 / 四分化 ›</span>
           </Link>
+          {hasDevices && (
+            <Link href="/settings/devices"
+              className="flex w-full items-center justify-between px-4 py-4 text-left text-sm text-gray-700 border-b border-gray-50">
+              <span>运动健康设备</span>
+              <span className="text-xs text-gray-400">›</span>
+            </Link>
+          )}
           {isOwner && (
             <Link href="/settings/health"
               className="block w-full px-4 py-4 text-left text-sm text-gray-700 border-b border-gray-50">
