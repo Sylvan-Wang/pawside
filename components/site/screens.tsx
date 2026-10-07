@@ -7,6 +7,8 @@
  * app/food/FoodPageClient.tsx, app/home/page.tsx, components/CoachCard.tsx.
  */
 
+import ExerciseFrames from './ExerciseFrames'
+
 function Head({ title }: { title: string }) {
   return <div className="a-head"><span>←</span>{title}</div>
 }
@@ -18,13 +20,13 @@ export function ScreenPlan() {
       <Head title="训练计划" />
       <div className="a-body">
         <div className="a-grid a-days">
-          <div className="a-day"><small>Day 1 · 推</small><b>已完成</b></div>
-          <div className="a-day a-day--on"><small>Day 2 · 拉</small><b>未开始</b></div>
+          <div className="a-day a-day--on"><small>Day 1 · 推</small><b>未开始</b></div>
+          <div className="a-day"><small>Day 2 · 拉</small><b>未开始</b></div>
           <div className="a-day"><small>Day 3 · 腿</small><b>未开始</b></div>
         </div>
         <div className="a-black">
-          <p className="a-xs a-on-dark" style={{ margin: 0 }}>Day 2 · 第 1 轮</p>
-          <p className="a-title" style={{ margin: '4px 0 0' }}>拉</p>
+          <p className="a-xs a-on-dark" style={{ margin: 0 }}>Day 1 · 第 1 轮</p>
+          <p className="a-title" style={{ margin: '4px 0 0' }}>推</p>
           <p style={{ margin: '14px 0 0', fontSize: 13, color: 'rgba(255,255,255,.8)' }}>今天大概想练多久？</p>
           <div className="a-grid a-mins">
             <div className="a-min">30</div><div className="a-min">45</div><div className="a-min a-min--on">60</div><div className="a-min">90</div>
@@ -34,11 +36,12 @@ export function ScreenPlan() {
         </div>
         <div className="a-card">
           <p className="a-xs a-dim" style={{ margin: 0 }}>动作 1</p>
-          <p className="a-semi" style={{ margin: '2px 0 0', fontSize: 16 }}>单手绳索下拉</p>
-          <div style={{ marginTop: 10, borderRadius: 12, background: '#f3f4f6', height: 74, display: 'grid', placeItems: 'center' }} className="a-xs a-dim">动作示意</div>
+          <p className="a-semi" style={{ margin: '2px 0 0', fontSize: 16 }}>杠铃卧推</p>
+          <ExerciseFrames slug="bench-press" name="杠铃卧推" caption="Bench Press" size={96} />
           <div className="a-setrow"><span>第 1 组 · 热身</span><span className="a-grey">15 次</span></div>
           <div className="a-setrow"><span>第 2 组 · 正式</span><span className="a-grey">12 次</span></div>
-          <div className="a-setrow"><span>第 3 组 · 正式</span><span className="a-grey">12 次</span></div>
+          <div className="a-setrow"><span>第 3 组 · 正式</span><span className="a-grey">10 次</span></div>
+          <div className="a-setrow"><span>第 4 组 · 正式</span><span className="a-grey">8 次</span></div>
         </div>
       </div>
     </div>
@@ -49,28 +52,28 @@ export function ScreenPlan() {
 export function ScreenSet() {
   return (
     <div className="a">
-      <Head title="拉 · 训练中" />
+      <Head title="推 · 训练中" />
       <div className="a-body">
         <div className="a-card">
           <p className="a-xs a-dim" style={{ margin: 0 }}>动作 1 / 5</p>
-          <p className="a-semi" style={{ margin: '2px 0 0', fontSize: 16 }}>单手绳索下拉</p>
+          <p className="a-semi" style={{ margin: '2px 0 0', fontSize: 16 }}>杠铃卧推</p>
+          <ExerciseFrames slug="bench-press" name="杠铃卧推" caption="Bench Press" size={120} />
           <div className="a-setbox" style={{ marginTop: 12 }}>
-            <div className="a-flex"><span className="a-semi">第 3 组 · 正式组</span><span className="a-xs" style={{ color: '#16a34a' }}>已保存</span></div>
+            <div className="a-flex"><span className="a-semi">第 2 组 · 正式组</span><span className="a-xs" style={{ color: '#16a34a' }}>已保存</span></div>
           </div>
           <div className="a-setbox" style={{ marginTop: 10 }}>
             <div className="a-flex">
-              <span className="a-semi">第 4 组 · 休息-暂停组</span>
+              <span className="a-semi">第 3 组 · 正式组</span>
               <span className="a-xs a-dim">待保存</span>
             </div>
-            <p className="a-xs a-semi" style={{ margin: '4px 0 10px' }}>目标 10 + 5 次 · 做到接近或到力竭</p>
+            <p className="a-xs a-grey" style={{ margin: '4px 0 10px' }}>目标 10 次 · 不做到力竭</p>
             <div className="a-grid" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
-              <span className="a-field">重量 kg<span className="a-input">25</span></span>
+              <span className="a-field">重量 kg<span className="a-input">60</span></span>
               <span className="a-field">实际次数<span className="a-input">10</span></span>
-              <span className="a-field">还能再做<span className="a-input">0</span></span>
+              <span className="a-field">还能再做<span className="a-input">2</span></span>
             </div>
             <span className="a-btn-line">完成这一组</span>
           </div>
-          <p className="a-semi" style={{ margin: '12px 0 0', fontSize: 13 }}>+ 记录额外一组</p>
         </div>
         <div className="a-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
           <span className="a-day" style={{ textAlign: 'center', borderRadius: 12, padding: 10, color: '#374151', fontWeight: 500 }}>上一个动作</span>
@@ -132,10 +135,10 @@ export function ScreenDaily() {
             <span className="a-semi">今日复盘</span>
             <span className="a-xs a-dim" style={{ textDecoration: 'underline' }}>查看详情</span>
           </div>
-          <p className="a-semi" style={{ margin: 0, fontSize: 14, lineHeight: 1.6 }}>今天拉日完成了 16 组，蛋白质记录到 48g。</p>
-          <p className="a-xs" style={{ margin: '6px 0 0', color: '#4b5563' }}>· 拉日 17 组完成了 16 组，单手绳索下拉最后一组差 1 次。</p>
+          <p className="a-semi" style={{ margin: 0, fontSize: 14, lineHeight: 1.6 }}>今天推日完成了 18 组，蛋白质记录到 48g。</p>
+          <p className="a-xs" style={{ margin: '6px 0 0', color: '#4b5563' }}>· 推日 19 组完成了 18 组，Y 字侧平举少做了 1 组。</p>
           <p className="a-xs" style={{ margin: '4px 0 0', color: '#4b5563' }}>· 目前记录的蛋白质离今天的参考还差一些，晚餐可以补一些。</p>
-          <p className="a-xs" style={{ margin: '6px 0 0', color: '#374151' }}>→ 下一次是腿日，现在还在找合适的重量，先把每组做稳。</p>
+          <p className="a-xs" style={{ margin: '6px 0 0', color: '#374151' }}>→ 下一次是拉日，单手绳索下拉的最后一组是重点：10 + 5 次。</p>
         </div>
         <div className="a-card">
           <div className="a-flex"><span className="a-semi">体重趋势</span><span className="a-semi">68.4 kg</span></div>
@@ -166,7 +169,7 @@ export function ScreenReturn() {
           <p className="a-xs a-on-dark" style={{ margin: 0 }}>官方三分化 · 第 1 轮</p>
           <div className="a-flex" style={{ marginTop: 8, alignItems: 'flex-end' }}>
             <div>
-              <p className="a-title" style={{ margin: 0 }}>下一次：拉</p>
+              <p className="a-title" style={{ margin: 0 }}>下一次：推</p>
               <p style={{ margin: '4px 0 0', fontSize: 13, color: 'rgba(255,255,255,.7)' }}>训练顺序按方法推进，休息不会跳过下一练。</p>
             </div>
           </div>
