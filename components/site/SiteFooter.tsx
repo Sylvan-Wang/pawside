@@ -13,7 +13,7 @@ export default function SiteFooter() {
               爪边 Pawside
             </Link>
             <p className="muted small" style={{ marginTop: 12, maxWidth: 360 }}>
-              给没有私教的你：今天练什么，打开就知道。目前是内测阶段。
+              今天练什么，打开就知道。目前是内测阶段。
             </p>
           </div>
           <ul>

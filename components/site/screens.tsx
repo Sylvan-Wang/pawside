@@ -121,27 +121,35 @@ export function ScreenMeal() {
   )
 }
 
-/** 4. The write-up after a session */
-export function ScreenReview() {
+/** 5. The evening review (home → 今日复盘) */
+export function ScreenDaily() {
   return (
     <div className="a">
-      <Head title="拉 · 训练中" />
+      <Head title="首页" />
       <div className="a-body">
         <div className="a-card">
-          <p className="a-semi" style={{ margin: 0, fontSize: 16 }}>今天的训练已记录</p>
-          <p style={{ margin: '6px 0 0', fontSize: 13, color: '#4b5563' }}>下一次继续腿训练。</p>
-          <div style={{ marginTop: 12 }} className="a-stats">
-            <span>完成动作 <b>5</b></span><span>完成组数 <b>16</b></span>
-            <span>训练时长 <b>52 分钟</b></span><span>训练容量 <b>6240 kg</b></span>
+          <div className="a-flex" style={{ marginBottom: 8 }}>
+            <span className="a-semi">今日复盘</span>
+            <span className="a-xs a-dim" style={{ textDecoration: 'underline' }}>查看详情</span>
           </div>
-          <div style={{ marginTop: 12, background: '#f9fafb', borderRadius: 12, padding: 12 }}>
-            <p className="a-semi" style={{ margin: 0, fontSize: 14, lineHeight: 1.6 }}>今天拉日 17 组完成了 16 组。</p>
-            <p className="a-xs" style={{ margin: '6px 0 0', color: '#4b5563' }}>· 单手绳索下拉最后一组做了 10 + 4 次，目标是 10 + 5 次，差 1 次。</p>
-            <p className="a-xs" style={{ margin: '4px 0 0', color: '#4b5563' }}>· 单手器械划船比上次多做了 1 次。</p>
-            <p className="a-xs" style={{ margin: '6px 0 0', color: '#374151' }}>→ 下一次是腿日，现在还在找合适的重量，先把每组做稳。</p>
-            <p className="a-xs a-dim" style={{ margin: '10px 0 0' }}>这次反馈有帮助吗？ 👍 👎</p>
+          <p className="a-semi" style={{ margin: 0, fontSize: 14, lineHeight: 1.6 }}>今天拉日完成了 16 组，蛋白质记录到 48g。</p>
+          <p className="a-xs" style={{ margin: '6px 0 0', color: '#4b5563' }}>· 拉日 17 组完成了 16 组，单手绳索下拉最后一组差 1 次。</p>
+          <p className="a-xs" style={{ margin: '4px 0 0', color: '#4b5563' }}>· 目前记录的蛋白质离今天的参考还差一些，晚餐可以补一些。</p>
+          <p className="a-xs" style={{ margin: '6px 0 0', color: '#374151' }}>→ 下一次是腿日，现在还在找合适的重量，先把每组做稳。</p>
+        </div>
+        <div className="a-card">
+          <div className="a-flex"><span className="a-semi">体重趋势</span><span className="a-semi">68.4 kg</span></div>
+          <div style={{ marginTop: 10, height: 54, borderRadius: 8, background: 'linear-gradient(180deg,#f9fafb,#f3f4f6)', position: 'relative' }}>
+            <svg viewBox="0 0 280 54" width="100%" height="54" aria-hidden="true"><polyline points="4,16 50,22 96,20 142,30 188,28 234,36 276,34" fill="none" stroke="#000" strokeWidth="2" /></svg>
           </div>
-          <span className="a-btn-black" style={{ marginTop: 14 }}>查看训练计划</span>
+        </div>
+        <div className="a-card">
+          <p className="a-semi" style={{ margin: '0 0 8px' }}>快捷入口</p>
+          <div className="a-grid" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
+            <span className="a-chip" style={{ borderRadius: 12 }}>记录自由训练</span>
+            <span className="a-chip" style={{ borderRadius: 12 }}>记录饮食</span>
+            <span className="a-chip" style={{ borderRadius: 12 }}>记录身体</span>
+          </div>
         </div>
       </div>
     </div>
@@ -167,6 +175,21 @@ export function ScreenReturn() {
         <div className="a-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
           <div className="a-card"><p className="a-xs a-dim" style={{ margin: '0 0 4px' }}>今日训练进度</p><p className="a-semi a-dim" style={{ margin: 0 }}>未完成</p></div>
           <div className="a-card"><p className="a-xs a-dim" style={{ margin: '0 0 4px' }}>今日饮食进度</p><p className="a-semi a-dim" style={{ margin: 0 }}>未记录</p></div>
+        </div>
+        <div className="a-card">
+          <div className="a-flex" style={{ marginBottom: 8 }}>
+            <span className="a-semi">今日复盘</span>
+            <span className="a-xs a-dim" style={{ textDecoration: 'underline' }}>查看详情</span>
+          </div>
+          <p style={{ margin: 0, fontSize: 13, color: '#9ca3af' }}>暂无数据，去记录今天的第一条吧～</p>
+        </div>
+        <div className="a-card">
+          <p className="a-semi" style={{ margin: '0 0 8px' }}>快捷入口</p>
+          <div className="a-grid" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
+            <span className="a-chip" style={{ borderRadius: 12 }}>记录自由训练</span>
+            <span className="a-chip" style={{ borderRadius: 12 }}>记录饮食</span>
+            <span className="a-chip" style={{ borderRadius: 12 }}>记录身体</span>
+          </div>
         </div>
       </div>
     </div>

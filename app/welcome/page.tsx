@@ -17,10 +17,10 @@ import {
   RotationPath,
 } from '@/components/site/illustrations'
 import {
+  ScreenDaily,
   ScreenMeal,
   ScreenPlan,
   ScreenReturn,
-  ScreenReview,
   ScreenSet,
 } from '@/components/site/screens'
 import { CONTACT_EMAIL, FAQ, SITE_NAME, SITE_URL, OG_IMAGE } from '@/lib/site/content'
@@ -28,7 +28,7 @@ import { featureById } from '@/lib/site/features'
 
 const TITLE = '爪边 Pawside｜今天练什么，打开就知道'
 const DESCRIPTION =
-  '给没有私教的你：选一套训练方法，每天打开就知道练什么、每组做多少；吃了什么写一句，晚上看蛋白质还差多少。'
+  '选好训练方法，之后从上次停下的地方继续。今天练哪一组、做哪些动作，打开就有；训练和饮食顺手记下来，晚上看看今天怎么样。'
 
 export const metadata: Metadata = {
   title: { absolute: TITLE },
@@ -39,18 +39,18 @@ export const metadata: Metadata = {
 }
 
 const STEPS: DemoStep[] = [
-  { id: 'plan', num: '01', title: '站在器械前，不用发愣', desc: '打开就是今天的部位、动作和每组目标。不用自己排。' },
-  { id: 'set', num: '02', title: '这一组做到什么程度，写在这儿', desc: '热身组、正式组、休息-暂停组，目标和做法都写在组旁边。做完点一下。' },
-  { id: 'meal', num: '03', title: '吃了啥，写一句', desc: '热量和蛋白质替你估好，对照当天的参考范围看就行。' },
-  { id: 'review', num: '04', title: '练完，一段话说清', desc: '哪几组做到了，下一次的重点是哪一组。' },
-  { id: 'return', num: '05', title: '周三没去？周五接着练', desc: '下一次练什么，由练没练完决定，不看星期几。' },
+  { id: 'open', num: '01', title: '打开，看到今天练什么', desc: '不用重新找计划，也不用回忆上次练到哪。' },
+  { id: 'time', num: '02', title: '选今天有多少时间', desc: '30、45、60 或 90 分钟，今天要做的动作数量跟着调整。' },
+  { id: 'do', num: '03', title: '跟着做完这一轮', desc: '动作、组数、次数和提示都在当前训练里，做完一组点一下。' },
+  { id: 'eat', num: '04', title: '吃过什么，顺手记下来', desc: '按食物和份量算出当天摄入，对照当天的参考范围看。' },
+  { id: 'night', num: '05', title: '晚上，看今天留下了什么', desc: '训练、饮食和身体记录汇到一起，给出今天最值得注意的几件事和下一步。' },
 ]
 
-const THOUGHTS = [
-  { where: '站在器械前', say: '「下一个练什么来着？」', icon: <IconDumbbell /> },
-  { where: '下班只剩 40 分钟', say: '「练，还是不练？」', icon: <IconClock /> },
-  { where: '周三没去，周五才去', say: '「是不是又断了？」', icon: <IconMoon /> },
-  { where: '吃完外卖', say: '「这顿，蛋白够吗？」', icon: <IconBowl /> },
+const DECISIONS = [
+  { when: '开练之前', ask: '今天练什么？', icon: <IconDumbbell /> },
+  { when: '开始之前', ask: '这次练多久？', icon: <IconClock /> },
+  { when: '每次回来', ask: '上次练到哪了？', icon: <IconMoon /> },
+  { when: '吃饭的时候', ask: '今天吃得够不够？', icon: <IconBowl /> },
 ]
 
 const PLANNED = [
@@ -108,35 +108,36 @@ export default function WelcomePage() {
               <span className="hl">打开就知道。</span>
             </h1>
             <p className="lede">
-              爪边陪你自学健身。选一套训练方法，它每天排好今天练什么、每组做多少；吃了什么写一句，晚上告诉你蛋白质还差多少。不用请教练，也不用认得器械名字。
+              <strong>选好训练方法，之后从上次停下的地方继续。</strong>
+              今天练哪一组、做哪些动作，打开就有。训练和饮食顺手记下来，晚上再看看今天怎么样、下一步该注意什么。
             </p>
             <div className="hero__cta">
               <Link href="/auth" className="btn btn--ink">开始使用</Link>
-              <a href="#demo" className="btn btn--ghost">先看看怎么用</a>
+              <a href="#demo" className="btn btn--ghost">看看怎么用</a>
             </div>
-            <p className="hero__note">手机浏览器打开即可，也能添加到主屏幕。</p>
+            <p className="hero__note">手机上打开就能用，也可以添加到主屏幕。</p>
           </div>
           <CowCatWithDumbbell className="hero__art" />
         </div>
         <PawTrail className="hero__trail" />
       </section>
 
-      {/* the moments */}
+      {/* the decisions you make before every session */}
       <section className="sec sec--warm" aria-labelledby="moments">
         <div className="wrap">
           <Reveal>
-            <p className="eyebrow">是不是也这样</p>
-            <h2 className="title" id="moments">看了很多教程，练的时候还是会愣住。</h2>
+            <p className="eyebrow">每次训练前</p>
+            <h2 className="title" id="moments">每次练之前，都有一堆临场决定。</h2>
             <div className="thoughts">
-              {THOUGHTS.map((item) => (
-                <div key={item.where} className="thought">
+              {DECISIONS.map((item) => (
+                <div key={item.ask} className="thought">
                   <span className="thought__icon">{item.icon}</span>
-                  <p className="thought__where">{item.where}</p>
-                  <p className="thought__say">{item.say}</p>
+                  <p className="thought__where">{item.when}</p>
+                  <p className="thought__say">{item.ask}</p>
                 </div>
               ))}
             </div>
-            <p className="thoughts__answer">爪边做的事：把这几个念头，一个个收掉。</p>
+            <p className="thoughts__answer">少一点临场决定，多一点直接开始。</p>
           </Reveal>
         </div>
       </section>
@@ -144,12 +145,12 @@ export default function WelcomePage() {
       {/* demo */}
       <section className="sec" id="demo" aria-labelledby="demo-title">
         <div className="wrap">
-          <p className="eyebrow">一天怎么用</p>
-          <h2 className="title" id="demo-title">从站到器械前，到晚上看总结。</h2>
+          <p className="eyebrow">一次训练</p>
+          <h2 className="title" id="demo-title">一次训练，从打开爪边开始。</h2>
           <p className="lede">点任意一步，手机里就会切到对应的界面。</p>
           <PhoneDemo
             steps={STEPS}
-            screens={[<ScreenPlan key="plan" />, <ScreenSet key="set" />, <ScreenMeal key="meal" />, <ScreenReview key="review" />, <ScreenReturn key="return" />]}
+            screens={[<ScreenReturn key="open" />, <ScreenPlan key="time" />, <ScreenSet key="do" />, <ScreenMeal key="eat" />, <ScreenDaily key="night" />]}
           />
         </div>
       </section>
@@ -159,10 +160,10 @@ export default function WelcomePage() {
         <div className="wrap">
           <Reveal>
             <h2 className="band__big" id="rest">
-              休息，<span className="hl">不是失败。</span>
+              没练，也不会<span className="hl">掉队。</span>
             </h2>
             <p className="band__sub">
-              训练日是一圈一圈轮着排的。没练完的那一天，会一直停在原位，等你回来。
+              爪边按训练轮次往前走，不按日历催你。今天没练，下一次就从这里继续。
             </p>
             <RotationPath labels={['推', '拉', '腿']} />
           </Reveal>
@@ -173,15 +174,15 @@ export default function WelcomePage() {
       <section className="sec sec--warm" aria-labelledby="methods">
         <div className="wrap">
           <Reveal>
-            <p className="eyebrow">训练方法</p>
-            <h2 className="title" id="methods">选一套，之后就照着它来。</h2>
-            <p className="lede">不用每天重新决定练什么。你选好方法，每个训练日按顺序轮。</p>
+            <p className="eyebrow">训练方式</p>
+            <h2 className="title" id="methods">先选一种训练方式，之后按自己的节奏往前走。</h2>
+            <p className="lede">不用每天重新决定练什么。</p>
             <div className="cards2">
               <article className="card">
                 <h3 className="card__title">三分化</h3>
                 <p className="card__sub">三天轮一圈</p>
                 <p className="card__text">
-                  把全身分成推、拉、腿三块。推日练胸、肩和手臂后侧，拉日练背和手臂前侧，腿日练腿。每一块练完，留足时间恢复，再轮到它。
+                  推 / 拉 / 腿轮流进行：推日练胸、肩和手臂后侧，拉日练背和手臂前侧，腿日练腿。结构简单，训练频率灵活。
                 </p>
                 <ul className="tags" aria-label="训练日"><li className="tag">推</li><li className="tag">拉</li><li className="tag">腿</li></ul>
               </article>
@@ -189,7 +190,7 @@ export default function WelcomePage() {
                 <h3 className="card__title">四分化</h3>
                 <p className="card__sub">四天轮一圈</p>
                 <p className="card__text">
-                  把全身分成胸、背、腿、肩四天，每个部位练得更集中。另外有腹肌日和有氧日两个可选的日子，不算在一圈里。
+                  胸 / 背 / 腿 / 肩拆得更开，每个训练日更集中。另有腹肌日和有氧日两个可选的日子，不算在一圈里。
                 </p>
                 <ul className="tags" aria-label="训练日">
                   <li className="tag">胸</li><li className="tag">背</li><li className="tag">腿</li><li className="tag">肩</li>

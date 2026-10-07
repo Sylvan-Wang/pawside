@@ -40,10 +40,10 @@ export default function MethodPage() {
         <div className="wrap">
           <p className="crumbs"><Link href="/welcome">爪边</Link> / 训练方法</p>
           <h1 className="display" style={{ marginTop: 16 }}>
-            选一套，<span className="hl">照着练。</span>
+            先选一种，<span className="hl">再往前走。</span>
           </h1>
           <p className="lede" style={{ maxWidth: 640 }}>
-            爪边目前有两套训练方法：三分化和四分化。你选好一套，之后每个训练日练什么、每个动作做几组，都由它排好。
+            爪边目前有两种训练方式：三分化和四分化。你选好一种，之后每个训练日练什么、每个动作做几组，都由它排好，再按你自己的节奏往前走。
           </p>
         </div>
       </section>
