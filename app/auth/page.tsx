@@ -238,7 +238,12 @@ export default function AuthPage() {
         )}
       </form>
 
-      <p className="text-center text-sm text-gray-400 mt-6">
+      <p className="mt-6 text-center text-xs leading-5 text-gray-400">
+        {mode === 'register' ? '注册即表示你已阅读并同意' : '使用爪边即表示你同意'}
+        <a href="/terms" className="underline">服务条款</a>和<a href="/privacy" className="underline">隐私政策</a>。
+      </p>
+
+      <p className="text-center text-sm text-gray-400 mt-4">
         {mode === 'login' ? '还没有账号？' : '已有账号？'}
         <button
           onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setRegistrationResult(null); setConfirm('') }}

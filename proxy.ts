@@ -44,7 +44,7 @@ export async function proxy(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   const { pathname } = request.nextUrl
 
-  const publicPaths = ['/auth']
+  const publicPaths = ['/auth', '/privacy', '/terms', '/welcome', '/og']
   const isPublic = publicPaths.some(p => pathname.startsWith(p)) || pathname === '/auth/reset-password'
   const isLocalMethodPreview =
     process.env.PAWSIDE_VISUAL_PREVIEW === '1' &&

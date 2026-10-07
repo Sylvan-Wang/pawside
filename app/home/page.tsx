@@ -501,16 +501,20 @@ export default function HomePage() {
           </div>
           <div className="bg-white rounded-2xl p-4">
             <p className="text-xs text-gray-400 mb-1">本周完成度</p>
-            <p className="text-sm font-semibold">{weeklyDone} / {weekTarget} 次</p>
-            <div className="mt-2 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-              <div className="h-full bg-black rounded-full transition-all" style={{ width: `${weekPct ?? 0}%` }} />
-            </div>
+            <p className="text-sm font-semibold">
+              {weekTarget === null ? `${weeklyDone} 次` : `${weeklyDone} / ${weekTarget} 次`}
+            </p>
+            {weekPct !== null && (
+              <div className="mt-2 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-full bg-black rounded-full transition-all" style={{ width: `${weekPct}%` }} />
+              </div>
+            )}
             {/* Product §27: no fabricated target — prompt to set one instead. */}
             {weekPct === null
               ? <button onClick={() => router.push('/settings')} className="text-xs text-gray-400 mt-1 underline">
                 设置每周训练目标
               </button>
-              : <p className="text-xs text-gray-400 mt-1">{weekPct}%</p>
+              : <p className="text-xs text-gray-400 mt-1">目标仅供参考，休息日可以按需安排</p>
             }
           </div>
           <div className="bg-white rounded-2xl p-4">

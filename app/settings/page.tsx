@@ -52,6 +52,10 @@ export default function SettingsPage() {
   const [form, setForm] = useState({ gender: '', height_cm: '', weight_kg: '', goal: '', weekly_workout_target: '', daily_calorie_target: '' })
   const [loading, setLoading] = useState(false)
   const [exporting, setExporting] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deleteConfirm, setDeleteConfirm] = useState('')
+  const [deleting, setDeleting] = useState(false)
+  const [accountEmail, setAccountEmail] = useState('')
   const [weightUnit, setWeightUnit] = useState<'kg' | 'lb'>('kg')
   const [isOwner, setIsOwner] = useState(false)
 
@@ -59,6 +63,7 @@ export default function SettingsPage() {
     const { data: { session } } = await supabase.auth.getSession()
     const user = session?.user
     if (!user) { router.push('/auth'); return }
+    setAccountEmail(user.email ?? '')
     void Promise.resolve(supabase.rpc('feature_enabled', { p_key: 'owner_console' })).then(({ data: owner }) => setIsOwner(owner === true), () => setIsOwner(false))
     const { data } = await supabase.from('user_profiles').select('*').eq('id', user.id).single()
     if (data) {
@@ -162,36 +167,13 @@ export default function SettingsPage() {
   async function handleExport() {
     setExporting(true)
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('未登录')
-
-      const [wRes, fRes, mRes] = await Promise.all([
-        supabase.from('workout_logs').select('*').eq('user_id', user.id).order('date'),
-        supabase.from('food_logs').select('*').eq('user_id', user.id).order('date'),
-        supabase.from('body_metrics').select('*').eq('user_id', user.id).order('date'),
-      ])
-
-      const toCSV = (rows: Record<string, unknown>[], cols: string[]) =>
-        [cols.join(','), ...rows.map(r => cols.map(c => JSON.stringify(r[c] ?? '')).join(','))].join('\n')
-
-      const wCols = ['date', 'type', 'duration_minutes', 'notes', 'exercises']
-      const fCols = ['date', 'meal_type', 'foods']
-      const mCols = ['date', 'weight_kg', 'body_fat_pct', 'muscle_mass', 'waist_cm', 'hip_cm', 'chest_cm', 'notes']
-
-      const csv = [
-        '=== 训练记录 ===',
-        toCSV(wRes.data || [], wCols),
-        '\n=== 饮食记录 ===',
-        toCSV(fRes.data || [], fCols),
-        '\n=== 身体数据 ===',
-        toCSV(mRes.data || [], mCols),
-      ].join('\n')
-
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+      const response = await fetch('/api/account/export', { cache: 'no-store' })
+      if (!response.ok) throw new Error('导出失败，请稍后再试')
+      const blob = await response.blob()
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `pawside_export_${new Date().toISOString().slice(0, 10)}.csv`
+      a.download = `pawside_all_data_${new Date().toISOString().slice(0, 10)}.json`
       a.click()
       URL.revokeObjectURL(url)
       show('导出成功')
@@ -199,6 +181,24 @@ export default function SettingsPage() {
       show(err instanceof Error ? err.message : '导出失败', 'error')
     } finally {
       setExporting(false)
+    }
+  }
+
+  async function handleDeleteAccount() {
+    setDeleting(true)
+    try {
+      const response = await fetch('/api/account/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ confirm_email: deleteConfirm }),
+      })
+      const payload = await response.json().catch(() => null)
+      if (!response.ok) throw new Error(payload?.error?.message ?? '删除失败，请稍后再试')
+      clearTrainingNavigationCache()
+      router.push('/auth')
+    } catch (err: unknown) {
+      show(err instanceof Error ? err.message : '删除失败', 'error')
+      setDeleting(false)
     }
   }
 
@@ -306,7 +306,7 @@ export default function SettingsPage() {
           )}
           <button onClick={handleExport} disabled={exporting}
             className="w-full px-4 py-4 text-left text-sm text-gray-700 border-b border-gray-50 disabled:opacity-50">
-            {exporting ? '导出中…' : '导出数据（CSV）'}
+            {exporting ? '导出中…' : '导出我的全部数据'}
           </button>
           {/* Patch B · B2: dropped the standing "每日复盘与建议草稿统一由
               OpenAI 生成" line — moved to 关于 as one plain sentence. */}
@@ -319,7 +319,36 @@ export default function SettingsPage() {
             退出登录
           </button>
         </div>
+
+        <button onClick={() => { setDeleteConfirm(''); setDeleteOpen(true) }}
+          className="w-full py-3 text-center text-xs text-gray-400 underline">
+          删除账号
+        </button>
       </div>
+
+      {deleteOpen && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 px-4 pb-6 sm:items-center">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-5">
+            <p className="text-base font-semibold">删除账号</p>
+            <p className="mt-2 text-sm leading-relaxed text-gray-700">
+              删除后，你的账号和所有训练、饮食、身体数据、自评和 AI 反馈都会被永久清除，无法恢复。需要留存的话，请先导出。
+            </p>
+            <p className="mt-3 text-xs text-gray-500">请输入你的账号邮箱（{accountEmail}）确认：</p>
+            <input value={deleteConfirm} onChange={(event) => setDeleteConfirm(event.target.value)}
+              autoCapitalize="none" autoCorrect="off" inputMode="email"
+              className="mt-2 w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none" />
+            <div className="mt-4 flex gap-3">
+              <button onClick={() => setDeleteOpen(false)} disabled={deleting}
+                className="flex-1 rounded-xl bg-gray-100 py-3 text-sm text-gray-700 disabled:opacity-50">取消</button>
+              <button onClick={handleDeleteAccount}
+                disabled={deleting || deleteConfirm.trim().toLowerCase() !== accountEmail.toLowerCase() || !accountEmail}
+                className="flex-1 rounded-xl bg-red-500 py-3 text-sm font-medium text-white disabled:opacity-40">
+                {deleting ? '删除中…' : '永久删除'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <BottomNav />
     </div>
