@@ -8,7 +8,7 @@ import { SITE_URL, OG_IMAGE } from '@/lib/site/content'
 import { featureById, featuresByStatus } from '@/lib/site/features'
 
 const TITLE = '路线图｜爪边 Pawside'
-const DESCRIPTION = '爪边现在能做什么，接下来想做什么。每一项都标着状态：已上线、内测中，还是规划中。'
+const DESCRIPTION = '爪边现在能做什么，接下来想做什么。'
 
 export const metadata: Metadata = {
   title: { absolute: TITLE },
@@ -45,16 +45,12 @@ export default function RoadmapPage() {
           <h1 className="display" style={{ marginTop: 16 }}>
             现在能做什么，<span className="hl">接下来想做什么。</span>
           </h1>
-          <p className="lede" style={{ maxWidth: 640 }}>
-            每一项都标着状态。没有角标的，现在注册就能用；写着「规划中」的，还在设计，不能用。
-          </p>
         </div>
       </section>
 
       <section className="sec" aria-labelledby="live">
         <div className="wrap">
           <Reveal>
-            <p className="eyebrow">现在能用</p>
             <h2 className="title" id="live">已上线</h2>
             <div className="glossary">
               {live.map((feature) => (
@@ -68,7 +64,6 @@ export default function RoadmapPage() {
       {beta.length > 0 && (
         <section className="sec sec--mist" aria-labelledby="beta">
           <div className="wrap">
-            <p className="eyebrow">小范围试用</p>
             <h2 className="title" id="beta">内测中</h2>
             <div className="stack stack--3">
               {beta.map((feature) => (
@@ -82,9 +77,7 @@ export default function RoadmapPage() {
       <section className="sec sec--warm" aria-labelledby="planned">
         <div className="wrap">
           <Reveal>
-            <p className="eyebrow">正在设计</p>
             <h2 className="title" id="planned">规划中</h2>
-            <p className="lede">下面这些现在都还不能用。样子是概念示意，实际做出来可能不一样。</p>
             <div className="stack stack--3">
               {planned.map((feature) => {
                 const concept = CONCEPT[feature.id]

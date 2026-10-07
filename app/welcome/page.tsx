@@ -149,7 +149,6 @@ export default function WelcomePage() {
       {/* demo */}
       <section className="sec" id="demo" aria-labelledby="demo-title">
         <div className="wrap">
-          <p className="eyebrow">一次训练</p>
           <h2 className="title" id="demo-title">一次训练，从打开爪边开始。</h2>
           <p className="lede">点任意一步，手机里就会切到对应的界面。</p>
           <PhoneDemo
@@ -213,7 +212,6 @@ export default function WelcomePage() {
           <Reveal>
             <p className="eyebrow">接下来</p>
             <h2 className="title" id="next">我们正在做的几件事。</h2>
-            <p className="lede">角标写着「规划中」的，现在还不能用。</p>
             <div className="stack stack--3">
               {PLANNED.map(({ feature, icon }) => (
                 <article key={feature.id} className="card card--flat">

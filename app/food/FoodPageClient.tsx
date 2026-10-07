@@ -809,7 +809,7 @@ export default function FoodPage() {
         </div>
 
         {!dailyLoading && guidance?.calorieTarget != null && guidance.mealRanges && (
-          <section className="rounded-2xl bg-blue-50/70 p-4" aria-label="今日饮食参考">
+          <section className="rounded-2xl border border-[#efe7da] bg-[#faf7f2] p-4" aria-label="今日饮食参考">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h2 className="text-sm font-semibold text-gray-900">今日饮食参考</h2>
