@@ -6,6 +6,8 @@ import { computeSessionFacts, computeSessionSignals } from '@/lib/workout/sessio
 import { createClient } from '@/lib/supabase/server'
 import { coachDurationBasis, coachFlag } from '@/lib/coach/flags'
 import { computeEffectiveDuration, type EffectiveDuration } from '@/lib/coach/session-duration'
+import { loadMethodWorkoutContext } from '@/lib/coach/workout-context'
+import { computeSessionHighlight, type SessionHighlight } from '@/lib/workout/session-highlight'
 import { NextRequest, NextResponse } from 'next/server'
 
 /**
@@ -77,6 +79,14 @@ export async function GET(request: NextRequest) {
 
     const rating = await loadFeedback(supabase, user.id, 'workout_session_feedback', log.id)
 
+    // The one thing worth remembering about this session. Best-effort: any
+    // failure just means no highlight line, never a failed response.
+    let highlight: SessionHighlight | null = null
+    if (log.method_workout_session_id) {
+      const context = await loadMethodWorkoutContext(supabase, user.id, log.method_workout_session_id).catch(() => null)
+      highlight = context ? computeSessionHighlight(context.exercises) : null
+    }
+
     return NextResponse.json({
       data: {
         // Layer A
@@ -97,6 +107,7 @@ export async function GET(request: NextRequest) {
           exercises: facts.exercises,
           data_quality_flags: facts.data_quality_flags,
         },
+        highlight,
         // Layer B
         signals,
         // Layer C container — filled by the AI Composer phase.

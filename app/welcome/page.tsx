@@ -6,8 +6,6 @@ import PhoneDemo, { type DemoStep } from '@/components/site/PhoneDemo'
 import Reveal from '@/components/site/Reveal'
 import StatusBadge from '@/components/site/StatusBadge'
 import {
-  CowCatPeek,
-  CowCatWithDumbbell,
   IconCamera,
   IconBowl,
   IconChat,
@@ -18,8 +16,10 @@ import {
   PawTrail,
   RotationPath,
 } from '@/components/site/illustrations'
+import { Cat } from '@/components/Cat'
 import {
   ScreenDaily,
+  ScreenFinish,
   ScreenMeal,
   ScreenPlan,
   ScreenReturn,
@@ -44,8 +44,9 @@ const STEPS: DemoStep[] = [
   { id: 'open', num: '01', title: '打开，看到今天练什么', desc: '不用重新找计划，也不用回忆上次练到哪。' },
   { id: 'time', num: '02', title: '选今天有多少时间', desc: '30、45、60 或 90 分钟，今天要做的动作数量跟着调整。' },
   { id: 'do', num: '03', title: '跟着做完这一轮', desc: '动作、组数、次数和提示都在当前训练里，做完一组点一下。' },
-  { id: 'eat', num: '04', title: '吃过什么，顺手记下来', desc: '按食物和份量算出当天摄入，对照当天的参考范围看。' },
-  { id: 'night', num: '05', title: '晚上，看今天留下了什么', desc: '训练、饮食和身体记录汇到一起，给出今天最值得注意的几件事和下一步。' },
+  { id: 'finish', num: '04', title: '练完，先看到最值得记住的一件事', desc: '有进步，就告诉你比上次变了什么；然后告诉你下一次练什么。数字收在下面。' },
+  { id: 'eat', num: '05', title: '吃过什么，顺手记下来', desc: '按食物和份量算出当天摄入，对照当天的参考范围看。' },
+  { id: 'night', num: '06', title: '晚上，看今天留下了什么', desc: '训练、饮食和身体记录汇到一起，给出今天最值得注意的几件事和下一步。' },
 ]
 
 const DECISIONS = [
@@ -121,7 +122,7 @@ export default function WelcomePage() {
             </div>
             <p className="hero__note">手机上打开就能用，也可以添加到主屏幕。</p>
           </div>
-          <CowCatWithDumbbell className="hero__art" />
+          <Cat name="rocket" width={440} className="hero__art" label="一只黑白小猫骑着火箭出发" />
         </div>
         <PawTrail className="hero__trail" />
       </section>
@@ -153,7 +154,7 @@ export default function WelcomePage() {
           <p className="lede">点任意一步，手机里就会切到对应的界面。</p>
           <PhoneDemo
             steps={STEPS}
-            screens={[<ScreenReturn key="open" />, <ScreenPlan key="time" />, <ScreenSet key="do" />, <ScreenMeal key="eat" />, <ScreenDaily key="night" />]}
+            screens={[<ScreenReturn key="open" />, <ScreenPlan key="time" />, <ScreenSet key="do" />, <ScreenFinish key="finish" />, <ScreenMeal key="eat" />, <ScreenDaily key="night" />]}
           />
         </div>
       </section>
@@ -286,7 +287,7 @@ export default function WelcomePage() {
             </div>
           </div>
           <div className="seed__card">
-            <CowCatPeek className="seed__cat" />
+            <Cat name="love" width={120} className="seed__cat" />
             <SeedForm />
           </div>
         </div>

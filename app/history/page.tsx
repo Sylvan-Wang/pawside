@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import BottomNav from '@/components/BottomNav'
 import PageHeader from '@/components/PageHeader'
+import { Cat } from '@/components/Cat'
 
 interface DayEntry {
   date: string
@@ -59,9 +60,10 @@ export default function HistoryPage() {
       <div className="px-4 py-4 space-y-3">
         {loading && <p className="text-center text-sm text-gray-400 py-8">加载中…</p>}
         {!loading && entries.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-gray-400 text-sm">暂无记录</p>
-            <p className="text-gray-300 text-xs mt-1">还没有数据，快去记录吧～</p>
+          <div className="flex flex-col items-center py-12 text-center">
+            <Cat name="sulk" width={110} />
+            <p className="mt-3 text-gray-500 text-sm">这里还空着</p>
+            <p className="text-gray-400 text-xs mt-1">练完一次或记下一餐，就会出现在这里。</p>
           </div>
         )}
         {pageEntries.map(entry => (

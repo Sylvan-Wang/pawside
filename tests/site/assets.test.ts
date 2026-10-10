@@ -27,4 +27,12 @@ describe('site demo assets', () => {
     const screens = readFileSync(join(ROOT, 'components/site/screens.tsx'), 'utf8')
     expect(screens).not.toMatch(/单手绳索下拉<\/p>\s*<ExerciseFrames/)
   })
+
+  it('serves the cat stickers without a login (the public site uses them too)', () => {
+    const proxy = readFileSync(join(ROOT, 'proxy.ts'), 'utf8')
+    expect(proxy).toMatch(/publicPaths = \[[^\]]*'\/cats'/)
+    for (const name of ['crying', 'confused', 'shock', 'cool', 'love', 'tongue', 'sulk', 'party', 'rocket']) {
+      expect(existsSync(join(ROOT, `public/cats/${name}.png`)), name).toBe(true)
+    }
+  })
 })

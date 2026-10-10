@@ -35,6 +35,7 @@ export const SITE_FEATURES: SiteFeature[] = [
   { id: 'meal-logging', name: '手动记录饮食', summary: '写下吃了什么，估算热量和蛋白质。', status: 'live', public: true },
   { id: 'nutrition-reference', name: '每日饮食参考', summary: '热量和蛋白质的参考范围，按餐拆开，仅作参考。', status: 'live', public: true },
   { id: 'reviews', name: '训练与饮食反馈', summary: '练完、吃完、每天、每周，各有一段文字反馈。', status: 'live', public: true },
+  { id: 'session-finish', name: '练完先看最值得记住的一件事', summary: '练完先告诉你这次比上次变了什么，再告诉你下一次练什么，数字收在下面。', status: 'live', public: true },
   { id: 'recovery-selfcheck', name: '睡眠与恢复自评', summary: '用 1–5 分记下睡得怎么样、练后恢复得怎么样。', status: 'live', public: true },
   { id: 'food-photo', name: '拍照识别外卖', summary: '拍一张外卖或餐盘，自动认出食物。', status: 'planned', public: true },
   { id: 'companion', name: '陪你练的小伙伴', summary: '练的时候能陪你说话、帮你选下一步。', status: 'planned', public: true },

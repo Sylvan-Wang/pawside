@@ -5,7 +5,8 @@ import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import PageHeader from '@/components/PageHeader'
 import { useToast } from '@/components/Toast'
-import { invalidateDayDerivedCache } from '@/lib/utils'
+import { formatLocalDateKey, invalidateDayDerivedCache } from '@/lib/utils'
+import { Cat } from '@/components/Cat'
 import CoachCard, { type CoachCardState } from '@/components/CoachCard'
 interface WorkoutLog {
   id: string
@@ -203,7 +204,15 @@ export default function HistoryDetailPage() {
         <div className="bg-white rounded-2xl p-4">
           <h2 className="text-sm font-semibold mb-3">训练记录</h2>
           {workouts.length === 0
-            ? <p className="text-sm text-gray-400">暂无训练记录</p>
+            ? date < formatLocalDateKey(new Date())
+              // A past day with no training is a rest day: say so, don't nag.
+              ? (
+                <div className="flex items-center gap-3">
+                  <Cat name="cool" width={72} />
+                  <p className="text-sm text-gray-500">这天没练，休息也是计划的一部分。</p>
+                </div>
+              )
+              : <p className="text-sm text-gray-400">暂无训练记录</p>
             : workouts.map(w => (
               <div key={w.id} className="mb-4 last:mb-0 pb-4 last:pb-0 border-b last:border-0 border-gray-50">
                 <div className="flex justify-between items-start">

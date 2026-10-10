@@ -43,6 +43,8 @@ export interface ExerciseSummary {
   logged_set_count: number
   key_sets: KeySetResult[]
   last_time: { top_weight_kg: number; reps: number | null } | null
+  /** Heaviest completed set today, measured the same way as `last_time`. */
+  top_today: { top_weight_kg: number; reps: number | null } | null
 }
 
 export interface MethodWorkoutContext {
@@ -256,6 +258,12 @@ export async function loadMethodWorkoutContext(
         })
 
       const previous = lastTime.get(raw.exercise_id) ?? null
+      let topToday: { top_weight_kg: number; reps: number | null } | null = null
+      for (const set of completedActual) {
+        const weight = num(set.actual_weight_kg)
+        if (weight === null) continue
+        if (!topToday || weight > topToday.top_weight_kg) topToday = { top_weight_kg: weight, reps: set.actual_reps ?? null }
+      }
       if (previous) {
         allowed.add(previous.top_weight_kg)
         if (previous.reps !== null) allowed.add(previous.reps)
@@ -277,6 +285,7 @@ export async function loadMethodWorkoutContext(
         logged_set_count: loggedPlanned,
         key_sets: keySets,
         last_time: previous,
+        top_today: topToday,
       })
 
       for (const value of planNumbers([{ exercise_name: name, sets: plannedSets }])) allowed.add(value)

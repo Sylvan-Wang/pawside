@@ -1,7 +1,8 @@
 /**
- * The five demo screens, drawn from the real app screens (same structure, same
+ * The six demo screens, drawn from the real app screens (same structure, same
  * wording where the app has fixed wording). All numbers, foods and names are demo
- * data. No artwork in here: this is the product, not decoration.
+ * data. The cat stickers are part of the real app (components/Cat.tsx) but sit on
+ * rare moments only; the everyday screens here have none, as in the app.
  *
  * Sources: app/training/today/page.tsx, app/training/sessions/[sessionId]/page.tsx,
  * app/food/FoodPageClient.tsx, app/home/page.tsx, components/CoachCard.tsx.
@@ -78,6 +79,30 @@ export function ScreenSet() {
         <div className="a-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
           <span className="a-day" style={{ textAlign: 'center', borderRadius: 12, padding: 10, color: '#374151', fontWeight: 500 }}>上一个动作</span>
           <span className="a-btn-black" style={{ borderRadius: 12 }}>下一个动作</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/** 4. Finishing a training day: the peak first, the details folded, then what is next. */
+export function ScreenFinish() {
+  return (
+    <div className="a">
+      <Head title="推 · 训练中" />
+      <div className="a-body">
+        <div className="a-card">
+          <div style={{ textAlign: 'center' }}>
+            <p className="a-semi" style={{ margin: 0, fontSize: 20 }}>杠铃卧推比上次重了</p>
+            <p className="a-xs" style={{ margin: '4px 0 0', color: '#4b5563' }}>60 → 62.5 kg</p>
+          </div>
+          <div style={{ marginTop: 14, borderRadius: 12, background: '#f9fafb', padding: 12 }}>
+            <p className="a-semi" style={{ margin: 0, fontSize: 13, lineHeight: 1.6 }}>推日 5 个动作都做完了，卧推最后一组是重点。</p>
+            <p className="a-xs" style={{ margin: '6px 0 0', color: '#4b5563' }}>· 正式组都按目标次数完成，没有做到力竭。</p>
+            <p className="a-xs a-dim" style={{ margin: '10px 0 0', background: '#fff', borderRadius: 8, padding: '6px 10px' }}>今天的数字</p>
+          </div>
+          <p className="a-xs" style={{ margin: '14px 0 0', textAlign: 'center', color: '#4b5563', fontSize: 13 }}>下一次：拉训练</p>
+          <span className="a-btn-black" style={{ marginTop: 10 }}>看看下一次练什么</span>
         </div>
       </div>
     </div>

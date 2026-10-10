@@ -5,6 +5,9 @@ import { splitLabel } from '@/lib/split-labels'
 import { describeTimedTarget } from '@/lib/workout-log-summary'
 import { friendlyTargetSummary, NO_PRESET_SETS_NOTICE } from '@/lib/training-copy'
 import CoachCard from '@/components/CoachCard'
+import { Cat } from '@/components/Cat'
+import { finishCopy } from '@/lib/workout/finish-copy'
+import type { SessionHighlight } from '@/lib/workout/session-highlight'
 import ExerciseMotion from '@/components/workout/ExerciseMotion'
 import type { ExerciseMedia } from '@/lib/exercise-media'
 import {
@@ -167,6 +170,8 @@ interface SessionFeedbackView {
     duration_excluded?: boolean
   }
   signals: Array<{ signal_key: string; text: string; authority: string }>
+  /** The one thing worth remembering about this session (rules only), or null. */
+  highlight: SessionHighlight | null
   /** loading → ready (AI text) or failed (rule cards shown as 基础总结). */
   aiState: 'loading' | 'ready' | 'failed'
   ai: null | {
@@ -391,6 +396,7 @@ export default function TrainingSessionPage() {
   const [completion, setCompletion] = useState<CompletionResult | null>(null)
   const [sessionFeedback, setSessionFeedback] = useState<SessionFeedbackView | null>(null)
   const [feedbackSaving, setFeedbackSaving] = useState(false)
+  const [firstSetCelebration, setFirstSetCelebration] = useState(false)
   const completionRequestId = useRef<string | null>(null)
 
   useEffect(() => {
@@ -613,6 +619,19 @@ export default function TrainingSessionPage() {
     clearTrainingSessionCache(sessionId)
   }
 
+  /** The first set saved on this device gets a small send-off (shown once per account). */
+  function celebrateFirstSet(viewerId: string) {
+    try {
+      const key = `pawside:first-set:v1:${viewerId}`
+      if (window.localStorage.getItem(key)) return
+      window.localStorage.setItem(key, '1')
+      setFirstSetCelebration(true)
+      window.setTimeout(() => setFirstSetCelebration(false), 3500)
+    } catch {
+      // Storage can be blocked; the send-off is a nicety, not required.
+    }
+  }
+
   async function saveSet(executionId: string, position: number) {
     if (!data) return
     const requestPayload = buildSetPayload(executionId, position)
@@ -645,6 +664,7 @@ export default function TrainingSessionPage() {
         )),
       }))
       clearTrainingSessionCache(sessionId)
+      celebrateFirstSet(data.viewer_id)
     } catch (reason: unknown) {
       const offline = !window.navigator.onLine || reason instanceof TypeError
       const stillPending = hasPendingSetActual(data.viewer_id, sessionId, executionId, draft.setIndex)
@@ -753,6 +773,7 @@ export default function TrainingSessionPage() {
               workoutLogId,
               facts: factsPayload.data.facts,
               signals: factsPayload.data.signals ?? [],
+              highlight: factsPayload.data.highlight ?? null,
               aiState: 'loading',
               ai: null,
               provenance: null,
@@ -933,6 +954,14 @@ export default function TrainingSessionPage() {
   return (
     <div className="min-h-screen bg-gray-50 pb-10">
       <PageHeader title={`${splitLabel(data.session.split_key)}训练`} back />
+      {firstSetCelebration && (
+        <div role="status" className="pointer-events-none fixed inset-x-0 bottom-6 z-40 flex justify-center px-4">
+          <div className="flex items-center gap-3 rounded-2xl bg-white px-4 py-2 shadow-lg">
+            <Cat name="rocket" width={84} />
+            <p className="text-sm font-medium text-gray-900">记下了，起飞！</p>
+          </div>
+        </div>
+      )}
       {isStaleSession && !staleBannerDismissed && (
         <div className="mx-auto max-w-2xl px-4 pt-4">
           <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
@@ -1209,24 +1238,18 @@ export default function TrainingSessionPage() {
 
         {isCompleted ? (
           <section className="rounded-2xl bg-white p-5">
-            <h2 className="font-semibold text-gray-900">今天的训练已记录</h2>
-            <p className="mt-2 text-sm text-gray-600">
-              {completion && !(completion.program_day_completed ?? completion.progression_advanced)
-                ? `补充训练已归入 ${completion.log_date}，不会改变当前训练顺序。`
-                : completion
-                  ? completion.cycle_completed
-                  ? `第 ${completion.current_cycle_number - 1} 轮已完成，下一次从推训练开始。`
-                    : `下一次继续${splitLabel(completion.next_split_key)}训练。`
-                  : '本次实际训练已经保存。'}
-            </p>
+            {(() => {
+              const finish = finishCopy(completion, sessionFeedback?.highlight ?? null, weightUnit)
+              return (
+                <div className="flex flex-col items-center text-center">
+                  {finish.celebrate && <Cat name="party" width={132} />}
+                  <h2 className="text-xl font-semibold text-gray-900">{finish.headline}</h2>
+                  {finish.detail && <p className="mt-1 text-sm text-gray-600">{finish.detail}</p>}
+                </div>
+              )
+            })()}
             {sessionFeedback && (
               <div className="mt-4 space-y-3 rounded-xl bg-gray-50 p-3" aria-live="polite">
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <p>完成动作 <span className="font-semibold">{sessionFeedback.facts.completed_exercise_count}</span></p>
-                  <p>完成组数 <span className="font-semibold">{sessionFeedback.facts.completed_set_count ?? '未完整记录'}</span></p>
-                  <p>训练时长 <span className="font-semibold">{sessionFeedback.facts.duration_excluded ? '记录异常，未计入' : sessionFeedback.facts.duration_minutes == null ? '未记录' : `${sessionFeedback.facts.duration_minutes} 分钟`}</span></p>
-                  <p>训练容量 <span className="font-semibold">{sessionFeedback.facts.total_volume_kg == null ? '无法计算' : `${Math.round(sessionFeedback.facts.total_volume_kg * 10) / 10} kg`}</span></p>
-                </div>
                 {/* spec A0-5: the shared CoachCard, so this Coach block looks
                     and behaves the same as Home / History / meal feedback. */}
                 <CoachCard
@@ -1252,11 +1275,29 @@ export default function TrainingSessionPage() {
                     </div>
                   )}
                 </CoachCard>
+                <details className="rounded-lg bg-white px-3 py-2">
+                  <summary className="cursor-pointer text-xs text-gray-500">今天的数字</summary>
+                <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
+                  <p>完成动作 <span className="font-semibold">{sessionFeedback.facts.completed_exercise_count}</span></p>
+                  <p>完成组数 <span className="font-semibold">{sessionFeedback.facts.completed_set_count ?? '未完整记录'}</span></p>
+                  <p>训练时长 <span className="font-semibold">{sessionFeedback.facts.duration_excluded ? '记录异常，未计入' : sessionFeedback.facts.duration_minutes == null ? '未记录' : `${sessionFeedback.facts.duration_minutes} 分钟`}</span></p>
+                  <p>训练容量 <span className="font-semibold">{sessionFeedback.facts.total_volume_kg == null ? '无法计算' : `${Math.round(sessionFeedback.facts.total_volume_kg * 10) / 10} kg`}</span></p>
+                </div>
+                  {sessionFeedback.facts.duration_excluded && (
+                    <div className="mt-2 flex items-center gap-2 text-xs text-gray-500">
+                      <Cat name="shock" width={44} />
+                      <span>这个时长看起来不太对，我没有把它算进去。</span>
+                    </div>
+                  )}
+                </details>
               </div>
             )}
+            <p className="mt-5 text-center text-sm text-gray-600">
+              {finishCopy(completion, sessionFeedback?.highlight ?? null, weightUnit).next}
+            </p>
             <button type="button" onClick={() => router.push('/training/today')}
-              className="mt-4 w-full rounded-xl bg-black py-3 text-sm font-semibold text-white">
-              查看训练计划
+              className="mt-3 w-full rounded-xl bg-black py-3 text-sm font-semibold text-white">
+              看看下一次练什么
             </button>
           </section>
         ) : (

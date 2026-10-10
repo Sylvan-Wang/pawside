@@ -121,7 +121,7 @@ body:has(.site-shell) {
   font-size: 14px; font-weight: 700; margin-bottom: 24px;
 }
 .site-shell .hero__cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
-.site-shell .hero__art { color: var(--ink); justify-self: center; width: 100%; max-width: 440px; }
+.site-shell .hero__art { justify-self: center; width: 100%; max-width: 380px; height: auto; }
 .site-shell .hero__note { margin: 16px 0 0; font-size: 14px; color: var(--muted); }
 
 /* ---- thoughts ---- */
@@ -367,7 +367,9 @@ body:has(.site-shell) {
 .site-shell .seed__perks .list { color: rgba(255, 255, 255, 0.86); }
 .site-shell .seed__tag { display: inline-block; margin-left: 8px; padding: 1px 10px; border: 1.5px dashed rgba(255, 255, 255, 0.7); border-radius: 999px; font-size: 13px; font-weight: 700; vertical-align: 1px; }
 .site-shell .seed__card { position: relative; margin-top: 56px; padding: 28px; background: #fff; color: var(--ink); border-radius: 22px; }
-.site-shell .seed__cat { position: absolute; top: -66px; right: 28px; width: 104px; height: auto; }
+.site-shell .seed__cat { position: absolute; top: -98px; right: 24px; max-width: 120px; height: auto; pointer-events: none; 
+  /* a white sticker outline, so the black cat reads on the dark section */
+  filter: drop-shadow(2px 0 0 #fff) drop-shadow(-2px 0 0 #fff) drop-shadow(0 2px 0 #fff) drop-shadow(0 -2px 0 #fff); }
 .site-shell .seed__form { display: grid; gap: 8px; }
 .site-shell .seed__label { font-size: 14px; font-weight: 700; margin-top: 6px; }
 .site-shell .seed__input {
