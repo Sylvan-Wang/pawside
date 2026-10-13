@@ -5,8 +5,10 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import BottomNav from '@/components/BottomNav'
+import AppTour from '@/components/AppTour'
+import { CatNote } from '@/components/CatMascot'
 import CoachCard, { type CoachCardState } from '@/components/CoachCard'
-import { getWeekStartKey, shiftDateKey, today } from '@/lib/utils'
+import { getWeekStartKey, today } from '@/lib/utils'
 import { writeTodayTrainingCache } from '@/lib/training-navigation-cache'
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis } from 'recharts'
 
@@ -70,7 +72,6 @@ export default function HomePage() {
   const [setupNotice, setSetupNotice] = useState('')
   const [todayWorkouts, setTodayWorkouts] = useState<{ type: string; duration_minutes: number }[]>([])
   const [todayMealCount, setTodayMealCount] = useState(0)
-  const [streak, setStreak] = useState(0)
   const [weeklyDone, setWeeklyDone] = useState(0)
   const [weightData, setWeightData] = useState<{ date: string; weight: number }[]>([])
   const [currentWeight, setCurrentWeight] = useState<number | null>(null)
@@ -99,16 +100,12 @@ export default function HomePage() {
 
     const todayStr = today()
     const weekStart = getWeekStartKey(todayStr)
-    // 查近 60 天用于计算 streak
-    const streakFrom = shiftDateKey(todayStr, -60)
-
-    const [profileRes, workoutRes, weekWorkoutRes, metricsRes, streakWRes, streakFRes] = await Promise.all([
+    const [profileRes, workoutRes, weekWorkoutRes, metricsRes, anyWorkoutRes] = await Promise.all([
       supabase.from('user_profiles').select('goal,weekly_workout_target,daily_calorie_target,weight_kg,onboarding_completed').eq('id', user.id).single(),
       supabase.from('workout_logs').select('type,duration_minutes').eq('user_id', user.id).eq('date', todayStr),
       supabase.from('workout_logs').select('date').eq('user_id', user.id).gte('date', weekStart),
       supabase.from('body_metrics').select('date,weight_kg').eq('user_id', user.id).order('date', { ascending: false }).limit(14),
-      supabase.from('workout_logs').select('date').eq('user_id', user.id).gte('date', streakFrom),
-      supabase.from('user_food_logs').select('log_date').eq('user_id', user.id).gte('log_date', streakFrom),
+      supabase.from('workout_logs').select('date').eq('user_id', user.id).limit(1),
     ])
 
     const p = profileRes.data
@@ -117,29 +114,13 @@ export default function HomePage() {
     setWeeklyDone((weekWorkoutRes.data || []).length)
     // Product §7: with no prior training, the recovery question is optional, so
     // Home needs to know whether to ask it at all.
-    setHasEverTrained((streakWRes.data || []).length > 0)
+    setHasEverTrained((anyWorkoutRes.data || []).length > 0)
 
     const metrics = metricsRes.data || []
     const withWeight = metrics.filter(m => m.weight_kg).reverse()
     setWeightData(withWeight.map(m => ({ date: m.date.slice(5), weight: m.weight_kg })))
     if (withWeight.length > 0) setCurrentWeight(withWeight[withWeight.length - 1].weight_kg)
 
-    // Streak：本地计算，从今天往前数连续有记录的天数
-    const activeDates = new Set<string>([
-      ...(streakWRes.data || []).map((r: { date: string }) => r.date),
-      ...(streakFRes.data || []).map((r: { log_date: string }) => r.log_date),
-    ])
-    let s = 0
-    for (let i = 0; i < 61; i++) {
-      const ds = shiftDateKey(todayStr, -i)
-      if (activeDates.has(ds)) {
-        s++
-      } else if (i > 0) {
-        // 今天可以还没有记录，不算断
-        break
-      }
-    }
-    setStreak(s)
     setProfileLoading(false)
   }, [router, supabase])
 
@@ -499,8 +480,8 @@ export default function HomePage() {
               {todayMealCount > 0 ? `已记录 ${todayMealCount} 餐` : '未记录'}
             </p>
           </div>
-          <div className="bg-white rounded-2xl p-4">
-            <p className="text-xs text-gray-400 mb-1">本周完成度</p>
+          <div className="bg-white rounded-2xl p-4 col-span-2">
+            <p className="text-xs text-gray-400 mb-1">本周训练</p>
             <p className="text-sm font-semibold">
               {weekTarget === null ? `${weeklyDone} 次` : `${weeklyDone} / ${weekTarget} 次`}
             </p>
@@ -517,10 +498,6 @@ export default function HomePage() {
               : <p className="text-xs text-gray-400 mt-1">目标仅供参考，休息日可以按需安排</p>
             }
           </div>
-          <div className="bg-white rounded-2xl p-4">
-            <p className="text-xs text-gray-400 mb-1">连续打卡</p>
-            <p className="text-sm font-semibold">{streak} 天</p>
-          </div>
         </div>
 
         {/* Today nutrition — Product §26 / §16.2 Daily Dashboard nutrition row */}
@@ -534,7 +511,7 @@ export default function HomePage() {
           {nutritionLoading ? (
             <p className="text-sm text-gray-400">读取中…</p>
           ) : nutritionRows.length === 0 ? (
-            <p className="text-sm text-gray-400">暂无数据</p>
+            <CatNote title="今天还没有饮食记录" hint="吃完点上面的「记录饮食」，我来帮你算" />
           ) : (
             <div className="space-y-2">
               {nutritionRows.map((row) => {
@@ -720,6 +697,7 @@ export default function HomePage() {
         </div>
       </div>
 
+      <AppTour ready={!profileLoading && profile?.onboarding_completed === true} />
       <BottomNav />
     </div>
   )
