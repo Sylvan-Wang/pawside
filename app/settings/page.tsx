@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import BottomNav from '@/components/BottomNav'
+import AppTour from '@/components/AppTour'
 import PageHeader from '@/components/PageHeader'
 import { useToast } from '@/components/Toast'
 import {
@@ -59,6 +60,7 @@ export default function SettingsPage() {
   const [weightUnit, setWeightUnit] = useState<'kg' | 'lb'>('kg')
   const [isOwner, setIsOwner] = useState(false)
   const [hasDevices, setHasDevices] = useState(false)
+  const [tourOpen, setTourOpen] = useState(false)
 
   const load = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession()
@@ -319,6 +321,10 @@ export default function SettingsPage() {
           </button>
           {/* Patch B · B2: dropped the standing "每日复盘与建议草稿统一由
               OpenAI 生成" line — moved to 关于 as one plain sentence. */}
+          <button onClick={() => setTourOpen(true)}
+            className="w-full px-4 py-4 text-left text-sm text-gray-700 border-b border-gray-50">
+            重看新手导览
+          </button>
           <Link href="/settings/about"
             className="block w-full px-4 py-4 text-left text-sm text-gray-700 border-b border-gray-50">
             关于
@@ -359,6 +365,7 @@ export default function SettingsPage() {
         </div>
       )}
 
+      {tourOpen && <AppTour ready replay onClose={() => setTourOpen(false)} />}
       <BottomNav />
     </div>
   )

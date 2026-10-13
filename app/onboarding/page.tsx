@@ -10,6 +10,7 @@ import {
   dailyCalorieTargetBounds,
   weeklyWorkoutTargetBounds,
 } from '@/lib/contracts/onboarding'
+import CatMascot from '@/components/CatMascot'
 import { computeMacroTargets } from '@/lib/nutrition/macro-targets'
 import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
@@ -136,6 +137,18 @@ export default function OnboardingPage() {
     return weightUnit === 'lb' ? raw * LB_TO_KG : raw
   }, [form.weight_kg, weightUnit])
 
+  /** The seven fields handleSubmit requires — drives the progress bar. */
+  const requiredDone = [
+    form.goal,
+    form.gender,
+    Number(form.height_cm) > 0,
+    Number(form.weight_kg) > 0,
+    form.training_experience,
+    form.pushup_capacity,
+    form.equipment_access,
+  ].filter(Boolean).length
+  const REQUIRED_TOTAL = 7
+
   const calorieTargetForPreview = useMemo(() => {
     if (form.daily_calorie_target.trim() === '') return null
     const parsed = Number(form.daily_calorie_target)
@@ -246,11 +259,24 @@ export default function OnboardingPage() {
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-8">
       <header className="rounded-2xl bg-black p-5 text-white">
-        <p className="text-xs text-white/60">Pawside 基础设置</p>
-        <h1 className="mt-2 text-xl font-semibold">了解你现在的起点</h1>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-xs text-white/60">Pawside 基础设置</p>
+            <h1 className="mt-2 text-xl font-semibold">了解你现在的起点</h1>
+          </div>
+          <CatMascot mood="peek" size={56} />
+        </div>
         <p className="mt-2 text-sm leading-6 text-white/70">
           这些答案只用于缩小初始训练范围。第一次训练仍会通过实际表现重新找重量。
         </p>
+        <div className="mt-4" role="progressbar" aria-valuemin={0} aria-valuemax={REQUIRED_TOTAL} aria-valuenow={requiredDone} aria-label="必填项完成进度">
+          <div className="h-1.5 overflow-hidden rounded-full bg-white/20">
+            <div className="h-full rounded-full bg-white transition-all" style={{ width: `${(requiredDone / REQUIRED_TOTAL) * 100}%` }} />
+          </div>
+          <p className="mt-1.5 text-xs text-white/60">
+            {requiredDone >= REQUIRED_TOTAL ? '必填都完成了，可以保存' : `必填 ${requiredDone} / ${REQUIRED_TOTAL}，每周目标和热量目标可以以后再填`}
+          </p>
+        </div>
       </header>
 
       {initialLoading && (
@@ -365,7 +391,7 @@ export default function OnboardingPage() {
 
           <div>
             <label htmlFor="calorie-target" className="mb-1 block text-sm font-medium text-gray-700">
-              每日热量目标（kcal）
+              每日热量目标（kcal，选填）
             </label>
             <input
               id="calorie-target"
@@ -382,7 +408,7 @@ export default function OnboardingPage() {
           </div>
 
           <div className="mt-5">
-            <label className="mb-2 block text-sm font-medium text-gray-700">每周训练目标</label>
+            <label className="mb-2 block text-sm font-medium text-gray-700">每周训练目标（选填）</label>
             <div className="flex flex-wrap gap-2">
               {WEEKLY_TARGET_OPTIONS.map((option) => (
                 <button
