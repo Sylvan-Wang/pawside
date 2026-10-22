@@ -5,6 +5,7 @@ import { buildCard } from '@/lib/coach-chat/cards'
 import { commitDraft, type CommitOutcome } from '@/lib/coach-chat/commit'
 import { validTimeZone } from '@/lib/coach-chat/dates'
 import { requireCoachUser } from '@/lib/coach-chat/http'
+import { describeError } from '@/lib/coach-chat/store'
 import { conflictText, savedText, TEXT } from '@/lib/coach-chat/replies'
 import { dateKeyInTimeZone } from '@/lib/utils'
 
@@ -67,12 +68,14 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     return NextResponse.json({
       data: {
         status: outcome.status,
+        // Days whose facts changed, so the app can drop its own cached reviews for them.
+        affected_dates: outcome.status === 'saved' ? outcome.affectedDates : [],
         text: describe(outcome),
         card: buildCard(outcome.draft, now, dateKeyInTimeZone(now, timeZone)),
       },
     })
   } catch (reason) {
-    console.error('[coach-chat] confirm failed', reason instanceof Error ? reason.message : reason)
+    console.error('[coach-chat] confirm failed', describeError(reason))
     return apiError('DATABASE_ERROR', '暂时无法保存，请稍后再试', 500)
   }
 }

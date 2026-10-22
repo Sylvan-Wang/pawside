@@ -1,4 +1,5 @@
 'use client'
+import { mealTypeLabel } from '@/lib/nutrition/meal-label'
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -77,7 +78,7 @@ export default function HistoryPage() {
                   </p>
                   <p className="text-xs text-gray-500">
                     饮食：{entry.foods.length > 0
-                      ? <span className="text-black">{entry.foods.map(f => f.meal_type).join('、')}</span>
+                      ? <span className="text-black">{entry.foods.map(f => mealTypeLabel(f.meal_type)).join('、')}</span>
                       : <span className="text-gray-300">未记录</span>}
                   </p>
                   <p className="text-xs text-gray-500">

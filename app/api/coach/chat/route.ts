@@ -7,7 +7,7 @@ import { requireCoachUser } from '@/lib/coach-chat/http'
 import { handleChatTurn, MAX_MESSAGE_CHARS, TurnError } from '@/lib/coach-chat/orchestrator'
 import { createEstimator, createPlanner } from '@/lib/coach-chat/planner'
 import { TEXT } from '@/lib/coach-chat/replies'
-import { countUserMessagesSince } from '@/lib/coach-chat/store'
+import { countUserMessagesSince, describeError } from '@/lib/coach-chat/store'
 import { toMessageViews } from '@/lib/coach-chat/views'
 
 /**
@@ -86,11 +86,12 @@ export async function POST(request: NextRequest) {
     if (reason instanceof TurnError) {
       switch (reason.code) {
         case 'conversation_not_found': return apiError('NOT_FOUND', reason.message, 404)
-        case 'bad_answer': return apiError('CONFLICT', reason.message, 409)
+        case 'bad_answer':
+        case 'in_progress': return apiError('CONFLICT', reason.message, 409)
         default: return apiError('VALIDATION_ERROR', reason.message, 422)
       }
     }
-    console.error('[coach-chat] turn failed', reason instanceof Error ? reason.message : reason)
+    console.error('[coach-chat] turn failed', describeError(reason))
     return apiError('DATABASE_ERROR', '暂时无法处理这条消息，请稍后再试', 500)
   }
 }

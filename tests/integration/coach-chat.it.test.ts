@@ -273,6 +273,80 @@ describe.skipIf(!IT_ENABLED)('coach chat against a real database', { timeout: 30
     })
   })
 
+  describe('more of the day', () => {
+    it('"还有一杯奶茶" adds one item to the meal that was just saved, leaving the others alone', async () => {
+      const t = await newTester()
+      const first = await t.say([rawPlan([riceAndEggs])], '午饭')
+      await t.confirm(first.cards[0].draft_id)
+
+      const edit = await t.say(
+        [rawPlan([rawTask('edit_meal', { items: [rawItem('奶茶', { amount_value: 1, amount_unit: '杯', grams_estimate: 400, estimate_basis: 'model_estimate', dish_kind: 'drink' })] })])],
+        '还有一杯奶茶', { estimator: fixedEstimator({ 奶茶: { energy_kcal: 60, protein_g: 1, carb_g: 10, fat_g: 2 } }).estimator })
+      expect(edit.cards[0].kind).toBe('meal_edit')
+      expect(edit.cards[0].lines.map((l) => l.text.split(' · ')[0])).toEqual(['米饭', '鸡蛋', '奶茶'])
+      expect(edit.cards[0].lines[2].badge).toBe('估算')
+      expect(edit.assistantMessage.content).toContain('加上 奶茶')
+
+      await t.confirm(edit.cards[0].draft_id)
+      expect(sql(`select food_name_raw || ':' || weight_g from public.user_food_log_items where food_log_id in (select id from public.user_food_logs where user_id='${t.user.id}') order by food_name_raw`).split('\n').sort())
+        .toEqual(['奶茶:400.00', '米饭:200.00', '鸡蛋:100.00'].sort())
+      expect(count('user_food_logs', `user_id='${t.user.id}'`)).toBe(1) // appended to the meal, not a second meal
+    })
+
+    it('"还想喝奶茶" is a consultation: nothing is recorded, and the facts it quotes are labelled incomplete', async () => {
+      const t = await newTester()
+      const meal = await t.say([rawPlan([rawTask('log_meal', { meal_type: 'lunch', items: [rawItem('米饭', { amount_value: 200, amount_unit: '克', estimate_basis: 'user_stated' })] })])], '午饭')
+      await t.confirm(meal.cards[0].draft_id)
+      const before = count('user_food_log_items', `food_log_id in (select id from public.user_food_logs where user_id='${t.user.id}')`)
+
+      const ask = await t.say([rawPlan([rawTask('consult_food', { topic: '奶茶' })], { reply: '奶茶可以喝，选小杯少糖会更轻松。' })], '我还想喝奶茶')
+      expect(ask.cards).toEqual([])
+      expect(ask.assistantMessage.content).toContain('奶茶可以喝，选小杯少糖会更轻松。')
+      expect(ask.assistantMessage.content).toContain('只算已记录的，可能不完整')
+      expect(count('user_food_log_items', `food_log_id in (select id from public.user_food_logs where user_id='${t.user.id}')`)).toBe(before)
+      expect(count('coach_drafts', `user_id='${t.user.id}' and status='proposed'`)).toBe(0)
+    })
+
+    it('a model reply that smuggles in numbers is replaced by the safe fallback', async () => {
+      const t = await newTester()
+      const ask = await t.say([rawPlan([rawTask('consult_food', { topic: '奶茶' })], { reply: '一杯奶茶大约 300 千卡' })], '我想喝奶茶')
+      expect(ask.assistantMessage.content).not.toMatch(/\d/)
+      expect(ask.assistantMessage.content).toContain('想吃就吃')
+    })
+
+    it('one task that cannot be understood does not stop the others, and says what is missing', async () => {
+      const t = await newTester()
+      const turn = await t.say([rawPlan([
+        rawTask('log_workout', { workout_type: '跑步', workout_minutes: null }), // no duration
+        riceAndEggs,
+      ])], '跑了步，午饭吃了米饭和鸡蛋')
+      expect(turn.cards.map((c) => c.kind)).toEqual(['meal'])
+      expect(turn.assistantMessage.content).toContain('大概做了多久')
+      expect(turn.assistantMessage.content).toContain('午餐')
+      expect(count('workout_logs', `user_id='${t.user.id}'`)).toBe(0)
+    })
+
+    it('medical and out-of-scope requests get a short pointer, never a card or advice', async () => {
+      const t = await newTester()
+      const medical = await t.say([rawPlan([rawTask('out_of_scope', { boundary: 'medical' })], { reply: '你应该吃 2 片布洛芬' })], '我头晕要吃什么药')
+      expect(medical.cards).toEqual([])
+      expect(medical.assistantMessage.content).toBe('这类问题需要问医生或营养师。我可以继续帮你记录饮食和训练。')
+      const other = await t.say([rawPlan([rawTask('out_of_scope', { boundary: 'finance' })])], '推荐一只股票')
+      expect(other.assistantMessage.content).toContain('理财我帮不上忙')
+    })
+
+    it('saving drops the cached review of that day, so the day page is not left showing the old result', async () => {
+      const t = await newTester()
+      sql(`insert into public.ai_generated_content (user_id, content_type, target_date, content_text) values
+           ('${t.user.id}','daily_review_ai','2026-10-22','old'), ('${t.user.id}','daily_summary','2026-10-22','old'),
+           ('${t.user.id}','daily_review_ai','2026-10-21','other day')`)
+      const turn = await t.say([rawPlan([riceAndEggs])], '午饭')
+      expect(count('ai_generated_content', `user_id='${t.user.id}'`)).toBe(3) // proposing changes nothing
+      await t.confirm(turn.cards[0].draft_id)
+      expect(sql(`select string_agg(target_date::text || ':' || content_type, ',' order by 1) from public.ai_generated_content where user_id='${t.user.id}'`)).toBe('2026-10-21:daily_review_ai')
+    })
+  })
+
   describe('dates and questions', () => {
     it('"昨晚" is yesterday for the user, not for the server', async () => {
       const t = await newTester()
@@ -419,6 +493,35 @@ describe.skipIf(!IT_ENABLED)('coach chat against a real database', { timeout: 30
       expect(retry.cards.map((c) => c.draft_id)).toEqual(first.cards.map((c) => c.draft_id))
       expect(count('coach_drafts', `user_id='${t.user.id}'`)).toBe(1)
       expect(count('coach_messages', `user_id='${t.user.id}' and role='user'`)).toBe(1)
+    })
+
+    it('a repeat of a send that is still being answered waits for that answer instead of running twice', async () => {
+      const t = await newTester()
+      const id = randomUUID()
+      // the "first attempt": its message is stored and it has not answered yet
+      const row = sql(`insert into public.coach_messages (conversation_id, user_id, role, client_message_id, content, local_date)
+                       values ('${t.conversationId}','${t.user.id}','user','${id}','午饭','2026-10-22') returning id`)
+      const firstMessageId = row.split('\n')[0]
+      // ... and a moment later it finishes
+      setTimeout(() => sql(`insert into public.coach_messages (conversation_id, user_id, role, reply_to_message_id, content, local_date)
+                            values ('${t.conversationId}','${t.user.id}','assistant','${firstMessageId}','来了','2026-10-22')`), 900)
+
+      const retry = await t.say([], '午饭', { clientMessageId: id })
+      expect(retry.duplicate).toBe(true)
+      expect(retry.assistantMessage.content).toBe('来了')
+      expect(retry.plannerCalls).toBe(0)
+      expect(count('coach_messages', `user_id='${t.user.id}' and role='assistant'`)).toBe(1)
+    })
+
+    it('a send that was stored long ago and never answered is run again (the first attempt died)', async () => {
+      const t = await newTester()
+      const id = randomUUID()
+      sql(`insert into public.coach_messages (conversation_id, user_id, role, client_message_id, content, local_date, created_at)
+           values ('${t.conversationId}','${t.user.id}','user','${id}','午饭','2026-10-22', now() - interval '10 minutes')`)
+      const retry = await t.say([rawPlan([riceAndEggs])], '午饭', { clientMessageId: id })
+      expect(retry.duplicate).toBe(false)
+      expect(retry.cards).toHaveLength(1)
+      expect(count('coach_messages', `user_id='${t.user.id}' and role='user'`)).toBe(1) // still one copy of the user's message
     })
 
     it('a lost response after a successful write is recognised right away, not repeated', async () => {

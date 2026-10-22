@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { apiError } from '@/lib/api/response'
 import { requireCoachUser } from '@/lib/coach-chat/http'
-import { conversationBelongsTo, deleteConversation } from '@/lib/coach-chat/store'
+import { conversationBelongsTo, deleteConversation, describeError } from '@/lib/coach-chat/store'
 
 /**
  * DELETE /api/coach/conversations/[id] - clears the chat (messages and cards).
@@ -19,7 +19,7 @@ export async function DELETE(_request: Request, context: { params: Promise<{ id:
     await deleteConversation(gate.supabase, gate.user.id, id)
     return NextResponse.json({ data: { deleted: true } })
   } catch (reason) {
-    console.error('[coach-chat] clear conversation failed', reason instanceof Error ? reason.message : reason)
+    console.error('[coach-chat] clear conversation failed', describeError(reason))
     return apiError('DATABASE_ERROR', '暂时无法清空对话', 500)
   }
 }

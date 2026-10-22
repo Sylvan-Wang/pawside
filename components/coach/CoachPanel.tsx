@@ -3,7 +3,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import CatMascot from '@/components/CatMascot'
 import { dateHeading, newClientId, replaceCard, withDateHeadings } from '@/lib/coach-chat/client'
 import type { CardView, ChatMessageView } from '@/lib/coach-chat/types'
-import { formatLocalDateKey } from '@/lib/utils'
+import { dayCacheKeys, formatLocalDateKey } from '@/lib/utils'
 import ChatCard from './ChatCard'
 
 type UiMessage = ChatMessageView & {
@@ -62,6 +62,7 @@ export default function CoachPanel({ onClose }: { onClose: () => void }) {
   const [sending, setSending] = useState(false)
   const [busyCards, setBusyCards] = useState<Set<string>>(new Set())
   const [notice, setNotice] = useState<string | null>(null)
+  const saved = useRef(false)
   const listRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const viewport = useVisualViewport(true)
@@ -74,11 +75,18 @@ export default function CoachPanel({ onClose }: { onClose: () => void }) {
     return () => { document.body.style.overflow = previous }
   }, [])
 
+  // Pages behind the panel fetch their own numbers when they open. After something was saved here
+  // they would keep showing the old day, so closing the panel reloads the page once.
+  const close = useCallback(() => {
+    if (saved.current) window.location.reload()
+    else onClose()
+  }, [onClose])
+
   useEffect(() => {
-    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose() }
+    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') close() }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
+  }, [close])
 
   const load = useCallback(async () => {
     setState('loading')
@@ -182,7 +190,7 @@ export default function CoachPanel({ onClose }: { onClose: () => void }) {
   async function act(card: CardView, kind: 'confirm' | 'cancel') {
     setBusyCards((current) => new Set(current).add(card.draft_id))
     setNotice(null)
-    const result = await api<{ status: string; text: string; card: CardView }>(`/api/coach/actions/${card.draft_id}/${kind}`, {
+    const result = await api<{ status: string; text: string; card: CardView; affected_dates?: string[] }>(`/api/coach/actions/${card.draft_id}/${kind}`, {
       method: 'POST',
       body: JSON.stringify(kind === 'confirm' ? { version: card.version, time_zone: timeZone() } : { time_zone: timeZone() }),
     })
@@ -194,6 +202,14 @@ export default function CoachPanel({ onClose }: { onClose: () => void }) {
     if (!result.ok) {
       setNotice(result.status === 0 ? '网络好像断了，没保存上。请再点一次。' : result.message)
       return
+    }
+    if (result.data.status === 'saved') {
+      saved.current = true
+      try {
+        for (const date of result.data.affected_dates ?? []) {
+          for (const key of dayCacheKeys(date)) sessionStorage.removeItem(key)
+        }
+      } catch { /* storage unavailable */ }
     }
     setMessages((current) => {
       const updated = replaceCard(current, result.data.card)
@@ -246,7 +262,7 @@ export default function CoachPanel({ onClose }: { onClose: () => void }) {
         <CatMascot mood="peek" size={32} />
         <p className="flex-1 text-sm font-semibold text-gray-900">小爪</p>
         <button type="button" onClick={clearConversation} className="px-2 py-1 text-xs text-gray-400" aria-label="清空对话">清空</button>
-        <button type="button" onClick={onClose} className="px-2 py-1 text-xl leading-none text-gray-500" aria-label="关闭">×</button>
+        <button type="button" onClick={close} className="px-2 py-1 text-xl leading-none text-gray-500" aria-label="关闭">×</button>
       </header>
 
       <div ref={listRef} className="flex-1 overflow-y-auto overscroll-contain px-3 py-3" aria-live="polite">

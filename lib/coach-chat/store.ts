@@ -22,6 +22,20 @@ export interface MessageRow {
 const MESSAGE_COLUMNS = 'id,conversation_id,role,client_message_id,reply_to_message_id,content,cards,local_date,created_at'
 const DRAFT_COLUMNS = 'id,user_id,conversation_id,message_id,kind,status,version,request_id,payload,target_record_id,target_updated_at,supersedes_id,clarifications_used,result,error_code,expires_at,created_at,updated_at'
 
+/**
+ * What may be logged about a failure: its kind and database code, never its message.
+ * Database messages can quote the row that failed (a constraint violation prints the
+ * whole row), and that row can hold what the user typed.
+ */
+export function describeError(error: unknown): string {
+  if (error instanceof StoreError) return `StoreError code=${error.code ?? 'none'}`
+  if (error && typeof error === 'object') {
+    const e = error as { name?: unknown; code?: unknown }
+    return `${typeof e.name === 'string' ? e.name : 'Error'} code=${typeof e.code === 'string' && e.code ? e.code : 'none'}`
+  }
+  return 'unknown'
+}
+
 export class StoreError extends Error {
   constructor(message: string, readonly code: string | null = null) {
     super(message)

@@ -1,4 +1,5 @@
 'use client'
+import { mealTypeLabel } from '@/lib/nutrition/meal-label'
 import { describeLoggedExercise, type LoggedExercise } from '@/lib/workout-log-summary'
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
@@ -248,7 +249,7 @@ export default function HistoryDetailPage() {
               <div key={f.id} className="mb-4 last:mb-0 pb-4 last:pb-0 border-b last:border-0 border-gray-50">
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
-                    <p className="text-sm font-medium mb-1">{f.meal_type}</p>
+                    <p className="text-sm font-medium mb-1">{mealTypeLabel(f.meal_type)}</p>
                     <div className="space-y-0.5">
                       {f.foods.map((item, i) => (
                         <p key={i} className="text-xs text-gray-600">

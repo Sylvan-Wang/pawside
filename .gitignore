@@ -41,3 +41,6 @@ npm-debug.log*
 
 # TypeScript incremental build cache
 *.tsbuildinfo
+
+# Model evaluation results (tests/eval)
+tests/eval/results/

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { apiError } from '@/lib/api/response'
 import { requireCoachUser } from '@/lib/coach-chat/http'
-import { conversationBelongsTo, listMessages } from '@/lib/coach-chat/store'
+import { conversationBelongsTo, describeError, listMessages } from '@/lib/coach-chat/store'
 import { toMessageViews } from '@/lib/coach-chat/views'
 
 /**
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     const messages = await toMessageViews(gate.supabase, gate.user.id, rows, params.get('time_zone'))
     return NextResponse.json({ data: { messages, has_more: rows.length >= Math.min(Math.max(limit || 30, 1), 100) } })
   } catch (reason) {
-    console.error('[coach-chat] load messages failed', reason instanceof Error ? reason.message : reason)
+    console.error('[coach-chat] load messages failed', describeError(reason))
     return apiError('DATABASE_ERROR', '暂时无法读取对话记录', 500)
   }
 }

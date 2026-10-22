@@ -211,6 +211,32 @@ try {
     await shot(page, '8-history')
   })
 
+  await check('a meal saved as "what was eaten" shows cleanly on the history page and survives the existing edit page', async () => {
+    await page.goto(`${APP}/food`, { waitUntil: 'networkidle' })
+    await launcher(page).click()
+    await say(page, '晚上吃了红烧肉')
+    await page.getByText('有 1 项暂时算不出营养').waitFor({ timeout: 15000 })
+    await page.getByRole('button', { name: '确认保存' }).last().click()
+    await page.getByText('有 1 项营养待补').waitFor({ timeout: 15000 })
+    const rawMealId = sql(`select id from public.user_food_logs where user_id='${me}' and meal_type='dinner'`)
+    assert(sql(`select weight_g is null and energy_kcal is null from public.user_food_log_items where food_log_id='${rawMealId}'`) === 't', 'item should have no weight and no nutrition')
+    await Promise.all([page.waitForEvent('load'), page.keyboard.press('Escape')]) // closing reloads the page behind the panel (something was saved)
+    const today = sql(`select log_date from public.user_food_logs where id='${rawMealId}'`)
+    await page.goto(`${APP}/history/${today}`, { waitUntil: 'networkidle' })
+    const text = await page.locator('body').innerText()
+    assert(text.includes('红烧肉 · 营养待补'), `history line not as expected: ${text.slice(0, 300)}`)
+    assert(!/红烧肉\s*g\b|null|undefined|NaN/.test(text), 'history shows a broken value for the raw-only item')
+    await shot(page, '9-history-raw-only')
+
+    // open the existing edit page for that meal and save it untouched
+    await page.getByRole('button', { name: '编辑' }).last().click()
+    await page.getByPlaceholder('食物名称').first().waitFor({ timeout: 10000 })
+    await page.getByRole('button', { name: /保存/ }).last().click()
+    await page.waitForTimeout(2500)
+    assert(sql(`select count(*) from public.user_food_log_items where food_log_id='${rawMealId}'`) === '1', 'the edit page dropped the raw-only item')
+    assert(sql(`select weight_g is null and energy_kcal is null from public.user_food_log_items where food_log_id='${rawMealId}'`) === 't', 'the edit page invented values')
+  })
+
   await check('the cat does not appear where it must not: training runner, login, onboarding, public site', async () => {
     for (const path of ['/training/sessions/00000000-0000-4000-8000-000000000000', '/onboarding', '/welcome', '/privacy']) {
       await page.goto(`${APP}${path}`, { waitUntil: 'domcontentloaded' })

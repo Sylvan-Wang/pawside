@@ -54,6 +54,7 @@ import {
   transitionDraft,
   attachDraftsToMessage,
   type MessageRow,
+  describeError,
 } from './store'
 import type {
   CardView,
@@ -81,9 +82,13 @@ export const MAX_MESSAGE_CHARS = 2000
 export const MAX_TOOL_CALLS = 6
 const CONTEXT_MESSAGES = 6
 const LAST_MEAL_WINDOW_MS = 24 * 60 * 60 * 1000
+// A repeated send of a message that has no answer yet: how long the first attempt is presumed alive, and how long to wait for it.
+const IN_FLIGHT_WINDOW_MS = 60_000
+const IN_FLIGHT_WAIT_MS = 10_000
+const IN_FLIGHT_POLL_MS = 400
 
 export class TurnError extends Error {
-  constructor(readonly code: 'invalid_time_zone' | 'text_too_long' | 'conversation_not_found' | 'empty_text' | 'bad_answer', message: string) {
+  constructor(readonly code: 'invalid_time_zone' | 'text_too_long' | 'conversation_not_found' | 'empty_text' | 'bad_answer' | 'in_progress', message: string) {
     super(message)
   }
 }
@@ -622,7 +627,7 @@ async function finish(
 /** Applies a tapped option to a question the server asked, without calling the model. */
 async function runAnswer(ctx: Ctx, answer: NonNullable<TurnInput['answer']>): Promise<TaskResult | null> {
   const draft = await getDraft(ctx.deps.supabase, ctx.userId, answer.draftId)
-  if (!draft || draft.status !== 'needs_clarification' || new Date(draft.expires_at) <= ctx.now) {
+  if (!draft || draft.conversation_id !== ctx.conversationId || draft.status !== 'needs_clarification' || new Date(draft.expires_at) <= ctx.now) {
     throw new TurnError('bad_answer', '这个问题已经过期了')
   }
   const payload = draft.payload as ClarifyPayload
@@ -669,7 +674,17 @@ export async function handleChatTurn(deps: TurnDeps, input: TurnInput): Promise<
 
   // The same send arriving twice returns the first answer instead of running again.
   if (stored.duplicate) {
-    const reply = await findReplyTo(deps.supabase, deps.userId, stored.message.id)
+    let reply = await findReplyTo(deps.supabase, deps.userId, stored.message.id)
+    // The first attempt may still be running (a double tap, a quick retry): wait for it rather than
+    // starting a second copy. If it is old and never answered, it died, so it is run now.
+    const sinceFirstAttempt = Date.now() - new Date(stored.message.created_at).getTime()
+    if (!reply && sinceFirstAttempt < IN_FLIGHT_WINDOW_MS) {
+      for (let waited = 0; !reply && waited < IN_FLIGHT_WAIT_MS; waited += IN_FLIGHT_POLL_MS) {
+        await new Promise((resolve) => setTimeout(resolve, IN_FLIGHT_POLL_MS))
+        reply = await findReplyTo(deps.supabase, deps.userId, stored.message.id)
+      }
+      if (!reply) throw new TurnError('in_progress', '上一次发送还在处理，请稍等一下')
+    }
     if (reply) {
       const cards = await getDrafts(deps.supabase, deps.userId, reply.cards.map((card) => card.draft_id))
       return { duplicate: true, userMessage: stored.message, assistantMessage: reply, cards: toCards(cards, now, today), updatedCards: [] }
@@ -752,7 +767,7 @@ export async function handleChatTurn(deps: TurnDeps, input: TurnInput): Promise<
     try {
       results.push(await runTask(ctx, task, plan))
     } catch (error) {
-      console.error('[coach-chat] task failed', task.kind, error instanceof Error ? error.message : error)
+      console.error('[coach-chat] task failed', task.kind, describeError(error))
       results.push(none('这一条我这边出了点问题，没有记。你可以再说一遍，或者到页面里手动记录。'))
     }
   }

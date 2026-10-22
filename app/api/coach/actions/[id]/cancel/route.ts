@@ -5,6 +5,7 @@ import { buildCard } from '@/lib/coach-chat/cards'
 import { cancelDraft } from '@/lib/coach-chat/commit'
 import { validTimeZone } from '@/lib/coach-chat/dates'
 import { requireCoachUser } from '@/lib/coach-chat/http'
+import { describeError } from '@/lib/coach-chat/store'
 import { dateKeyInTimeZone } from '@/lib/utils'
 
 /** POST /api/coach/actions/[id]/cancel  { time_zone } - drops a card that is still waiting. Nothing is written. */
@@ -30,7 +31,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       },
     })
   } catch (reason) {
-    console.error('[coach-chat] cancel failed', reason instanceof Error ? reason.message : reason)
+    console.error('[coach-chat] cancel failed', describeError(reason))
     return apiError('DATABASE_ERROR', '暂时无法取消，请稍后再试', 500)
   }
 }
