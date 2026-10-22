@@ -19,6 +19,8 @@ interface FoodItem {
   carbs: string
   fat: string
   foodId: number | null
+  /** Saved from chat as "what was eaten" only: no weight, no nutrition. Kept as such unless filled in. */
+  rawOnly?: boolean
 }
 
 export default function EditFoodPage() {
@@ -61,6 +63,8 @@ export default function EditFoodPage() {
           carbs: f.carb_g == null ? '' : String(f.carb_g),
           fat: f.fat_g == null ? '' : String(f.fat_g),
           foodId: f.food_id,
+          rawOnly: f.weight_g == null && f.energy_kcal == null && f.protein_g == null
+            && f.carb_g == null && f.fat_g == null,
         }))
       )
       setLoading(false)
@@ -70,13 +74,13 @@ export default function EditFoodPage() {
 
   function addFood() {
     setFoods(f => [...f, {
-      name: '', weight: '', calories: '', protein: '', carbs: '', fat: '', foodId: null,
+      name: '', weight: '', calories: '', protein: '', carbs: '', fat: '', foodId: null, rawOnly: false,
     }])
   }
 
   function updateFood(i: number, key: keyof FoodItem, val: string) {
     setFoods(f => f.map((item, idx) => idx === i
-      ? { ...item, [key]: val, ...(key === 'name' ? { foodId: null } : {}) }
+      ? { ...item, [key]: val, ...(key === 'name' ? { foodId: null } : { rawOnly: false }) }
       : item))
   }
 
@@ -87,7 +91,8 @@ export default function EditFoodPage() {
 
   async function handleSave() {
     if (!mealType) return show('请选择餐别', 'error')
-    const valid = foods.filter(f => f.name && f.weight)
+    // A food saved without a weight (rawOnly) stays in the record; dropping it here would delete it silently.
+    const valid = foods.filter(f => f.name && (f.weight || f.rawOnly))
     if (valid.length === 0) return show('至少填写一个食物的名称和重量', 'error')
     setSaving(true)
     try {
@@ -99,7 +104,17 @@ export default function EditFoodPage() {
           date,
           meal_type: mealType,
           expected_updated_at: updatedAt,
-          items: valid.map(f => ({
+          items: valid.map(f => f.rawOnly && !f.weight ? {
+            food_id: null,
+            food_name_raw: f.name,
+            food_name_resolved: f.name,
+            weight_g: null,
+            nutrition_unknown: true,
+            resolution_source: 'user_override',
+            source_ref_id: null,
+            user_confirmed: true,
+            per100g: null,
+          } : ({
             food_id: f.foodId,
             food_name_raw: f.name,
             food_name_resolved: f.name,

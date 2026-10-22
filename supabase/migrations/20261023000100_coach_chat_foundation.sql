@@ -52,6 +52,8 @@ create table public.coach_messages (
   -- Set for user messages: a retried send with the same id returns the stored
   -- reply instead of running the turn twice.
   client_message_id uuid,
+  -- Assistant messages: the user message this one answers (retry lookup).
+  reply_to_message_id uuid references public.coach_messages(id) on delete set null,
   content text not null check (char_length(content) between 1 and 4000),
   -- Assistant messages: [{ "draft_id": uuid }, ...]. Card content is read from
   -- coach_drafts so a card can never drift from what will be committed.
@@ -67,6 +69,8 @@ create index coach_messages_conversation_idx
   on public.coach_messages (conversation_id, created_at desc);
 create index coach_messages_user_idx
   on public.coach_messages (user_id);
+create index coach_messages_reply_to_idx
+  on public.coach_messages (reply_to_message_id);
 
 create table public.coach_drafts (
   id uuid primary key default gen_random_uuid(),
@@ -386,7 +390,9 @@ begin
     raise exception 'food log not found' using errcode = 'P0002';
   end if;
   if p_expected_updated_at is not null and current_updated_at <> p_expected_updated_at then
-    raise exception 'food log was updated by another request' using errcode = '40001';
+    -- Not 40001: PostgREST retries a 40001 transaction instead of answering, so the
+    -- caller would hang (observed on PostgREST 12.2.3). PT409 is returned as HTTP 409.
+    raise exception 'food log was updated by another request' using errcode = 'PT409';
   end if;
 
   if old_log_date <= p_log_date then

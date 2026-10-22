@@ -23,11 +23,21 @@ import {
 
 export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack'
 
+/**
+ * An item that cannot be stored as given (missing nutrition, bad number). Raised
+ * before anything is written, and carries the database's invalid-input SQLSTATE
+ * so callers can tell it from a failure whose outcome is unknown.
+ */
+export class NutritionInputError extends Error {
+  readonly code = '22023'
+}
+
 export interface FoodItemInput {
   food_id: number | null
   food_name_raw: string
   food_name_resolved: string | null
-  weight_g: number
+  /** null only for a raw-only item (`nutrition_unknown`): what was eaten is known, how much is not. */
+  weight_g: number | null
   quantity?: number | null
   unit?: string | null
   is_estimated?: boolean
@@ -36,6 +46,19 @@ export interface FoodItemInput {
   user_confirmed: boolean
   /** Reference row used to derive all four macros deterministically. */
   per100g: FoodNutritionPer100g | null
+  /**
+   * Chat only. The user confirmed the card, but nothing could compute this item's
+   * nutrition (no reference row, no estimate). Stored as NULL, never 0.
+   */
+  nutrition_unknown?: boolean
+  /**
+   * Chat only, server-built. A provisional per-100g AI estimate carried in the
+   * stored draft; used as the reference for a `resolution_source: 'ai_estimate'`
+   * item with no candidate row. It is NOT part of the browser contract:
+   * lib/nutrition/api-contracts.ts strips unknown keys, so a request body cannot
+   * set it.
+   */
+  provisional_per100g?: FoodNutritionPer100g | null
   /** Fallback values when the item was typed without a matched reference row. */
   fallback?: {
     calories_kcal?: number | null
@@ -75,8 +98,35 @@ export interface SaveFoodLogResult {
  * (`calculation_basis`); otherwise the item is flagged `is_estimated`.
  */
 export function deriveItemForPersistence(item: FoodItemInput, reference: FoodNutritionPer100g | null) {
+  if (item.nutrition_unknown) {
+    if (!item.user_confirmed) {
+      throw new NutritionInputError(`“${item.food_name_raw}”还缺少营养信息，请先确认估算或手动填写`)
+    }
+    return {
+      row: { energy_kcal: null, protein_g: null, carb_g: null, fat_g: null },
+      calculationBasis: {
+        basis_type: 'unknown',
+        resolution_source: 'unresolved',
+        source_ref_id: null,
+        user_confirmed: true,
+        per_100g: null,
+        weight_g: item.weight_g ?? null,
+        formula: null,
+        rounding: 'none',
+      },
+      isEstimated: false,
+    }
+  }
+
   const weight = Number(item.weight_g)
-  const confirmedReference = reference ?? (
+  const provisionalReference = reference === null
+    && item.user_confirmed
+    && item.resolution_source === 'ai_estimate'
+    && item.source_ref_id === null
+    && item.provisional_per100g?.basis_type === 'per_100g'
+    ? item.provisional_per100g
+    : null
+  const confirmedReference = reference ?? provisionalReference ?? (
     item.user_confirmed
       && item.resolution_source === 'user_override'
       && item.per100g?.basis_type === 'per_100g'
@@ -106,7 +156,7 @@ export function deriveItemForPersistence(item: FoodItemInput, reference: FoodNut
   }
 
   if (!item.user_confirmed) {
-    throw new Error(`“${item.food_name_raw}”还缺少营养信息，请先确认估算或手动填写`)
+    throw new NutritionInputError(`“${item.food_name_raw}”还缺少营养信息，请先确认估算或手动填写`)
   }
 
   // A confirmed manual/history value is allowed for the user's current log,
@@ -119,7 +169,7 @@ export function deriveItemForPersistence(item: FoodItemInput, reference: FoodNut
     fallback.fat_g,
   ]
   if (values.some(value => value === null || value === undefined || !Number.isFinite(value))) {
-    throw new Error(`“${item.food_name_raw}”还缺少完整营养信息`)
+    throw new NutritionInputError(`“${item.food_name_raw}”还缺少完整营养信息`)
   }
   return {
     row: {
@@ -148,7 +198,7 @@ interface PreparedFoodLog {
     food_id: number | null
     food_name_raw: string
     food_name_resolved: string | null
-    weight_g: number
+    weight_g: number | null
     quantity: number | null
     unit: string | null
     is_estimated: boolean
@@ -260,7 +310,7 @@ async function prepareFoodLog(
     food_id: item.food_id,
     food_name_raw: item.food_name_raw,
     food_name_resolved: item.food_name_resolved,
-    weight_g: Number(item.weight_g),
+    weight_g: item.weight_g == null ? null : Number(item.weight_g),
     quantity: item.quantity ?? null,
     unit: item.unit ?? null,
     is_estimated: isEstimated || Boolean(item.is_estimated),
@@ -378,6 +428,83 @@ export async function replaceFoodLog(
     foodLogId: result.food_log_id,
     legacyFoodLogId: result.legacy_food_log_id,
     oldLogDate: result.old_log_date,
+    items: persistedItems,
+    hasEstimatedItems: persistedItems.some((item) => item.is_estimated),
+    idempotent: false,
+  }
+}
+
+export type FoodLogInputMode = 'manual' | 'natural_language' | 'ai_assisted'
+
+/**
+ * Same contract as {@link saveFoodLog} on `save_food_log_canonical_v2`: an item
+ * may be raw-only (no weight, no nutrition) and the record carries how it was
+ * entered. Idempotent on `requestId`. v1 stays in place for the existing pages.
+ */
+export async function saveFoodLogV2(
+  supabase: SupabaseClient,
+  input: Omit<SaveFoodLogInput, 'legacyFoodLogId'> & { inputMode: FoodLogInputMode },
+): Promise<SaveFoodLogResult> {
+  const prepared = await prepareFoodLog(supabase, input.items)
+  const { data, error } = await supabase.rpc('save_food_log_canonical_v2', {
+    p_request_id: input.requestId,
+    p_log_date: input.logDate,
+    p_meal_type: input.mealType,
+    p_raw_input_text: input.rawInputText ?? null,
+    p_notes: input.notes ?? null,
+    p_items: prepared.rows,
+    p_legacy_foods: prepared.legacyFoods,
+    p_input_mode: input.inputMode,
+  })
+  if (error || !data) {
+    const failure = new Error(error?.message || '无法保存饮食记录') as Error & { code?: string }
+    failure.code = error?.code
+    throw failure
+  }
+  const result = data as { food_log_id: string; legacy_food_log_id: string | null; idempotent: boolean }
+  const persistedItems = await loadMealItems(supabase, result.food_log_id)
+  return {
+    foodLogId: result.food_log_id,
+    legacyFoodLogId: result.legacy_food_log_id,
+    items: persistedItems,
+    hasEstimatedItems: persistedItems.some((item) => item.is_estimated),
+    idempotent: result.idempotent,
+  }
+}
+
+/** {@link replaceFoodLog} on `replace_food_log_canonical_v2` (accepts raw-only items). */
+export async function replaceFoodLogV2(
+  supabase: SupabaseClient,
+  input: ReplaceFoodLogInput,
+): Promise<SaveFoodLogResult & { oldLogDate: string; updatedAt: string | null }> {
+  const prepared = await prepareFoodLog(supabase, input.items)
+  const { data, error } = await supabase.rpc('replace_food_log_canonical_v2', {
+    p_food_log_id: input.foodLogId,
+    p_log_date: input.logDate,
+    p_meal_type: input.mealType,
+    p_raw_input_text: input.rawInputText ?? null,
+    p_notes: input.notes ?? null,
+    p_items: prepared.rows,
+    p_legacy_foods: prepared.legacyFoods,
+    p_expected_updated_at: input.expectedUpdatedAt ?? null,
+  })
+  if (error || !data) {
+    const failure = new Error(error?.message || '无法更新饮食记录') as Error & { code?: string }
+    failure.code = error?.code
+    throw failure
+  }
+  const result = data as {
+    food_log_id: string
+    legacy_food_log_id: string
+    old_log_date: string
+    updated_at?: string
+  }
+  const persistedItems = await loadMealItems(supabase, result.food_log_id)
+  return {
+    foodLogId: result.food_log_id,
+    legacyFoodLogId: result.legacy_food_log_id,
+    oldLogDate: result.old_log_date,
+    updatedAt: result.updated_at ?? null,
     items: persistedItems,
     hasEstimatedItems: persistedItems.some((item) => item.is_estimated),
     idempotent: false,

@@ -18,7 +18,7 @@ interface WorkoutLog {
 interface FoodLog {
   id: string
   meal_type: string
-  foods: { name: string; weight?: number; weight_g?: number; calories?: number; protein_g?: number }[]
+  foods: { name: string; weight?: number | null; weight_g?: number | null; calories?: number | null; protein_g?: number | null }[]
 }
 
 interface AIReview {
@@ -252,8 +252,10 @@ export default function HistoryDetailPage() {
                     <div className="space-y-0.5">
                       {f.foods.map((item, i) => (
                         <p key={i} className="text-xs text-gray-600">
-                          {item.name} {item.weight_g ?? item.weight}g
+                          {item.name}
+                          {(item.weight_g ?? item.weight) != null ? ` ${item.weight_g ?? item.weight}g` : ''}
                           {item.calories ? ` · ${item.calories} kcal` : ''}
+                          {item.calories == null ? ' · 营养待补' : ''}
                           {item.protein_g ? ` · 蛋白质 ${item.protein_g}g` : ''}
                         </p>
                       ))}

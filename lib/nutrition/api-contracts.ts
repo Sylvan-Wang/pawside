@@ -52,9 +52,30 @@ export const createFoodLogBodySchema = foodLogBaseSchema.extend({
   request_id: z.string().uuid(),
 })
 
+/**
+ * An item on the edit path may be raw-only: what was eaten is recorded but not
+ * how much or its nutrition (a meal saved from chat). Only then is the weight
+ * optional, and the item must not carry numbers - unknown is stored as NULL,
+ * never as 0. The create path (nutritionItemSchema) is unchanged.
+ */
+export const editableNutritionItemSchema = nutritionItemSchema
+  .extend({
+    weight_g: z.number().positive().nullable().optional(),
+    nutrition_unknown: z.boolean().optional(),
+  })
+  .superRefine((item, context) => {
+    if (item.weight_g == null && !item.nutrition_unknown) {
+      context.addIssue({ code: 'custom', path: ['weight_g'], message: 'weight_g is required' })
+    }
+    if (item.nutrition_unknown && item.weight_g != null) {
+      context.addIssue({ code: 'custom', path: ['nutrition_unknown'], message: 'a weighed item cannot be raw-only' })
+    }
+  })
+
 export const replaceFoodLogBodySchema = foodLogBaseSchema.extend({
   request_id: z.string().uuid(),
   expected_updated_at: z.string().datetime({ offset: true }).nullable().optional(),
+  items: z.array(editableNutritionItemSchema).min(1),
 })
 
 export function normalizeMealType(value: unknown): typeof mealTypes[number] | null {

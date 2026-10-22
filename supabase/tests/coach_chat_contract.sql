@@ -298,7 +298,7 @@ begin
   -- explicitly different timestamp rather than the pre-update value.)
   perform pg_temp.expect_error(format(
     $q$select public.replace_food_log_canonical_v2(%L, date '2026-10-22', 'dinner', null, null,
-       '[{"food_name_raw":"x"}]'::jsonb, '[]'::jsonb, %L)$q$, log_id, stale_ts - interval '1 second'), '40001');
+       '[{"food_name_raw":"x"}]'::jsonb, '[]'::jsonb, %L)$q$, log_id, stale_ts - interval '1 second'), 'PT409');
   if (select count(*) from public.user_food_log_items where food_log_id = log_id) <> 1
      or (select food_name_raw from public.user_food_log_items where food_log_id = log_id) <> '宫保鸡丁' then
     raise exception 'a refused stale replace changed the record';

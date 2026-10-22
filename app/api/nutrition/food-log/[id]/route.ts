@@ -3,6 +3,7 @@ import { normalizeMealType, replaceFoodLogBodySchema } from '@/lib/nutrition/api
 import {
   deleteFoodLog,
   replaceFoodLog,
+  replaceFoodLogV2,
   saveFoodLog,
   type FoodItemInput,
   type MealType,
@@ -165,8 +166,15 @@ export async function PATCH(
       notes: body.notes ?? null,
       items: body.items as FoodItemInput[],
     }
+    // Raw-only items (saved from chat without a weight) need the v2 contract.
+    // Every other edit keeps the original v1 path untouched.
+    const hasRawOnlyItem = body.items.some((item) => item.nutrition_unknown)
+    if (hasRawOnlyItem && !legacy.canonical_food_log_id) {
+      return apiError('VALIDATION_ERROR', '这条旧记录里不能保留“只记录了吃什么”的食物', 422)
+    }
+    const replace = hasRawOnlyItem ? replaceFoodLogV2 : replaceFoodLog
     const result = legacy.canonical_food_log_id
-      ? await replaceFoodLog(supabase, {
+      ? await replace(supabase, {
           ...common,
           foodLogId: legacy.canonical_food_log_id,
           expectedUpdatedAt: body.expected_updated_at ?? null,
