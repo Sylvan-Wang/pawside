@@ -648,6 +648,27 @@ describe.skipIf(!IT_ENABLED)('coach chat against a real database', { timeout: 30
     })
   })
 
+  describe('account deletion', () => {
+    it('deleting the account removes every chat table row and every record saved from the chat', async () => {
+      const t = await newTester()
+      const meal = await t.say([rawPlan([riceAndEggs])], '午饭')
+      await t.confirm(meal.cards[0].draft_id)
+      await t.say([rawPlan([], { clarification: { about: 'workout', question: '大概做了多久呢？', options: [] } })], '我跑步了')
+      const work = await t.say([rawPlan([rawTask('log_workout', { workout_type: '跑步', workout_minutes: 20 })])], '跑了20分钟')
+      await t.confirm(work.cards[0].draft_id)
+
+      const tables: Array<[string, string]> = [
+        ['coach_conversations', 'user_id'], ['coach_messages', 'user_id'], ['coach_drafts', 'user_id'],
+        ['user_food_logs', 'user_id'], ['food_logs', 'user_id'], ['daily_nutrition_summary', 'user_id'], ['workout_logs', 'user_id'],
+      ]
+      for (const [table, column] of tables) expect(count(table, `${column}='${t.user.id}'`), `${table} before`).toBeGreaterThan(0)
+
+      sql(`delete from auth.users where id='${t.user.id}'`) // what the account-delete route does
+      for (const [table, column] of tables) expect(count(table, `${column}='${t.user.id}'`), `${table} after`).toBe(0)
+      expect(count('user_food_log_items', `food_log_id not in (select id from public.user_food_logs)`)).toBe(0)
+    })
+  })
+
   describe('isolation and safety', () => {
     it('another user can neither confirm, cancel, nor read my draft or messages', async () => {
       const a = await newTester()

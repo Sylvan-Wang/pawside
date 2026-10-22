@@ -1,6 +1,6 @@
 # 小爪测试报告
 
-对应 Patch §11。**被测代码：commit `10783ec`**（之后只有文档和 README 改动）。日期：2026-10-22。
+对应 Patch §11。**被测代码：commit `10783ec`**（之后只有文档、README 和一条新增的账号删除集成测试）。日期：2026-10-22。
 
 ## 0. 读这份报告前先看这三点
 
@@ -18,7 +18,7 @@
 |---|---|
 | 运行环境 | 云端沙箱，Linux，Node 22.22.0 |
 | 应用 | Next 16.3.4（`next build --webpack` 通过，`next start`） |
-| 数据库 | PostgreSQL 16.15（本地），40+ 个迁移全部应用；种子：食物库 1698 条、别名 12、份量模板 15 |
+| 数据库 | PostgreSQL 16.15（本地），47 个迁移全部应用；种子：食物库 1698 条、别名 12、份量模板 15 |
 | 接口层 | PostgREST 12.2.3 + supabase-js 2.102.1，RLS 开启 |
 | 浏览器 | Chromium（Playwright 1.56.1），390×844 手机模拟 |
 | 模型 | **脚本化 / 规则替身**；真实模型：无 |
@@ -29,10 +29,10 @@
 |---|---|
 | `npx tsc --noEmit` | 通过（0 错误） |
 | `npx eslint .` | 通过（0 错误，0 警告） |
-| `npx vitest run`（默认，不含集成） | **635 通过，56 跳过**（跳过的是 `PAWSIDE_IT=1` 才运行的集成测试），0 失败 |
-| `PAWSIDE_IT=1 npx vitest run`（含集成） | **691 通过**，0 失败（70 个文件） |
+| `npx vitest run`（默认，不含集成） | **635 通过，57 跳过**（跳过的是 `PAWSIDE_IT=1` 才运行的集成测试），0 失败 |
+| `PAWSIDE_IT=1 npx vitest run`（含集成） | **692 通过**，0 失败（70 个文件） |
 | 其中小爪单元测试 | `tests/coach-chat/`（日期、计划校验、匹配与份量、编辑、卡片与回复、评测语料自检、前端辅助） |
-| 其中集成测试 | `tests/integration/`：服务层 + 路由 + 原有饮食路由，共 56 条，真实数据库 |
+| 其中集成测试 | `tests/integration/`：服务层 + 路由 + 原有饮食路由，共 57 条，真实数据库 |
 | SQL 契约（`supabase/tests/*.sql`） | **25/25 通过**（原有 23 + 新增 `coach_chat_contract.sql`、`food_edit_conflict_contract.sql`） |
 | `npx vitest run tests/site tests/devices tests/account` | 通过（官网文案、设备数据不进 AI——已把 `lib/coach-chat`、`app/api/coach` 加入扫描、导出/删除清单覆盖） |
 | `next build --webpack` | 通过，7 个新路由出现在构建产物中 |
