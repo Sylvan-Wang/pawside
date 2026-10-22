@@ -96,6 +96,8 @@ export interface TurnDeps {
   /** Records the model call (never the user's text). Failures must not break the turn. */
   log?: (record: GenerationRecord) => Promise<unknown>
   now?: () => Date
+  /** Switches for parts of the chat; a part that is off answers politely and writes nothing. */
+  features?: { meals?: boolean; workouts?: boolean; weight?: boolean }
 }
 
 export interface TurnInput {
@@ -508,6 +510,10 @@ async function runCancel(ctx: Ctx, task: Extract<PlanTask, { kind: 'cancel_draft
 }
 
 async function runTask(ctx: Ctx, task: PlanTask, plan: NormalizedPlan): Promise<TaskResult> {
+  const features = ctx.deps.features ?? {}
+  if ((task.kind === 'log_meal' || task.kind === 'edit_meal') && features.meals === false) return none(TEXT.featureOff)
+  if (task.kind === 'log_workout' && features.workouts === false) return none(TEXT.featureOff)
+  if (task.kind === 'log_weight' && features.weight === false) return none(TEXT.featureOff)
   if (ctx.calls >= MAX_TOOL_CALLS && ['log_meal', 'edit_meal', 'log_workout', 'log_weight', 'query_day'].includes(task.kind)) {
     return none('还有一件事我先放一放，等这几条处理完你再告诉我一次。')
   }
