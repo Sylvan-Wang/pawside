@@ -70,6 +70,7 @@ const requiredFiles = [
   'supabase/tests/four_split_switch_contract.sql',
   'supabase/tests/set_record_shapes_contract.sql',
   'supabase/tests/end_early_and_alerts_contract.sql',
+  'supabase/tests/home_five_session_contract.sql',
   'supabase/seeds/seed_food_data.sql',
   'supabase/seeds/seed_canonical_patch.sql',
   'supabase/seeds/seed_portion_templates.sql',
