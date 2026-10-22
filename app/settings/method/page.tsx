@@ -19,6 +19,9 @@ interface MethodOption {
   name: string | null
   description: string | null
   is_current: boolean
+  equipment_fit: 'available' | 'needs_confirmation'
+  equipment_requirement_label: string
+  equipment_message: string | null
   days: MethodDay[]
 }
 
@@ -86,14 +89,17 @@ export default function MethodSettingsPage() {
         )}
 
         {methods?.map((method) => (
-          <section key={method.release_id} className={`rounded-2xl bg-white p-4 ${method.is_current ? 'ring-1 ring-black' : ''}`}>
+          <section key={method.release_id} className={`rounded-2xl p-4 ${method.equipment_fit === 'needs_confirmation' && !method.is_current ? 'bg-gray-100 text-gray-500' : 'bg-white'} ${method.is_current ? 'ring-1 ring-black' : ''}`}>
             <div className="flex items-center justify-between gap-3">
-              <h2 className="text-base font-semibold text-gray-900">{method.short_name}</h2>
+              <h2 className={`text-base font-semibold ${method.equipment_fit === 'needs_confirmation' && !method.is_current ? 'text-gray-500' : 'text-gray-900'}`}>{method.short_name}</h2>
               {method.is_current && (
                 <span className="rounded-full bg-black px-2.5 py-1 text-[11px] text-white">当前使用</span>
               )}
             </div>
             {method.description && <p className="mt-2 text-sm leading-6 text-gray-600">{method.description}</p>}
+            {method.equipment_fit === 'needs_confirmation' && !method.is_current && (
+              <p className="mt-1 text-xs text-gray-500">需要{method.equipment_requirement_label}</p>
+            )}
             <div className="mt-3 flex flex-wrap gap-2">
               {method.days.map((day) => (
                 <span key={day.key} className="rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-700">
@@ -105,7 +111,7 @@ export default function MethodSettingsPage() {
               <button
                 type="button"
                 onClick={() => { setSwitchError(null); setStartDay((method.days.find((day) => day.required) ?? method.days[0])?.key ?? null); setPending(method) }}
-                className="mt-4 w-full rounded-xl bg-black py-3 text-sm font-medium text-white"
+                className={`mt-4 w-full rounded-xl py-3 text-sm font-medium ${method.equipment_fit === 'needs_confirmation' ? 'border border-gray-300 bg-transparent text-gray-600' : 'bg-black text-white'}`}
               >
                 切换到{method.short_name}
               </button>
@@ -119,8 +125,11 @@ export default function MethodSettingsPage() {
           <div className="w-full max-w-md rounded-2xl bg-white p-5">
             <h2 id="switch-title" className="text-base font-semibold text-gray-900">确定要切换训练方法吗？</h2>
             <p className="mt-2 text-sm leading-6 text-gray-600">
-              将从「{current?.short_name ?? '当前方法'}」切换到「{pending.short_name}」。
+              {current ? `将从「${current.short_name}」切换到「${pending.short_name}」。` : `将开始「${pending.short_name}」。`}
             </p>
+            {pending.equipment_message && (
+              <p className="mt-2 rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-800">{pending.equipment_message}</p>
+            )}
             <ul className="mt-3 space-y-1.5 text-sm leading-6 text-gray-700">
               <li>• 你过往的训练记录不会丢失</li>
               <li>• 之后会按新的方法安排训练</li>

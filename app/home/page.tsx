@@ -154,7 +154,7 @@ export default function HomePage() {
       return
     }
     if (methodAvailability?.reason === 'EQUIPMENT_REVIEW_REQUIRED') {
-      router.push('/onboarding')
+      router.push('/settings/method')
       return
     }
     if (methodAvailability?.status !== 'available') {
@@ -428,7 +428,7 @@ export default function HomePage() {
                   : methodAvailable
                     ? '官方三分化已准备好'
                     : methodEquipmentBlocked
-                      ? '当前训练条件不匹配'
+                      ? '选一个适合你的训练方法'
                     : '官方三分化尚未开放'}
               </p>
               <p className="text-sm text-white/70 mt-1">
@@ -447,7 +447,7 @@ export default function HomePage() {
                       : methodNeedsSetup
                         ? '完成基础设置'
                         : methodEquipmentBlocked
-                          ? '修改训练条件'
+                          ? '选择训练方法'
                         : methodAvailable
                           ? '启用训练方法'
                           : '查看训练方法'}
