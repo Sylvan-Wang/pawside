@@ -48,6 +48,9 @@ export async function POST(request: Request) {
     if (error.code === 'P0002') {
       return apiError('NOT_FOUND', '这个训练方法暂时不可用。', 404)
     }
+    if (error.code === '22023' && /onboarding/i.test(error.message)) {
+      return apiError('VALIDATION_ERROR', '请先完成基础设置，再选择训练方法。', 400)
+    }
     if (error.code === '22023') {
       return apiError('VALIDATION_ERROR', '这个起始训练日不在所选方法里。', 400)
     }

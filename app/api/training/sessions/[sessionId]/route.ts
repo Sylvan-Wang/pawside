@@ -1,4 +1,5 @@
 import { apiError } from '@/lib/api/response'
+import { visibleTutorialUrl } from '@/lib/exercise-tutorial'
 import { buildWorkoutGuideMedia, type ExerciseMediaMapping } from '@/lib/exercise-media'
 import { createClient } from '@/lib/supabase/server'
 import { completionCountUnit, prescribedSetsAreComplete } from '@/lib/training-completion'
@@ -11,6 +12,8 @@ const idSchema = z.string().uuid()
 interface RawExercise {
   canonical_name_zh: string
   record_shape?: string | null
+  tutorial_url?: string | null
+  tutorial_verified_at?: string | null
   media_mappings: ExerciseMediaMapping[] | null
 }
 
@@ -74,6 +77,8 @@ export async function GET(
         exercise:exercises(
           canonical_name_zh,
           record_shape,
+          tutorial_url,
+          tutorial_verified_at,
           media_mappings:exercise_external_mappings(
             provider,external_slug,source_version,license,attribution,
             source_url,mapping_status,mapping_notes
@@ -115,6 +120,7 @@ export async function GET(
       ...execution,
       exercise: exercise ? { canonical_name_zh: exercise.canonical_name_zh, record_shape: exercise.record_shape ?? 'weight_reps' } : null,
       media: mapping ? buildWorkoutGuideMedia(mapping) : null,
+      tutorial_url: visibleTutorialUrl(exercise?.tutorial_url, exercise?.tutorial_verified_at),
       sets,
       fully_completed: exerciseIsFullyCompleted(sets),
     }

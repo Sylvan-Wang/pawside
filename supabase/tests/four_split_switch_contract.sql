@@ -146,8 +146,8 @@ begin
   perform set_config('request.jwt.claim.sub', u2::text, true);
   begin
     perform public.switch_method_release_v1(r4);
-    raise exception 'a user with no active enrollment could switch';
-  exception when sqlstate 'P0002' then null;
+    raise exception 'a user with neither an enrollment nor an onboarding profile could switch';
+  exception when sqlstate '22023' then null;  -- since 20261022000100: no enrollment is fine if onboarding is done
   end;
   perform set_config('request.jwt.claim.sub', u::text, true);
   begin

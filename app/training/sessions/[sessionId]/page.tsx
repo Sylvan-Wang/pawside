@@ -78,6 +78,8 @@ interface ExerciseExecution {
   } | null
   sets: ActualSet[]
   media: ExerciseMedia | null
+  /** Verified tutorial link, already filtered by the API; null hides the link. */
+  tutorial_url?: string | null
   /** Minimum P1 §4.2: every prescribed set of this exercise is completed. */
   fully_completed?: boolean
 }
@@ -1191,6 +1193,13 @@ export default function TrainingSessionPage() {
             <button type="button" onClick={() => { if (exercise.status === 'skipped') void setExerciseStatus(exercise.id, 'resume'); addSet(exercise.id) }} className="mt-3 text-sm font-medium text-gray-700">
               + 记录额外一组
             </button>
+          )}
+
+          {exercise.tutorial_url && (
+            <a href={exercise.tutorial_url} target="_blank" rel="noopener noreferrer"
+              className="mt-4 block text-xs text-gray-400 underline underline-offset-2">
+              动作还不清楚？查看完整视频教程 ↗
+            </a>
           )}
         </section>
 
