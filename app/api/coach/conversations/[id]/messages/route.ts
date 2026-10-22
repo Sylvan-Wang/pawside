@@ -25,7 +25,8 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     const rows = await listMessages(gate.supabase, gate.user.id, id, { before, limit: Number.isFinite(limit) ? limit : 30 })
     const messages = await toMessageViews(gate.supabase, gate.user.id, rows, params.get('time_zone'))
     return NextResponse.json({ data: { messages, has_more: rows.length >= Math.min(Math.max(limit || 30, 1), 100) } })
-  } catch {
+  } catch (reason) {
+    console.error('[coach-chat] load messages failed', reason instanceof Error ? reason.message : reason)
     return apiError('DATABASE_ERROR', '暂时无法读取对话记录', 500)
   }
 }

@@ -326,6 +326,13 @@ function rescale(item: MealDraftItem, grams: number, basis: WeightBasis): MealDr
   }
 }
 
+/** "0.5" reads as 减半, not as a parameter. */
+function factorText(factor: number): string {
+  if (factor === 0.5) return '减半'
+  if (factor === 2) return '加倍'
+  return `×${formatNumber(factor, undefined, 2)}`
+}
+
 export interface EditOutcome {
   items: MealDraftItem[]
   applied: string[]
@@ -363,7 +370,7 @@ export async function applyEdits(input: {
         return rescale(item, item.weight_g * factor, 'scaled')
       })
       const skipped = items.filter((item) => item.weight_g === null).length
-      if (any) applied.push(`全部 ×${formatNumber(factor, undefined, 2)}`)
+      if (any) applied.push(`全部${factorText(factor)}`)
       else unmatched.push('全部份量（没有可调整的重量）')
       if (any && skipped > 0) warnings.push('some_items_without_weight')
       continue
@@ -390,7 +397,7 @@ export async function applyEdits(input: {
         continue
       }
       items[index] = rescale(item, item.weight_g * (edit.factor as number), 'scaled')
-      applied.push(`${item.name_raw} ×${formatNumber(edit.factor, undefined, 2)}`)
+      applied.push(`${item.name_raw} ${factorText(edit.factor as number)}`)
     } else if (edit.action === 'set_grams') {
       items[index] = rescale(
         item.weight_g === null ? { ...item, weight_g: edit.grams as number } : item,

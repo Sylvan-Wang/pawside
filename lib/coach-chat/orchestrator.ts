@@ -114,6 +114,12 @@ export interface TurnResult {
   userMessage: MessageRow
   assistantMessage: MessageRow
   cards: CardView[]
+  /**
+   * Cards from EARLIER messages that this turn changed (replaced by a correction,
+   * cancelled, a question that got answered). The app swaps them in so no old card
+   * keeps offering a button that no longer applies.
+   */
+  updatedCards: CardView[]
 }
 
 interface Ctx {
@@ -129,6 +135,8 @@ interface Ctx {
   calls: number
   clarificationsUsed: number
   asked: boolean
+  /** Drafts this turn changed without creating a new card for them. */
+  touched: Set<string>
   profileUnit: 'kg' | 'lb' | null
 }
 
@@ -164,6 +172,7 @@ function summarizeDraft(draft: DraftRow): string {
 }
 
 async function supersede(ctx: Ctx, old: DraftRow): Promise<void> {
+  ctx.touched.add(old.id)
   await transitionDraft(ctx.deps.supabase, {
     userId: ctx.userId,
     draftId: old.id,
@@ -506,7 +515,9 @@ async function runCancel(ctx: Ctx, task: Extract<PlanTask, { kind: 'cancel_draft
     to: 'cancelled',
   })
   if (!cancelled) return none('这一张刚刚已经有变化了，请看看卡片上的状态。')
-  return { drafts: [cancelled], texts: ['好，这条不记了。'] }
+  // The card that was cancelled is updated where it already is; it is not shown a second time.
+  ctx.touched.add(cancelled.id)
+  return { drafts: [], texts: ['好，这条不记了。'] }
 }
 
 async function runTask(ctx: Ctx, task: PlanTask, plan: NormalizedPlan): Promise<TaskResult> {
@@ -597,7 +608,15 @@ async function finish(
   const fresh = await getDrafts(ctx.deps.supabase, ctx.userId, drafts.map((d) => d.id))
   const order = new Map(drafts.map((draft, index) => [draft.id, index]))
   fresh.sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0))
-  return { duplicate: false, userMessage, assistantMessage, cards: toCards(fresh, ctx.now, ctx.today) }
+  const shown = new Set(drafts.map((d) => d.id))
+  const updated = await getDrafts(ctx.deps.supabase, ctx.userId, [...ctx.touched].filter((id) => !shown.has(id)))
+  return {
+    duplicate: false,
+    userMessage,
+    assistantMessage,
+    cards: toCards(fresh, ctx.now, ctx.today),
+    updatedCards: toCards(updated, ctx.now, ctx.today),
+  }
 }
 
 /** Applies a tapped option to a question the server asked, without calling the model. */
@@ -653,7 +672,7 @@ export async function handleChatTurn(deps: TurnDeps, input: TurnInput): Promise<
     const reply = await findReplyTo(deps.supabase, deps.userId, stored.message.id)
     if (reply) {
       const cards = await getDrafts(deps.supabase, deps.userId, reply.cards.map((card) => card.draft_id))
-      return { duplicate: true, userMessage: stored.message, assistantMessage: reply, cards: toCards(cards, now, today) }
+      return { duplicate: true, userMessage: stored.message, assistantMessage: reply, cards: toCards(cards, now, today), updatedCards: [] }
     }
   }
 
@@ -671,6 +690,7 @@ export async function handleChatTurn(deps: TurnDeps, input: TurnInput): Promise<
     calls: 0,
     clarificationsUsed: Math.max(0, ...openDrafts.filter((d) => d.status === 'needs_clarification').map((d) => d.clarifications_used)),
     asked: false,
+    touched: new Set<string>(),
     profileUnit: await loadProfileUnit(deps.supabase, deps.userId),
   }
 

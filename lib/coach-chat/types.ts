@@ -130,6 +130,11 @@ export interface ClarifyPayload {
 
 export type DraftPayload = MealDraftPayload | WorkoutDraftPayload | WeightDraftPayload | ClarifyPayload
 
+/** A question draft keeps its question payload for life, whatever status it ends in (answered, dropped, expired). */
+export function isClarifyPayload(payload: DraftPayload): payload is ClarifyPayload {
+  return typeof (payload as ClarifyPayload).question === 'string' && Array.isArray((payload as ClarifyPayload).options)
+}
+
 export interface DraftRow {
   id: string
   user_id: string

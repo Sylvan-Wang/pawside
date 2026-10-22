@@ -9,7 +9,8 @@ export async function POST() {
   if (!gate.ok) return gate.response
   try {
     return NextResponse.json({ data: { conversation_id: await getOrCreateConversation(gate.supabase, gate.user.id) } })
-  } catch {
+  } catch (reason) {
+    console.error('[coach-chat] open conversation failed', reason instanceof Error ? reason.message : reason)
     return apiError('DATABASE_ERROR', '暂时无法打开对话', 500)
   }
 }

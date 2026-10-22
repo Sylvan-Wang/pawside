@@ -29,7 +29,8 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
         card: buildCard(result.draft, now, dateKeyInTimeZone(now, timeZone)),
       },
     })
-  } catch {
+  } catch (reason) {
+    console.error('[coach-chat] cancel failed', reason instanceof Error ? reason.message : reason)
     return apiError('DATABASE_ERROR', '暂时无法取消，请稍后再试', 500)
   }
 }

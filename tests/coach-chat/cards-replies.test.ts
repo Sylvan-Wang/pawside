@@ -3,7 +3,7 @@ import { buildCard } from '../../lib/coach-chat/cards'
 import { dayFactsText, savedText, TEXT } from '../../lib/coach-chat/replies'
 import type { DayFacts } from '../../lib/coach-chat/day-facts'
 import { buildMealPayload } from '../../lib/coach-chat/meal'
-import type { DraftRow, MealDraftItem, WeightDraftPayload, WorkoutDraftPayload } from '../../lib/coach-chat/types'
+import type { ClarifyPayload, DraftRow, MealDraftItem, WeightDraftPayload, WorkoutDraftPayload } from '../../lib/coach-chat/types'
 import { findInternalTerms } from '../../lib/coach/display'
 
 const NOW = new Date('2026-10-22T06:30:00.000Z')
@@ -34,6 +34,11 @@ function draft(fields: Partial<DraftRow>): DraftRow {
 
 describe('meal card', () => {
   const card = buildCard(draft({}), NOW, '2026-10-22')
+
+  it('does not repeat a weight the user gave in grams', () => {
+    const grams = buildCard(draft({ payload: buildMealPayload({ date: '2026-10-22', dateSource: 'default', mealType: 'lunch', mealTypeSource: 'user', rawText: '', items: [{ ...rice, amount_text: '200克', weight_g: 200, weight_basis: 'user_grams', nutrition_status: 'resolved' }] }) }), NOW, '2026-10-22')
+    expect(grams.lines[0]).toEqual({ text: '米饭 · 200g · 174 kcal', badge: null })
+  })
 
   it('shows what will be saved, with honest badges and no invented totals', () => {
     expect(card.title).toBe('午餐（今天）')
@@ -84,6 +89,16 @@ describe('card state', () => {
     expect(card.can_confirm).toBe(false)
     expect(card.can_cancel).toBe(false)
     expect(card.status_text).toContain('已过期')
+  })
+
+  it.each([
+    ['superseded', '已回答'],
+    ['cancelled', '已取消'],
+  ] as const)('an answered or dropped question (%s) is drawn as a question, never as a meal/workout card', (status, text) => {
+    const payload: ClarifyPayload = { v: 1, source: 'model', about: 'workout', question: '大概做了多久呢？', options: [{ label: '半小时', value: '半小时' }], pending_task: null, raw_text: '' }
+    // kind 'workout' with a question payload: the shape that used to be read as a workout card and throw
+    const card = buildCard(draft({ kind: 'workout', status, payload }), NOW, '2026-10-22')
+    expect(card).toMatchObject({ title: '大概做了多久呢？', question: null, can_confirm: false, can_cancel: false, status_text: text })
   })
 
   it('a question waits for an answer with tappable options', () => {

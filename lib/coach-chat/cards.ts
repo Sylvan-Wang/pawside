@@ -1,15 +1,15 @@
 import { formatNumber } from '../coach/display'
 import { describeDate } from './dates'
 import { MEAL_LABELS } from './meal'
-import type {
-  CardLine,
-  CardView,
-  ClarifyPayload,
-  DraftRow,
-  MealDraftItem,
-  MealDraftPayload,
-  WeightDraftPayload,
-  WorkoutDraftPayload,
+import {
+  isClarifyPayload,
+  type CardLine,
+  type CardView,
+  type DraftRow,
+  type MealDraftItem,
+  type MealDraftPayload,
+  type WeightDraftPayload,
+  type WorkoutDraftPayload,
 } from './types'
 
 /**
@@ -30,7 +30,8 @@ function kcal(value: number | null): string | null {
 
 function mealItemLine(item: MealDraftItem): CardLine {
   const parts: string[] = [item.name_raw]
-  if (item.amount_text) parts.push(item.amount_text)
+  // "200克" and "200g" say the same thing: show the amount the user gave only when it adds information.
+  if (item.amount_text && item.weight_basis !== 'user_grams') parts.push(item.amount_text)
   if (item.weight_g !== null) {
     const approx = item.weight_basis === 'user_grams' || item.weight_basis === 'unit_conversion' || item.weight_basis === 'kept'
       ? ''
@@ -121,25 +122,33 @@ export function isExpired(draft: Pick<DraftRow, 'expires_at'>, now: Date): boole
   return new Date(draft.expires_at).getTime() <= now.getTime()
 }
 
-function clarifyBody(draft: DraftRow): Pick<CardView, 'title' | 'subtitle' | 'lines' | 'total' | 'notes'> {
-  void draft
-  return { title: '等你回答', subtitle: null, lines: [], total: null, notes: [] }
+const CLARIFY_DONE_TEXT: Partial<Record<DraftRow['status'], string>> = {
+  superseded: '已回答',
+  cancelled: '已取消',
+  failed: '已失效',
 }
 
 export function buildCard(draft: DraftRow, now: Date, today: string): CardView {
-  if (draft.status === 'needs_clarification') {
-    const payload = draft.payload as ClarifyPayload
-    const expired = isExpired(draft, now)
+  // Questions are recognised by what they hold, not by status: an answered or dropped question
+  // keeps its question payload and must never be drawn as a meal/workout/weight card.
+  if (isClarifyPayload(draft.payload)) {
+    const payload = draft.payload
+    const open = draft.status === 'needs_clarification'
+    const expired = open && isExpired(draft, now)
     return {
       draft_id: draft.id,
-      question: expired ? null : { text: payload.question, options: payload.options.map((option) => option.label) },
+      question: open && !expired ? { text: payload.question, options: payload.options.map((option) => option.label) } : null,
       kind: draft.kind,
       status: draft.status,
       version: draft.version,
-      ...clarifyBody(draft),
+      title: payload.question,
+      subtitle: null,
+      lines: [],
+      total: null,
+      notes: [],
       can_confirm: false,
-      can_cancel: !expired,
-      status_text: expired ? '已过期，请重新说一遍。' : null,
+      can_cancel: open && !expired,
+      status_text: expired ? '已过期，请重新说一遍。' : open ? null : (CLARIFY_DONE_TEXT[draft.status] ?? null),
     }
   }
 

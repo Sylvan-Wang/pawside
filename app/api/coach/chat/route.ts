@@ -74,7 +74,14 @@ export async function POST(request: NextRequest) {
     const [userMessage, assistantMessage] = await toMessageViews(
       supabase, user.id, [result.userMessage, result.assistantMessage], body.time_zone,
     )
-    return NextResponse.json({ data: { duplicate: result.duplicate, user_message: userMessage, assistant_message: assistantMessage } })
+    return NextResponse.json({
+      data: {
+        duplicate: result.duplicate,
+        user_message: userMessage,
+        assistant_message: assistantMessage,
+        updated_cards: result.updatedCards,
+      },
+    })
   } catch (reason) {
     if (reason instanceof TurnError) {
       switch (reason.code) {

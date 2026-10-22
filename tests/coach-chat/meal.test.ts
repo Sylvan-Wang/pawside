@@ -166,6 +166,7 @@ describe('applying edits', () => {
     expect(result.items[0].weight_basis).toBe('scaled')
     expect(result.items[0].nutrition_status).toBe('estimated')
     expect(result.unmatched).toEqual([])
+    expect(result.applied).toEqual(['全部减半'])
   })
 
   it('halves only the named item', async () => {

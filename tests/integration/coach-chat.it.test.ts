@@ -4,6 +4,7 @@ import { afterAll, describe, expect, it } from 'vitest'
 import { cancelDraft, commitDraft } from '../../lib/coach-chat/commit'
 import { handleChatTurn, type TurnResult } from '../../lib/coach-chat/orchestrator'
 import { getDraft, getOrCreateConversation, listMessages } from '../../lib/coach-chat/store'
+import { toMessageViews } from '../../lib/coach-chat/views'
 import type { MealDraftPayload, WeightDraftPayload, WorkoutDraftPayload } from '../../lib/coach-chat/types'
 import { failingEstimator, fixedEstimator, rawItem, rawPlan, rawTask, scriptedPlanner } from '../coach-chat/helpers'
 import { clientFor, count, createTestUser, deleteTestUser, IT_ENABLED, sql } from './harness'
@@ -183,6 +184,7 @@ describe.skipIf(!IT_ENABLED)('coach chat against a real database', { timeout: 30
       expect(newCard.lines[0].text).toContain('150g') // the portion stays
 
       expect((await getDraft(t.user.client, t.user.id, oldId))!.status).toBe('superseded')
+      expect(second.updatedCards.map((c) => [c.draft_id, c.status, c.can_confirm])).toEqual([[oldId, 'superseded', false]])
       expect((await t.confirm(oldId)).status).toBe('not_confirmable')
       expect(count('user_food_logs', `user_id='${t.user.id}'`)).toBe(0)
 
@@ -325,6 +327,13 @@ describe.skipIf(!IT_ENABLED)('coach chat against a real database', { timeout: 30
       const done = await t.say([rawPlan([rawTask('log_workout', { workout_type: '跑步', workout_minutes: 30 })])], '半小时')
       expect(done.cards[0].kind).toBe('workout')
       expect((await getDraft(t.user.client, t.user.id, asked.cards[0].draft_id))!.status).toBe('superseded')
+      // the answered question comes back as "updated" so the app can close it where it is shown
+      expect(done.updatedCards.map((c) => [c.draft_id, c.status, c.question])).toEqual([[asked.cards[0].draft_id, 'superseded', null]])
+
+      // regression: reopening the chat must still be able to draw an answered question
+      const history = await toMessageViews(t.user.client, t.user.id, await listMessages(t.user.client, t.user.id, t.conversationId), TZ, t.now)
+      const question = history.flatMap((m) => m.cards).find((c) => c.draft_id === asked.cards[0].draft_id)!
+      expect(question).toMatchObject({ status: 'superseded', question: null, status_text: '已回答', can_cancel: false })
     })
   })
 
@@ -508,7 +517,8 @@ describe.skipIf(!IT_ENABLED)('coach chat against a real database', { timeout: 30
       const t = await newTester()
       await t.say([rawPlan([riceAndEggs])], '午饭')
       const cancelled = await t.say([rawPlan([rawTask('cancel_draft')])], '算了不记了')
-      expect(cancelled.cards[0].status).toBe('cancelled')
+      expect(cancelled.cards).toEqual([]) // no second copy of the card
+      expect(cancelled.updatedCards.map((c) => c.status)).toEqual(['cancelled']) // the original is updated where it is
       expect(cancelled.assistantMessage.content).toBe('好，这条不记了。')
     })
 

@@ -18,7 +18,8 @@ export async function DELETE(_request: Request, context: { params: Promise<{ id:
     if (!(await conversationBelongsTo(gate.supabase, gate.user.id, id))) return apiError('NOT_FOUND', '对话不存在', 404)
     await deleteConversation(gate.supabase, gate.user.id, id)
     return NextResponse.json({ data: { deleted: true } })
-  } catch {
+  } catch (reason) {
+    console.error('[coach-chat] clear conversation failed', reason instanceof Error ? reason.message : reason)
     return apiError('DATABASE_ERROR', '暂时无法清空对话', 500)
   }
 }
