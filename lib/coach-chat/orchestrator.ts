@@ -66,6 +66,7 @@ import type {
   WeightDraftPayload,
   WorkoutDraftPayload,
 } from './types'
+import { pickRecipes, recipeText } from './recipes'
 import { buildWeightPayload } from './weight'
 import { buildWorkoutPayload } from './workout'
 
@@ -548,6 +549,8 @@ async function runTask(ctx: Ctx, task: PlanTask, plan: NormalizedPlan): Promise<
       if (facts.meals.length > 0) {
         lines.push(`${dayFactsText(facts, ctx.today)}\n（只算已记录的，可能不完整。）`)
       }
+      const suggestions = recipeText(await pickRecipes(ctx.deps.supabase, task.topic, ctx.today))
+      if (suggestions) lines.push(suggestions)
       return none(lines.join('\n'))
     }
     case 'smalltalk': return none(plan.reply ?? TEXT.smalltalk)

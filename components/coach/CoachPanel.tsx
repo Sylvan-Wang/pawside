@@ -1,6 +1,7 @@
 'use client'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import CatMascot from '@/components/CatMascot'
+import { splitLinks } from '@/lib/coach-chat/links'
 import { dateHeading, newClientId, replaceCard, withDateHeadings } from '@/lib/coach-chat/client'
 import type { CardView, ChatMessageView } from '@/lib/coach-chat/types'
 import { dayCacheKeys, formatLocalDateKey } from '@/lib/utils'
@@ -297,7 +298,9 @@ export default function CoachPanel({ onClose }: { onClose: () => void }) {
                     <div className={`whitespace-pre-wrap break-words rounded-2xl px-3 py-2 text-sm ${
                       mine ? 'bg-black text-white' : message.local === 'note' ? 'bg-transparent px-1 text-xs text-gray-400' : 'bg-white text-gray-800'
                     } ${message.local === 'sending' ? 'opacity-60' : ''}`}>
-                      {message.text}
+                      {splitLinks(message.text).map((part, index) => part.type === 'link'
+                        ? <a key={index} href={part.href} target="_blank" rel="noopener noreferrer" className="break-all text-blue-600 underline">{part.href}</a>
+                        : <span key={index}>{part.text}</span>)}
                     </div>
                     {message.local === 'failed' && (
                       <button type="button" onClick={() => retry(message)} className="mt-1 text-xs text-red-500">没发出去 · 重试</button>
