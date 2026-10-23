@@ -511,7 +511,7 @@ export default function HomePage() {
           {nutritionLoading ? (
             <p className="text-sm text-gray-400">读取中…</p>
           ) : nutritionRows.length === 0 ? (
-            <CatNote title="今天还没有饮食记录" hint="吃完点上面的「记录饮食」，我来帮你算" />
+            <CatNote mood="eating" size={88} title="今天还没有饮食记录" hint="吃完点上面的「记录饮食」，我来帮你算" />
           ) : (
             <div className="space-y-2">
               {nutritionRows.map((row) => {

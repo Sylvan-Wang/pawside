@@ -266,10 +266,11 @@ export default function CoachPanel({ onClose }: { onClose: () => void }) {
       </header>
 
       <div ref={listRef} className="flex-1 overflow-y-auto overscroll-contain px-3 py-3" aria-live="polite">
-        {state === 'loading' && <p className="py-8 text-center text-sm text-gray-400">加载中…</p>}
+        {state === 'loading' && <p className="flex items-center justify-center gap-1.5 py-8 text-sm text-gray-400"><CatMascot mood="thinking" size={28} />加载中…</p>}
         {state === 'error' && (
           <div className="py-8 text-center">
-            <p className="text-sm text-gray-500">{notice ?? '暂时打不开对话'}</p>
+            <CatMascot mood="cry" size={64} />
+            <p className="mt-1 text-sm text-gray-500">{notice ?? '暂时打不开对话'}</p>
             <button type="button" onClick={() => void load()} className="mt-3 rounded-full border border-gray-200 px-4 py-1.5 text-sm text-gray-700">重试</button>
           </div>
         )}
@@ -315,7 +316,9 @@ export default function CoachPanel({ onClose }: { onClose: () => void }) {
                 </div>
               )
             })}
-            {sending && <p className="mb-3 text-xs text-gray-400">小爪在看…</p>}
+            {sending && (
+              <p className="mb-3 flex items-center gap-1.5 text-xs text-gray-400"><CatMascot mood="thinking" size={28} />小爪在看…</p>
+            )}
           </>
         )}
       </div>

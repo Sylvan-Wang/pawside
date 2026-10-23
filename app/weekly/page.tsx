@@ -5,6 +5,7 @@ import BottomNav from '@/components/BottomNav'
 import { getWeekStartKey, shiftDateKey, today } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useState } from 'react'
+import { CatNote } from '@/components/CatMascot'
 import {
   Bar,
   BarChart,
@@ -256,7 +257,7 @@ export default function WeeklyPage() {
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <p className="text-xs text-gray-400">本周还没有饮食记录</p>
+                <CatNote mood="eating" size={72} title="本周还没有饮食记录" />
               )}
 
               <div className="mt-3 space-y-1.5">
@@ -309,7 +310,7 @@ export default function WeeklyPage() {
                   </LineChart>
                 </ResponsiveContainer>
               ) : (
-                <p className="text-xs text-gray-400">本周体重数据不足（需要至少 3 次记录才能判断趋势）</p>
+                <CatNote mood="scale" size={72} title="本周体重数据不足" hint="需要至少 3 次记录才能判断趋势" />
               )}
               <p className="mt-2 text-xs text-gray-400">
                 使用 7 日滚动均值，避免单日波动被当成趋势。

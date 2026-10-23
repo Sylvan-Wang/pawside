@@ -1,6 +1,7 @@
 'use client'
 import { mealTypeLabel } from '@/lib/nutrition/meal-label'
 import { useEffect, useState, useCallback } from 'react'
+import { CatNote } from '@/components/CatMascot'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import BottomNav from '@/components/BottomNav'
@@ -60,10 +61,7 @@ export default function HistoryPage() {
       <div className="px-4 py-4 space-y-3">
         {loading && <p className="text-center text-sm text-gray-400 py-8">加载中…</p>}
         {!loading && entries.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-gray-400 text-sm">暂无记录</p>
-            <p className="text-gray-300 text-xs mt-1">还没有数据，快去记录吧～</p>
-          </div>
+          <CatNote mood="sleep" size={96} title="暂无记录" hint="还没有数据，快去记录吧～" />
         )}
         {pageEntries.map(entry => (
           <div key={entry.date} className="bg-white rounded-2xl p-4">
