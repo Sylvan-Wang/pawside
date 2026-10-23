@@ -34,3 +34,11 @@ Oura 的 API 协议禁止把 Oura 数据或其衍生数据交给任何 AI 模型
 - 涉及数据库的改动要在本地仿真环境验证：见 `scripts/local-supabase/README.md`（`PAWSIDE_IT=1 npx vitest run tests/integration`）。
 - 让函数以 HTTP 状态应答冲突时用 `PT409` 这类 `PTnnn` 错误码，不要用 `40001`（PostgREST 会无限重试，请求不返回）。
 - 新增小爪目录后，`tests/devices/no-ai.test.ts` 已扫描 `lib/coach-chat`、`app/api/coach`：这些文件不能引用设备（Oura）数据。
+
+## 食谱推荐（2026-10-23 起）
+
+食谱是「别人视频的指针」，运营和上线步骤见 `docs/coach/RECIPES_RUNBOOK.md`。
+- 食谱由服务端挑选并拼进回复（`lib/coach-chat/recipes.ts`）；**不要让模型选食谱、写链接或写热量数字**。
+- `recipes` 表默认 `draft`，发布必须有核验时间；导入的数据是二手 AI 整理，未核验前不要改成 `published`。
+- 食谱热量只写「视频标称」，不参与任何计算，不写进用户的饮食记录；蛋白质等没有可信来源就留空。
+- 没有已发布、已对用户开放的食谱前，官网不新增「食谱推荐」（`tests/site` 与 `lib/site/features.ts` 的规则同样适用）。
