@@ -4,7 +4,7 @@ import type { CardView, ChatMessageView } from '../../lib/coach-chat/types'
 
 const card = (id: string, status: CardView['status'] = 'proposed'): CardView => ({
   draft_id: id, question: null, kind: 'meal', status, version: 1, title: 't', subtitle: null, lines: [], total: null,
-  notes: [], can_confirm: status === 'proposed', can_cancel: status === 'proposed', status_text: null,
+  notes: [], can_confirm: status === 'proposed', can_cancel: status === 'proposed', status_text: null, edit_href: null,
 })
 const message = (id: string, date: string, cards: CardView[] = []): ChatMessageView => ({
   id, role: 'assistant', text: id, local_date: date, created_at: '', cards,

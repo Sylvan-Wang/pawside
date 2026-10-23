@@ -193,3 +193,18 @@ describe('day facts in words', () => {
     expect(text).not.toMatch(/超标|不自律|罪/)
   })
 })
+
+describe('edit link on a saved meal', () => {
+  const LEGACY = '3f2b8c1e-0a4d-4c55-9e1b-7d6a5c4b3a21'
+  const saved = (fields: Partial<DraftRow>) => buildCard(draft({ status: 'saved', result: { food_log_id: 'x', legacy_food_log_id: LEGACY }, ...fields }), NOW, '2026-10-22')
+
+  it('points at the food page editor once the meal is saved', () => {
+    expect(saved({}).edit_href).toBe(`/food/${LEGACY}/edit`)
+    expect(saved({ kind: 'meal_edit' }).edit_href).toBe(`/food/${LEGACY}/edit`)
+  })
+  it('has no link before saving, for other kinds, or when the id is not a uuid', () => {
+    expect(buildCard(draft({}), NOW, '2026-10-22').edit_href).toBeNull()
+    expect(saved({ result: { legacy_food_log_id: '../../admin' } }).edit_href).toBeNull()
+    expect(saved({ result: { food_log_id: 'x' } }).edit_href).toBeNull()
+  })
+})

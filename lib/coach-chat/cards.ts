@@ -118,6 +118,15 @@ const STATUS_TEXT: Partial<Record<DraftRow['status'], string>> = {
   needs_clarification: '等你回答上面的问题。',
 }
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+/** A saved meal links to the food page's editor (the page that edits food_logs rows, so the legacy id). */
+function editHref(draft: DraftRow): string | null {
+  if (draft.status !== 'saved' || (draft.kind !== 'meal' && draft.kind !== 'meal_edit')) return null
+  const id = draft.result?.legacy_food_log_id
+  return typeof id === 'string' && UUID.test(id) ? `/food/${id}/edit` : null
+}
+
 export function isExpired(draft: Pick<DraftRow, 'expires_at'>, now: Date): boolean {
   return new Date(draft.expires_at).getTime() <= now.getTime()
 }
@@ -149,6 +158,7 @@ export function buildCard(draft: DraftRow, now: Date, today: string): CardView {
       can_confirm: false,
       can_cancel: open && !expired,
       status_text: expired ? '已过期，请重新说一遍。' : open ? null : (CLARIFY_DONE_TEXT[draft.status] ?? null),
+      edit_href: null,
     }
   }
 
@@ -173,5 +183,6 @@ export function buildCard(draft: DraftRow, now: Date, today: string): CardView {
     can_confirm: confirmable,
     can_cancel: cancellable,
     status_text: expired ? '已过期，请重新说一遍。' : (STATUS_TEXT[draft.status] ?? null),
+    edit_href: editHref(draft),
   }
 }

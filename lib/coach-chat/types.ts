@@ -179,6 +179,8 @@ export interface CardView {
   can_cancel: boolean
   /** Why it can't be confirmed right now, shown in place of the button. */
   status_text: string | null
+  /** A saved meal: where the user can open it in the food page to change it (e.g. the meal slot). */
+  edit_href: string | null
 }
 
 export interface ChatMessageView {

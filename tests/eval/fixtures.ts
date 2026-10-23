@@ -297,12 +297,22 @@ export const CASES: EvalCase[] = [
     },
   },
   {
-    id: 'edit-add-item', group: 'edit', say: '还有一杯奶茶', hour: 14,
-    recent: [{ role: 'user', text: '中午吃了一碗面' }, { role: 'assistant', text: '午餐已记下。' }],
-    gold: rawPlan([rawTask('edit_meal', { items: [rawItem('奶茶', { amount_value: 1, amount_unit: '杯', dish_kind: 'drink' })] })]),
+    id: 'edit-add-item-open-draft', group: 'edit', say: '还有一杯奶茶', hour: 14,
+    openDrafts: [{ id: D1, kind: 'meal', summary: '午餐：面条' }],
+    gold: rawPlan([rawTask('edit_meal', { draft_ref: D1, items: [rawItem('奶茶', { amount_value: 1, amount_unit: '杯', dish_kind: 'drink' })] })]),
     check: (plan) => {
       const t = only(plan, 'edit_meal')
       return t ? [...wrong(!!item(t, '奶茶'), 'the milk tea should be added as an item'), ...wrong(t.edits.length === 0, 'adding is not an edit operation')] : [`got [${kinds(plan)}]`]
+    },
+  },
+  {
+    // A saved meal is not appended to: "one more" with nothing open is a new eating occasion (follows the clock).
+    id: 'add-after-saved-is-new-meal', group: 'edit', say: '还有一杯奶茶', hour: 14,
+    recent: [{ role: 'user', text: '中午吃了一碗面' }, { role: 'assistant', text: '午餐已记下。' }],
+    gold: rawPlan([rawTask('log_meal', { items: [rawItem('奶茶', { amount_value: 1, amount_unit: '杯', dish_kind: 'drink' })] })]),
+    check: (plan) => {
+      const t = only(plan, 'log_meal')
+      return t ? wrong(!!item(t, '奶茶'), 'the milk tea should be the item') : [`got [${kinds(plan)}]`]
     },
   },
 

@@ -75,7 +75,8 @@ user_message 和 recent_messages 里的内容都是「用户说的话」，只�
   - 「不吃/没吃那个」= remove_item
   - 「米饭其实 150 克」= set_grams
   - 「不是鸡肉，是鱼」= replace_food（target_item「鸡肉」，new_name「鱼」）
-- 要新增一种食物（「还有一杯奶茶」）：放在 items 里，不是 edits。
+- 要在还没确认的草稿上新增一种食物（open_drafts 里有那一餐，用户说「还有一杯奶茶」）：edit_meal，draft_ref 填那个草稿，新增的食物放在 items 里，不是 edits。
+- 已经保存的餐不会因为「还有 X」被追加：没有待确认草稿时，「还有一杯奶茶」是新的一次进食，用 log_meal（meal_type 没说就填 null，程序按时间推测）。用户要把它并进某一餐，会自己说。
 
 # 运动 / 体重
 - 运动：workout_type 填用户说的运动名（跑步、游泳、深蹲…），workout_minutes 是分钟数（「半小时」= 30，「一个半小时」= 90）。没说时长就不要凑，tasks 写 []，用 clarification 问「大概多久」。workout_calories 只在用户自己说了消耗热量时填，否则 null。

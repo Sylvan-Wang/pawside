@@ -13,7 +13,7 @@ import type { DateRefKind, MealSlot } from './dates'
  */
 
 export const PLAN_SCHEMA_NAME = 'pawside_coach_plan_v1'
-export const PLAN_PROMPT_VERSION = 'coach_chat_plan_v1'
+export const PLAN_PROMPT_VERSION = 'coach_chat_plan_v2'
 
 export const MAX_TASKS = 4
 export const MAX_ITEMS_PER_MEAL = 12

@@ -1,4 +1,5 @@
 'use client'
+import Link from 'next/link'
 import type { CardView } from '@/lib/coach-chat/types'
 
 const BADGE_STYLE: Record<string, string> = {
@@ -73,6 +74,14 @@ export default function ChatCard({ card, busy, onConfirm, onCancel, onAnswer }: 
             <li key={note} className="text-xs text-gray-400">{note}</li>
           ))}
         </ul>
+      )}
+
+      {card.edit_href && (
+        <div className="mt-2 flex justify-end">
+          <Link href={card.edit_href} className="text-xs text-gray-500 underline decoration-gray-300 underline-offset-2" aria-label="在饮食页修改这餐，比如餐别">
+            编辑 ›
+          </Link>
+        </div>
       )}
 
       {card.status_text && !(card.status === 'saved') && <p className="mt-2 text-xs text-gray-500">{card.status_text}</p>}
