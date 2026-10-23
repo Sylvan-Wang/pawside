@@ -1,10 +1,21 @@
 'use client'
 import Link from 'next/link'
+import CatMascot, { type CatPose } from '@/components/CatMascot'
 import type { CardView } from '@/lib/coach-chat/types'
 
 const BADGE_STYLE: Record<string, string> = {
   估算: 'bg-amber-50 text-amber-700',
   营养待补: 'bg-gray-100 text-gray-600',
+}
+
+/** Small status icon on a card: what it is while open, a different cat per kind of record once saved. */
+const OPEN_POSE: Record<CardView['kind'], CatPose> = { meal: 'eating', meal_edit: 'eating', workout: 'dumbbell', weight: 'scale' }
+const SAVED_POSE: Record<CardView['kind'], CatPose> = { meal: 'thumbsup', meal_edit: 'thumbsup', workout: 'cool', weight: 'love' }
+
+function cardPose(card: CardView): CatPose {
+  if (card.status === 'saved') return SAVED_POSE[card.kind]
+  if (card.status === 'failed' || card.status === 'outcome_unknown') return 'cry'
+  return OPEN_POSE[card.kind]
 }
 
 interface Props {
@@ -26,6 +37,7 @@ export default function ChatCard({ card, busy, onConfirm, onCancel, onAnswer }: 
   if (card.question) {
     return (
       <div className="mt-2 rounded-2xl border border-gray-100 bg-white p-3" role="group" aria-label="小爪的问题">
+        <div className="mb-2"><CatMascot mood="confused" size={28} /></div>
         <div className="flex flex-wrap gap-2">
           {card.question.options.map((option, index) => (
             <button
@@ -48,8 +60,11 @@ export default function ChatCard({ card, busy, onConfirm, onCancel, onAnswer }: 
 
   return (
     <div className={`mt-2 rounded-2xl border bg-white p-3 ${finished ? 'border-gray-100 opacity-70' : 'border-gray-200'}`} role="group" aria-label={card.title}>
-      <div className="flex items-baseline justify-between gap-2">
-        <p className="text-sm font-semibold text-gray-900">{card.title}</p>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-1.5">
+          <CatMascot mood={cardPose(card)} size={28} className="shrink-0" />
+          <p className="min-w-0 break-words text-sm font-semibold text-gray-900">{card.title}</p>
+        </div>
         {card.status === 'saved' && <span className="text-xs text-green-600">已保存</span>}
       </div>
       {card.subtitle && <p className="mt-0.5 text-xs text-gray-400">{card.subtitle}</p>}

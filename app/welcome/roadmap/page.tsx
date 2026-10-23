@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 
 const CONCEPT: Record<string, { icon: React.ReactNode; note: string }> = {
   'food-photo': { icon: <IconCamera width={44} height={44} />, note: '概念示意：拍一张餐盘，认出里面有什么。还没有做出来。' },
-  companion: { icon: <IconChat width={44} height={44} />, note: '概念示意：练的时候能说话、问下一步。还没有做出来，现在应用里没有对话功能。' },
+  companion: { icon: <IconChat width={44} height={44} />, note: '概念示意：练的时候能说话、问下一步。这部分还没有做出来；用一句话记饮食、运动和体重的小爪已经可以用。' },
   'more-devices': { icon: <IconRing width={44} height={44} />, note: '概念示意：把智能戒指、手表里的睡眠和活动放到同一个地方看。还没有做出来。' },
 }
 

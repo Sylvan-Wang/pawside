@@ -2,6 +2,7 @@
 import { mealTypeLabel } from '@/lib/nutrition/meal-label'
 import { describeLoggedExercise, type LoggedExercise } from '@/lib/workout-log-summary'
 import { useEffect, useState, useCallback } from 'react'
+import { CatNote } from '@/components/CatMascot'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import PageHeader from '@/components/PageHeader'
@@ -204,7 +205,7 @@ export default function HistoryDetailPage() {
         <div className="bg-white rounded-2xl p-4">
           <h2 className="text-sm font-semibold mb-3">训练记录</h2>
           {workouts.length === 0
-            ? <p className="text-sm text-gray-400">暂无训练记录</p>
+            ? <CatNote mood="dumbbell" size={72} title="暂无训练记录" />
             : workouts.map(w => (
               <div key={w.id} className="mb-4 last:mb-0 pb-4 last:pb-0 border-b last:border-0 border-gray-50">
                 <div className="flex justify-between items-start">
@@ -244,7 +245,7 @@ export default function HistoryDetailPage() {
         <div className="bg-white rounded-2xl p-4">
           <h2 className="text-sm font-semibold mb-3">饮食记录</h2>
           {foods.length === 0
-            ? <p className="text-sm text-gray-400">暂无饮食记录</p>
+            ? <CatNote mood="eating" size={72} title="暂无饮食记录" />
             : foods.map(f => (
               <div key={f.id} className="mb-4 last:mb-0 pb-4 last:pb-0 border-b last:border-0 border-gray-50">
                 <div className="flex justify-between items-start">
@@ -290,7 +291,7 @@ export default function HistoryDetailPage() {
             )}
           </div>
           {!metric
-            ? <p className="text-sm text-gray-400">暂无身体数据</p>
+            ? <CatNote mood="scale" size={72} title="暂无身体数据" />
             : (
               <div className="space-y-1 text-sm">
                 {metric.weight_kg && <p>体重：<span className="font-medium">{metric.weight_kg} kg</span></p>}
