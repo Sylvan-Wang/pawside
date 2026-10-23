@@ -1,7 +1,7 @@
 import { isIsoDate, parseBodyMetricsInput } from '@/lib/contracts/body-metrics'
-import { buildNutritionTargetSnapshot, targetSnapshotRpcArgs } from '@/lib/nutrition/targets'
+import { saveBodyMetric } from '@/lib/body-metrics-service'
 import { createClient } from '@/lib/supabase/server'
-import { dateKeyInTimeZone, invalidateDayDerivedCache } from '@/lib/utils'
+import { dateKeyInTimeZone } from '@/lib/utils'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
@@ -25,9 +25,8 @@ export async function POST(req: NextRequest) {
   if (!requestId.success || !timeZone.success) {
     return NextResponse.json({ error: 'request_id 或 time_zone 无效' }, { status: 400 })
   }
-  let targetEffectiveDate: string
   try {
-    targetEffectiveDate = dateKeyInTimeZone(new Date(), timeZone.data)
+    dateKeyInTimeZone(new Date(), timeZone.data)
   } catch {
     return NextResponse.json({ error: 'time_zone 无效' }, { status: 400 })
   }
@@ -37,59 +36,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: '体测数据无效', issues: parsed.issues }, { status: 400 })
   }
 
-  const [{ data: profile, error: profileError }, { data: latestMetric, error: metricError }] = await Promise.all([
-    supabase
-      .from('user_profiles')
-      .select('daily_calorie_target,weight_kg')
-      .eq('id', user.id)
-      .maybeSingle(),
-    supabase
-      .from('body_metrics')
-      .select('date,weight_kg')
-      .eq('user_id', user.id)
-      .not('weight_kg', 'is', null)
-      .order('date', { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-  ])
-  if (profileError || metricError) {
-    return NextResponse.json({ error: '读取目标依据失败' }, { status: 500 })
-  }
-
-  const candidateIsLatest = parsed.data.weight_kg !== null
-    && (!latestMetric?.date || parsed.data.date >= String(latestMetric.date))
-  const targetWeightKg = candidateIsLatest
-    ? parsed.data.weight_kg
-    : latestMetric?.weight_kg != null
-      ? Number(latestMetric.weight_kg)
-      : profile?.weight_kg != null
-        ? Number(profile.weight_kg)
-        : null
-  const calorieTarget = profile?.daily_calorie_target == null
-    ? null
-    : Number(profile.daily_calorie_target)
-  const snapshot = buildNutritionTargetSnapshot({
-    dailyCalorieTargetKcal: calorieTarget,
-    weightKg: targetWeightKg,
+  const result = await saveBodyMetric(supabase, user.id, {
+    requestId: requestId.data,
+    timeZone: timeZone.data,
+    metric: parsed.data,
   })
-
-  const { data, error } = await supabase.rpc('save_body_metric_with_target_v1', {
-    p_request_id: requestId.data,
-    p_metric: parsed.data,
-    ...targetSnapshotRpcArgs(snapshot, targetEffectiveDate),
-  })
-
-  if (error) {
-    console.error('body_metrics insert failed', { code: error.code })
-    return NextResponse.json({ error: '保存失败，请稍后重试' }, { status: 500 })
-  }
-  const invalidation = await invalidateDayDerivedCache(supabase, user.id, parsed.data.date)
+  if (!result.ok) return NextResponse.json({ error: result.message }, { status: result.status })
   return NextResponse.json({
     success: true,
-    id: (data as { body_metric_id: string }).body_metric_id,
+    id: result.id,
     message: '保存成功',
-    affected_dates: [...new Set([parsed.data.date, targetEffectiveDate])],
-    cache_invalidation: invalidation,
+    affected_dates: result.affectedDates,
+    cache_invalidation: result.cacheInvalidation,
   }, { status: 201 })
 }
 

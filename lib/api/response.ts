@@ -15,6 +15,7 @@ export type ApiErrorCode =
   | 'AI_NOT_CONFIGURED'
   | 'AI_PROVIDER_ERROR'
   | 'DATABASE_ERROR'
+  | 'FEATURE_DISABLED'
 
 export function apiError(code: ApiErrorCode, message: string, status: number, details?: unknown) {
   return NextResponse.json(

@@ -24,6 +24,9 @@ const AI_FILES = [
   ...files(join(ROOT, 'lib/coach')),
   ...files(join(ROOT, 'lib/nutrition')),
   ...files(join(ROOT, 'app/api/ai')),
+  ...files(join(ROOT, 'lib/coach-chat')),
+  ...files(join(ROOT, 'app/api/coach')),
+  join(ROOT, 'lib/body-metrics-service.ts'),
   join(ROOT, 'app/api/evidence/route.ts'),
   join(ROOT, 'app/api/workout/session-feedback/route.ts'),
 ].filter((path) => /\.(ts|tsx)$/.test(path))

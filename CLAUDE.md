@@ -24,3 +24,13 @@ Oura 的 API 协议禁止把 Oura 数据或其衍生数据交给任何 AI 模型
 - **任何 AI 相关文件都不能引用它们**（`lib/ai*`、`lib/evidence`、`lib/coach`、`lib/nutrition`、`app/api/ai`）。`tests/devices/no-ai.test.ts` 会逐个扫描，失败时不要改测试，要去掉依赖，或先拿到 Oura 的书面同意。
 - 只申请 `daily` 一个权限范围。令牌用 AES-256-GCM 加密后存库，客户端角色读不到；断开连接要立即删除凭据和已同步的数据。
 - 官网不提 Oura（`tests/site` 会拦）；官网只写「更多设备接入：规划中」。
+
+## 小爪聊天助手（2026-10-22 起）
+
+做小爪（聊天助手）相关工作之前，先读 `docs/coach/XIAOZHUA_PATCH_ASSESSMENT.md`（对照代码的评估和范围）、`docs/coach/XIAOZHUA_DECISIONS.md`（决策日志和待答问题）、`docs/coach/XIAOZHUA_PROMPT_GUIDE.md`（提示词与评测）。
+
+- 聊天**只能生成草稿**，写入只经 `lib/coach-chat/commit.ts`（用户点确认）。不要给模型加任何直接写入的路径。
+- 改了 `lib/coach-chat/prompt.ts` 或 `schemas.ts`：升 `PLAN_PROMPT_VERSION`，跑 `npm run coach:eval`（需要 OpenAI 密钥），并跑 `npx vitest run tests/coach-chat`。
+- 涉及数据库的改动要在本地仿真环境验证：见 `scripts/local-supabase/README.md`（`PAWSIDE_IT=1 npx vitest run tests/integration`）。
+- 让函数以 HTTP 状态应答冲突时用 `PT409` 这类 `PTnnn` 错误码，不要用 `40001`（PostgREST 会无限重试，请求不返回）。
+- 新增小爪目录后，`tests/devices/no-ai.test.ts` 已扫描 `lib/coach-chat`、`app/api/coach`：这些文件不能引用设备（Oura）数据。

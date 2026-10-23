@@ -1,4 +1,5 @@
 'use client'
+import { mealTypeLabel } from '@/lib/nutrition/meal-label'
 import { describeLoggedExercise, type LoggedExercise } from '@/lib/workout-log-summary'
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
@@ -18,7 +19,7 @@ interface WorkoutLog {
 interface FoodLog {
   id: string
   meal_type: string
-  foods: { name: string; weight?: number; weight_g?: number; calories?: number; protein_g?: number }[]
+  foods: { name: string; weight?: number | null; weight_g?: number | null; calories?: number | null; protein_g?: number | null }[]
 }
 
 interface AIReview {
@@ -248,12 +249,14 @@ export default function HistoryDetailPage() {
               <div key={f.id} className="mb-4 last:mb-0 pb-4 last:pb-0 border-b last:border-0 border-gray-50">
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
-                    <p className="text-sm font-medium mb-1">{f.meal_type}</p>
+                    <p className="text-sm font-medium mb-1">{mealTypeLabel(f.meal_type)}</p>
                     <div className="space-y-0.5">
                       {f.foods.map((item, i) => (
                         <p key={i} className="text-xs text-gray-600">
-                          {item.name} {item.weight_g ?? item.weight}g
+                          {item.name}
+                          {(item.weight_g ?? item.weight) != null ? ` ${item.weight_g ?? item.weight}g` : ''}
                           {item.calories ? ` · ${item.calories} kcal` : ''}
+                          {item.calories == null ? ' · 营养待补' : ''}
                           {item.protein_g ? ` · 蛋白质 ${item.protein_g}g` : ''}
                         </p>
                       ))}

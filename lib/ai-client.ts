@@ -15,8 +15,20 @@ export type OpenAIFailureReason =
   | 'upstream_error'
   | 'invalid_response'
 
+export interface OpenAIUsage {
+  inputTokens: number | null
+  outputTokens: number | null
+}
+
+export interface StructuredOutputOptions {
+  /** Overrides OPENAI_MODEL for this call (e.g. the faster chat model). */
+  model?: string
+  /** Overrides OPENAI_TIMEOUT_MS for this call. */
+  timeoutMs?: number
+}
+
 export type OpenAIResult<T> =
-  | { ok: true; data: T; provider: 'openai'; model: string }
+  | { ok: true; data: T; provider: 'openai'; model: string; usage?: OpenAIUsage }
   | { ok: false; reason: OpenAIFailureReason; provider: 'openai'; model: string }
 
 export interface DailyReviewPayload {
@@ -131,6 +143,23 @@ export function getOpenAIConfigStatus() {
   }
 }
 
+/**
+ * Model for the chat assistant. OPENAI_CHAT_MODEL lets the chat run on a
+ * smaller/faster model without touching the review and estimate features.
+ */
+export function getChatModel(): string {
+  return process.env.OPENAI_CHAT_MODEL?.trim() || OPENAI_MODEL
+}
+
+function extractUsage(payload: unknown): OpenAIUsage | undefined {
+  if (!payload || typeof payload !== 'object') return undefined
+  const usage = (payload as { usage?: { input_tokens?: unknown; output_tokens?: unknown } }).usage
+  if (!usage || typeof usage !== 'object') return undefined
+  const count = (value: unknown) =>
+    typeof value === 'number' && Number.isFinite(value) && value >= 0 ? Math.round(value) : null
+  return { inputTokens: count(usage.input_tokens), outputTokens: count(usage.output_tokens) }
+}
+
 function extractOutputText(payload: unknown): string | null {
   if (!payload || typeof payload !== 'object') return null
   const response = payload as {
@@ -155,11 +184,14 @@ export async function callStructuredOutput<T>(
   schema: object,
   validate: (value: unknown) => value is T,
   maxOutputTokens: number,
+  options: StructuredOutputOptions = {},
 ): Promise<OpenAIResult<T>> {
+  const model = options.model?.trim() || OPENAI_MODEL
+  const timeoutMs = options.timeoutMs ?? OPENAI_TIMEOUT_MS
   const apiKey = process.env.OPENAI_API_KEY?.trim()
   if (!apiKey) {
     console.warn('[ai-client] OPENAI_API_KEY is not configured')
-    return { ok: false, reason: 'not_configured', provider: 'openai', model: OPENAI_MODEL }
+    return { ok: false, reason: 'not_configured', provider: 'openai', model }
   }
 
   try {
@@ -170,7 +202,7 @@ export async function callStructuredOutput<T>(
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: OPENAI_MODEL,
+        model,
         instructions,
         input,
         max_output_tokens: maxOutputTokens,
@@ -183,7 +215,7 @@ export async function callStructuredOutput<T>(
           },
         },
       }),
-      signal: AbortSignal.timeout(OPENAI_TIMEOUT_MS),
+      signal: AbortSignal.timeout(timeoutMs),
     })
 
     if (!response.ok) {
@@ -195,14 +227,15 @@ export async function callStructuredOutput<T>(
         ok: false,
         reason: response.status === 429 ? 'rate_limited' : 'upstream_error',
         provider: 'openai',
-        model: OPENAI_MODEL,
+        model,
       }
     }
 
-    const outputText = extractOutputText(await response.json())
+    const responseBody: unknown = await response.json()
+    const outputText = extractOutputText(responseBody)
     if (!outputText) {
       console.error('[ai-client] OpenAI response did not contain output text')
-      return { ok: false, reason: 'invalid_response', provider: 'openai', model: OPENAI_MODEL }
+      return { ok: false, reason: 'invalid_response', provider: 'openai', model }
     }
 
     let parsed: unknown
@@ -210,15 +243,15 @@ export async function callStructuredOutput<T>(
       parsed = JSON.parse(outputText)
     } catch {
       console.error('[ai-client] OpenAI structured output was not valid JSON')
-      return { ok: false, reason: 'invalid_response', provider: 'openai', model: OPENAI_MODEL }
+      return { ok: false, reason: 'invalid_response', provider: 'openai', model }
     }
 
     if (!validate(parsed)) {
       console.error('[ai-client] OpenAI structured output failed local validation')
-      return { ok: false, reason: 'invalid_response', provider: 'openai', model: OPENAI_MODEL }
+      return { ok: false, reason: 'invalid_response', provider: 'openai', model }
     }
 
-    return { ok: true, data: parsed, provider: 'openai', model: OPENAI_MODEL }
+    return { ok: true, data: parsed, provider: 'openai', model, usage: extractUsage(responseBody) }
   } catch (error) {
     const isTimeout = error instanceof Error && (
       error.name === 'AbortError' || error.name === 'TimeoutError'
@@ -228,7 +261,7 @@ export async function callStructuredOutput<T>(
       ok: false,
       reason: isTimeout ? 'timeout' : 'upstream_error',
       provider: 'openai',
-      model: OPENAI_MODEL,
+      model,
     }
   }
 }

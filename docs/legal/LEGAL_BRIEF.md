@@ -25,6 +25,7 @@ Pawside：AI 健身教练应用（PWA，中文界面，网址 https://paw-side.c
 - 身体指标：体重、体脂、围度（`body_metrics`）。
 - 主观自评：睡眠质量、训练后恢复，1–5 分（`recovery_checkins`）。
 - 用户对 AI 反馈的评价（`ai_feedback`）。
+- 小爪聊天（内测，按用户开放；2026-10-22 起）：对话文字、待确认的饮食/运动/体重草稿（`coach_conversations`、`coach_messages`、`coach_drafts`，随账号删除；用户可在小爪里清空对话）。对话文字会发给 OpenAI 用于理解意图；AI 调用日志（`ai_generations`，surface=`coach_chat`）只存任务类型、状态、耗时，不存原话。**照片和语音输入尚未实现，所以“不收集照片”仍然成立。**
 - **即将加入**：用户授权连接 Oura 后，读取每日睡眠、准备度、活动、运动摘要。Oura 的 scope 申请为 `daily`、`personal`、`workout`。`personal` 会返回年龄、性别、身高、体重。**这些数据与上面的数据一起存储，Oura 只是数据来源之一，产品独立运行，不依赖 Oura。**
 - 不收集：位置、通讯录、照片、支付信息。没有广告，没有第三方分析 SDK（`package.json` 里没有，待核实 Netlify 是否开了访问分析）。
 

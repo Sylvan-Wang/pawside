@@ -40,6 +40,9 @@ export const USER_DATA_TABLES: UserDataTable[] = [
   { table: 'ai_generated_content', userColumn: 'user_id' },
   { table: 'ai_generations', userColumn: 'user_id' },
   { table: 'ai_feedback', userColumn: 'user_id' },
+  { table: 'coach_conversations', userColumn: 'user_id' },
+  { table: 'coach_messages', userColumn: 'user_id' },
+  { table: 'coach_drafts', userColumn: 'user_id' },
 ]
 
 /** Owned rows that are deliberately not exported (still deleted with the account). */
