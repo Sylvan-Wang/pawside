@@ -124,6 +124,28 @@ export function ScreenMeal() {
   )
 }
 
+/** 4b. Saying it to 小爪: a draft card that only saves when confirmed (demo data). */
+export function ScreenChat() {
+  return (
+    <div className="a">
+      <Head title="小爪" />
+      <div className="a-body">
+        <div className="a-card" style={{ background: '#000', color: '#fff', marginLeft: 36 }}>
+          <p style={{ margin: 0, fontSize: 13 }}>中午吃了一碗米饭和一份鸡胸肉</p>
+        </div>
+        <div className="a-card">
+          <div className="a-flex"><span className="a-semi">午餐（今天）</span></div>
+          <div className="a-setrow"><span>米饭 · 约 200g</span><span className="a-grey">估算</span></div>
+          <div className="a-setrow"><span>鸡胸肉 · 约 120g</span><span className="a-grey">估算</span></div>
+          <p className="a-xs a-grey" style={{ margin: '8px 0 0' }}>已知合计 392 kcal · 蛋白质 34g</p>
+          <p className="a-xs a-dim" style={{ margin: '4px 0 0' }}>带「估算」的份量是估的，随时可以改。</p>
+        </div>
+        <span className="a-btn-black">确认保存</span>
+      </div>
+    </div>
+  )
+}
+
 /** 5. The evening review (home → 今日复盘) */
 export function ScreenDaily() {
   return (

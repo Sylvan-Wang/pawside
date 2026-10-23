@@ -19,6 +19,7 @@ import {
   RotationPath,
 } from '@/components/site/illustrations'
 import {
+  ScreenChat,
   ScreenDaily,
   ScreenMeal,
   ScreenPlan,
@@ -45,7 +46,8 @@ const STEPS: DemoStep[] = [
   { id: 'time', num: '02', title: '选今天有多少时间', desc: '30、45、60 或 90 分钟，今天要做的动作数量跟着调整。' },
   { id: 'do', num: '03', title: '跟着做完这一轮', desc: '动作、组数、次数和提示都在当前训练里，做完一组点一下。' },
   { id: 'eat', num: '04', title: '吃过什么，顺手记下来', desc: '按食物和份量算出当天摄入，对照当天的参考范围看。' },
-  { id: 'night', num: '05', title: '晚上，看今天留下了什么', desc: '训练、饮食和身体记录汇到一起，给出今天最值得注意的几件事和下一步。' },
+  { id: 'chat', num: '05', title: '或者，一句话告诉小爪', desc: '饮食、运动、体重都能这样记。先出一张卡片，你确认了才保存。' },
+  { id: 'night', num: '06', title: '晚上，看今天留下了什么', desc: '训练、饮食和身体记录汇到一起，给出今天最值得注意的几件事和下一步。' },
 ]
 
 const DECISIONS = [
@@ -153,7 +155,7 @@ export default function WelcomePage() {
           <p className="lede">点任意一步，手机里就会切到对应的界面。</p>
           <PhoneDemo
             steps={STEPS}
-            screens={[<ScreenReturn key="open" />, <ScreenPlan key="time" />, <ScreenSet key="do" />, <ScreenMeal key="eat" />, <ScreenDaily key="night" />]}
+            screens={[<ScreenReturn key="open" />, <ScreenPlan key="time" />, <ScreenSet key="do" />, <ScreenMeal key="eat" />, <ScreenChat key="chat" />, <ScreenDaily key="night" />]}
           />
         </div>
       </section>

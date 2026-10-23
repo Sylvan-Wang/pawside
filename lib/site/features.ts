@@ -38,6 +38,7 @@ export const SITE_FEATURES: SiteFeature[] = [
   { id: 'recovery-selfcheck', name: '睡眠与恢复自评', summary: '用 1–5 分记下睡得怎么样、练后恢复得怎么样。', status: 'live', public: true },
   { id: 'weekly-progress', name: '本周训练进度', summary: '首页显示「本周训练 x/y 次」，目标自己定，休息日不算失败。', status: 'live', public: true },
   { id: 'app-tour', name: '新手导览', summary: '第一次进入、以及有新功能时，小猫带你过一遍；随时可在设置里重看。', status: 'live', public: true },
+  { id: 'xiaozhua-chat', name: '小爪：一句话记录', summary: '用一句话记饮食、运动和体重，先出卡片，你确认了才保存；也能问今天吃了什么。', status: 'live', public: true },
   { id: 'food-photo', name: '拍照识别外卖', summary: '拍一张外卖或餐盘，自动认出食物。', status: 'planned', public: true },
   { id: 'companion', name: '陪你练的小伙伴', summary: '练的时候能陪你说话、帮你选下一步。', status: 'planned', public: true },
   { id: 'more-devices', name: '更多设备接入', summary: '把智能戒指、手表里的睡眠和活动，放进同一个地方看。', status: 'planned', public: true },
