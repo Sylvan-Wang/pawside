@@ -80,6 +80,20 @@ export function savedText(draft: DraftRow): string {
   return `${label}已记下。`
 }
 
+/**
+ * One line after a meal is saved: where the day now stands against the target.
+ * Facts only, from the saved records; silent when the day cannot be totalled honestly.
+ */
+export function intakeAfterSaveText(n: DayFacts['nutrition']): string | null {
+  if (n.known_kcal === null || !n.complete) return null
+  if (n.target_kcal !== null && n.remaining_kcal !== null) {
+    return n.remaining_kcal >= 0
+      ? `这一天已记约 ${formatNumber(n.known_kcal, 'kcal')} kcal，离目标还差 ${formatNumber(n.remaining_kcal, 'kcal')} kcal。`
+      : `这一天已记约 ${formatNumber(n.known_kcal, 'kcal')} kcal，比目标多 ${formatNumber(-n.remaining_kcal, 'kcal')} kcal。`
+  }
+  return `这一天已记约 ${formatNumber(n.known_kcal, 'kcal')} kcal。`
+}
+
 export function conflictText(kind: 'meal' | 'edited'): string {
   return kind === 'edited'
     ? '这餐刚刚在别处被改过了，我没有覆盖它。请再说一遍你想怎么改，我按最新的来。'

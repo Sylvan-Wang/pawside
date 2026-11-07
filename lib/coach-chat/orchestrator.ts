@@ -555,7 +555,11 @@ async function runTask(ctx: Ctx, task: PlanTask, plan: NormalizedPlan): Promise<
     }
     case 'smalltalk': return none(plan.reply ?? TEXT.smalltalk)
     case 'fitness_question': return none(plan.reply ?? TEXT.fitnessFallback)
-    case 'out_of_scope': return none(TEXT[task.boundary])
+    case 'out_of_scope':
+      // A medical reply may use the model's own wording only when it still hands off to a professional;
+      // otherwise the fixed line is used. Free text has already passed the no-numbers/no-internals filter.
+      if (task.boundary === 'medical' && plan.reply && /(医生|营养师|就医|急救|热线)/.test(plan.reply)) return none(plan.reply)
+      return none(TEXT[task.boundary])
     case 'invalid': {
       if (task.reason === 'no_food_items') return none(TEXT.needsFoodWhat)
       if (task.reason === 'bad_duration' || task.reason === 'no_activity') return none(TEXT.needsWorkoutMinutes)
