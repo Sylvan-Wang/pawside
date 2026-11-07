@@ -5,7 +5,7 @@ export default async function RootPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user) redirect('/auth')
+  if (!user) redirect('/welcome')
 
   const { data: profile } = await supabase
     .from('user_profiles')

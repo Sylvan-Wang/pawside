@@ -50,6 +50,11 @@ export async function proxy(request: NextRequest) {
     process.env.PAWSIDE_VISUAL_PREVIEW === '1' &&
     (pathname.startsWith('/training/method') || pathname === '/onboarding')
 
+  // Logged-out visitors (and search engines) on the bare domain see the public site, not the login page.
+  if (!user && pathname === '/') {
+    return redirectWithAuthCookies(new URL('/welcome', request.url), supabaseResponse)
+  }
+
   if (!user && !isPublic && !isLocalMethodPreview && !pathname.startsWith('/api')) {
     return redirectWithAuthCookies(new URL('/auth', request.url), supabaseResponse)
   }
