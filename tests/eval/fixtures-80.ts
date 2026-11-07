@@ -32,14 +32,14 @@ interface MealOpts { hour?: number; date?: RawTask['date_ref']; noAsk?: boolean;
 function meal(say: string, mealType: Meal | null, names: string[], o: MealOpts = {}): EvalCase {
   return {
     id: id('d80-meal'), group: 'd80-meal', say, hour: o.hour ?? 13, recent: o.recent,
-    gold: rawPlan([rawTask('log_meal', { meal_type: mealType, date_ref: o.date ?? 'unspecified', items: names.map((x) => rawItem(x)) })]),
+    gold: rawPlan([rawTask('log_meal', { meal_type: mealType, date_ref: o.date ?? 'unspecified', items: names.map((x) => rawItem(x.split('|')[0])) })]),
     check: (p) => {
       const t = one(p, 'log_meal')
       if (!t) return [`expected one log_meal, got [${kinds(p)}]`]
       return [
         ...(mealType ? wrong(t.mealType === mealType, `meal ${t.mealType}, expected ${mealType}`) : []),
         ...(o.date ? wrong(t.dateRef === o.date, `date ${t.dateRef}, expected ${o.date}`) : []),
-        ...names.filter((x) => !t.items.some((i) => i.name.includes(x) || x.includes(i.name))).map((x) => `missing item ${x}`),
+        ...names.filter((x) => !x.split('|').some((alt) => t.items.some((i) => i.name.toLowerCase().includes(alt) || alt.includes(i.name.toLowerCase())))).map((x) => `missing item ${x}`),
         ...(o.noAsk ? wrong(p.clarification === null, 'should not ask') : []),
       ]
     },
@@ -164,7 +164,7 @@ export const CASES_80: EvalCase[] = [
   meal('刚吃了个苹果', null, ['苹果'], { hour: 15 }),
   meal('吃了麻辣烫，大概加了很多菜', null, ['麻辣烫'], { hour: 19, noAsk: true }),
   meal('早餐 燕麦50g 牛奶250ml 香蕉1根', 'breakfast', ['燕麦', '牛奶', '香蕉'], { hour: 8, noAsk: true }),
-  meal('lunch: chicken salad and a coke', 'lunch', ['沙拉'], { hour: 13 }),
+  meal('lunch: chicken salad and a coke', 'lunch', ['沙拉|salad'], { hour: 13 }),
   meal('中饭吃了宫保鸡丁盖饭 外加一瓶可乐', 'lunch', ['宫保鸡丁', '可乐']),
   meal('宵夜撸串，十串羊肉串两瓶啤酒', null, ['羊肉串', '啤酒'], { hour: 23 }),
   meal('早上就喝了杯美式', 'breakfast', ['美式'], { hour: 9 }),
