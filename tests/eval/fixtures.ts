@@ -1,5 +1,6 @@
 import type { NormalizedPlan, PlanTask, RawPlan } from '../../lib/coach-chat/schemas'
 import { rawItem, rawPlan, rawTask } from '../coach-chat/helpers'
+import { CASES_80 } from './fixtures-80'
 
 /**
  * The evaluation corpus for the chat planner.
@@ -514,4 +515,5 @@ export const CASES: EvalCase[] = [
     gold: rawPlan([rawTask('log_workout', { workout_type: '力量训练', workout_minutes: 40 })]),
     check: (plan) => wrong(only(plan, 'log_workout')?.minutes === 40, `minutes ${only(plan, 'log_workout')?.minutes}`),
   },
+  ...CASES_80,
 ]
