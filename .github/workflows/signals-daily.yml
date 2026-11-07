@@ -1,0 +1,50 @@
+# 每天北京时间 20:00 采集公开信号（Reddit / App Store 评论 / 行业新闻）。
+# 只采集和清洗，不调用 AI，不需要任何密钥。
+# 结果写到独立分支 signals-data（不碰 master，不会触发 Netlify 部署）。
+# 20:30 的 Claude 每日例程从 signals-data 读取当天的 signals/YYYY-MM-DD.md。
+name: Daily signals
+
+on:
+  schedule:
+    - cron: "0 12 * * *"  # 12:00 UTC = 20:00 北京时间
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: signals-daily
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r tools/signals/requirements.txt
+      - name: Self-test on sample data
+        run: python tools/signals/collect.py --sample --out /tmp/signals-sample
+      - name: Collect
+        run: python tools/signals/collect.py --out /tmp/signals
+      - name: Commit to signals-data branch
+        run: |
+          set -e
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git ls-remote --exit-code --heads origin signals-data >/dev/null; then
+            git fetch --depth 1 origin signals-data
+            git worktree add /tmp/data signals-data
+          else
+            git worktree add --orphan -b signals-data /tmp/data
+          fi
+          mkdir -p /tmp/data/signals
+          cp /tmp/signals/* /tmp/data/signals/
+          cd /tmp/data
+          git add signals
+          if git diff --cached --quiet; then echo "nothing new"; exit 0; fi
+          git commit -m "data(signals): $(ls /tmp/signals | head -1 | cut -d. -f1)"
+          git push origin signals-data

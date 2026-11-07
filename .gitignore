@@ -44,3 +44,4 @@ npm-debug.log*
 
 # Model evaluation results (tests/eval)
 tests/eval/results/
+tools/signals/out/
