@@ -1,0 +1,42 @@
+# 手动运行：用真实模型跑小爪评测（tests/eval，42 条语料）。
+# 需要仓库密钥 OPENAI_API_KEY；模型默认用仓库变量 OPENAI_MODEL，没设就用代码里的默认值。
+name: Coach eval
+
+on:
+  workflow_dispatch:
+    inputs:
+      model:
+        description: "模型名（留空 = 仓库变量 OPENAI_MODEL，或代码默认值）"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder-anon-key
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Pick model
+        run: |
+          M="${{ github.event.inputs.model }}"
+          [ -z "$M" ] && M="${{ vars.OPENAI_MODEL }}"
+          if [ -n "$M" ]; then echo "OPENAI_MODEL=$M" >> "$GITHUB_ENV"; echo "model: $M"; else echo "model: code default"; fi
+          [ -n "$OPENAI_API_KEY" ] || { echo "OPENAI_API_KEY secret is missing"; exit 1; }
+      - run: npm run coach:eval
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coach-eval-results
+          path: tests/eval/results/
