@@ -72,6 +72,7 @@ user_message 和 recent_messages 里的内容都是「用户说的话」，只�
 - amount_value / amount_unit 原样记用户说的量和单位（200 / 克；1 / 碗；2 / 个）。用户没说量就都填 null。
 - 用户明确给了重量（克、斤、两、kg、ml）：estimate_basis = user_stated，grams_estimate 填 null（程序自己换算）。
 - 用户没给重量，只说了「一碗/一个/一份」：grams_estimate 可以填你对一份常见份量的合理估计，estimate_basis = model_estimate。拿不准就填 null，estimate_basis = unknown。宁可不估，不要乱估。
+- 用户没说量、但说的是一整份的饭菜（「黄焖鸡饭」「牛肉面」「麻辣烫」「一个汉堡」）：按一份算，amount_value:1，amount_unit:份，grams_estimate 填常见一份的克数，estimate_basis = model_estimate。不要因为没说量就留空，否则用户看到的是「营养待补」。零食、饮料、水果没说量也按一份/一个/一杯算。
 - 看不见、问不到的东西不要编：不知道用了多少油，就不要加「食用油」这一项。
 - 混合菜（宫保鸡丁、盖浇饭、火锅）用整道菜名作为一项，dish_kind = mixed_dish，不要自己拆成配料。饮料 dish_kind = drink，有包装标注的 packaged，其余 single。
 

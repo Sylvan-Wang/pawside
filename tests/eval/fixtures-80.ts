@@ -148,7 +148,15 @@ export const CASES_80: EvalCase[] = [
   // ---------------- 60 everyday conversations ----------------
   // meals (22)
   meal('早上一个包子一杯豆浆', 'breakfast', ['包子', '豆浆'], { hour: 8 }),
-  meal('午饭黄焖鸡米饭', 'lunch', ['黄焖鸡']),
+  {
+    ...meal('午饭黄焖鸡米饭', 'lunch', ['黄焖鸡']),
+    gold: rawPlan([rawTask('log_meal', { meal_type: 'lunch', items: [rawItem('黄焖鸡米饭', { amount_value: 1, amount_unit: '份', grams_estimate: 450, estimate_basis: 'model_estimate', dish_kind: 'mixed_dish' })] })]),
+    check: (p) => {
+      const t = one(p, 'log_meal')
+      if (!t) return [`expected one log_meal, got [${kinds(p)}]`]
+      return wrong(t.items.length > 0 && t.items.every((i) => i.grams !== null), `a whole dish with no amount was left without a portion: ${JSON.stringify(t.items)}`)
+    },
+  },
   meal('晚上吃了碗牛肉面', 'dinner', ['牛肉面'], { hour: 20 }),
   meal('下午茶一杯奶茶', 'snack', ['奶茶'], { hour: 16 }),
   meal('昨晚吃了火锅', 'dinner', ['火锅'], { hour: 10, date: 'yesterday' }),
