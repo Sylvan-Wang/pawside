@@ -1,0 +1,50 @@
+# Pawside 信号采集配置。改关键词、版块、竞品都只改这个文件。
+# 采集器只读公开内容，不登录、不发帖、不私信，不保存用户名。
+
+lookback_hours: 48          # 只要最近 48 小时的帖子（Reddit RSS 每版块约 25 条）
+max_body_chars: 1200
+min_text_chars: 60
+
+# 每个赛道 = 一组版块 + 一组关键词（标题或正文命中任意一个才保留）
+tracks:
+  beginner_consistency:
+    why: 新手坚持不下去、不知道今天练什么——Pawside 的核心问题
+    subreddits: [Fitness, beginnerfitness, GYM, workout, xxfitness, bodyweightfitness]
+    keywords: [consistent, consistency, motivation, "fall off", "fell off", routine, "what to do", "don't know", beginner, "start", "stick to", plan, program, "split", ppl, "push pull legs", overwhelmed, lazy, habit]
+  diet_tracking:
+    why: 记饮食太麻烦、热量和蛋白质算不清
+    subreddits: [loseit, fitmeals, EatCheapAndHealthy, MealPrepSunday, nutrition]
+    keywords: [track, tracking, calorie, macro, protein, myfitnesspal, "mfp", cronometer, "log", logging, "eating out", takeout, tedious, "meal prep"]
+  ai_coach:
+    why: 用户怎么看 AI 健身教练 / 用 ChatGPT 排计划
+    subreddits: [Fitness, loseit, ChatGPT, artificial, personaltraining, xxfitness]
+    keywords: ["ai coach", "ai trainer", "ai personal trainer", chatgpt, "gpt", "ai app", "ai workout", "ai plan", "ai generated", claude, gemini]
+  apps_and_pricing:
+    why: 竞品口碑、订阅价格、免费替代
+    subreddits: [Fitness, bodyweightfitness, loseit, xxfitness, apps]
+    keywords: [app, subscription, "free alternative", paywall, fitbod, hevy, strong, "jefit", "nike training", "keep app", "macrofactor", "myfitnesspal", price, "worth it"]
+  home_light_training:
+    why: 居家 / 碎片时间训练（对应居家轻力量方法）
+    subreddits: [bodyweightfitness, homegym, xxfitness, beginnerfitness]
+    keywords: [home, "no gym", dumbbell, "resistance band", "short workout", "20 min", "30 min", busy, apartment, "no time"]
+  students_young_adults:
+    why: 18–30 岁、学生、刚工作——目标人群的生活约束
+    subreddits: [college, GradSchool, Fitness, loseit]
+    keywords: [gym, workout, "work out", fitness, "lose weight", "gain muscle", "dining hall", "meal plan", "freshman 15"]
+
+# 竞品应用商店评论（只取公开 RSS，美区）。apple_id 写错时该项会在健康表里显示 0。
+app_store_apps:
+  - {name: Fitbod, apple_id: "1041517543"}
+  - {name: Hevy, apple_id: "1458862350"}
+  - {name: MyFitnessPal, apple_id: "341232718"}
+  - {name: MacroFactor, apple_id: "1553503471"}
+  - {name: Strong, apple_id: "464254577"}
+
+# 行业新闻 RSS（只保留命中任一关键词的条目）
+news_feeds:
+  - {name: TechCrunch, url: "https://techcrunch.com/feed/"}
+  - {name: The Verge, url: "https://www.theverge.com/rss/index.xml"}
+news_keywords: [fitness, workout, "personal trainer", nutrition, "calorie", strava, whoop, peloton, fitbod, myfitnesspal, "health app"]
+
+# 命中这些词的内容直接丢弃（伤病、医疗、进食障碍：不是我们的服务对象，也不拿来做增长）
+exclusion_keywords: [eating disorder, anorexia, bulimia, "self harm", suicide, pregnant, pregnancy, steroid, sarms, injury lawsuit]
