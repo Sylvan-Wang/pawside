@@ -117,7 +117,11 @@ def _reddit_json(session, sub: str) -> list[dict] | None:
 
 def _reddit_rss(sub: str) -> list[dict] | None:
     import feedparser
-    for host in ("https://old.reddit.com", "https://www.reddit.com"):
+    # Reddit 对连续请求限流（429），所以每个地址最多试 3 次，逐次等待更久。
+    attempts = [(h, wait) for h in ("https://old.reddit.com", "https://www.reddit.com") for wait in (0, 8, 20)]
+    for host, wait in attempts:
+        if wait:
+            time.sleep(wait)
         feed = feedparser.parse(f"{host}/r/{sub}/new/.rss", request_headers={"User-Agent": UA})
         status = getattr(feed, "status", 0)
         if status == 200 and feed.entries:
@@ -162,7 +166,7 @@ def collect_reddit(cfg: dict, health: Health, cutoff: float) -> list[dict]:
                 else:
                     health.add("reddit", f"r/{sub}", method, "ok", len(raw))
                     cache[sub] = (method, raw)
-                time.sleep(2.0)   # be polite
+                time.sleep(6.0)   # be polite; Reddit 限流很紧
             method, raw = cache[sub]
             for p in raw:
                 if p["created"] and p["created"] < cutoff:
@@ -193,12 +197,18 @@ def collect_app_reviews(cfg: dict, health: Health) -> list[dict]:
     import requests
     out = []
     for app in cfg.get("app_store_apps", []):
-        url = f"https://itunes.apple.com/us/rss/customerreviews/id={app['apple_id']}/sortBy=mostRecent/json"
-        try:
-            r = requests.get(url, headers={"User-Agent": UA}, timeout=15)
-            entries = r.json().get("feed", {}).get("entry", []) if r.status_code == 200 else []
-        except Exception:
-            entries = []
+        entries = []
+        for url in (
+            f"https://itunes.apple.com/us/rss/customerreviews/page=1/id={app['apple_id']}/sortby=mostrecent/json",
+            f"https://itunes.apple.com/us/rss/customerreviews/id={app['apple_id']}/json",
+        ):
+            try:
+                r = requests.get(url, headers={"User-Agent": BROWSER_UA}, timeout=15)
+                entries = r.json().get("feed", {}).get("entry", []) if r.status_code == 200 else []
+            except Exception:
+                entries = []
+            if entries:
+                break
         if isinstance(entries, dict):
             entries = [entries]
         reviews = [e for e in entries if "im:rating" in e]
