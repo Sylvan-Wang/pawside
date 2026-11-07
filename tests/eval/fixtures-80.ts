@@ -32,14 +32,14 @@ interface MealOpts { hour?: number; date?: RawTask['date_ref']; noAsk?: boolean;
 function meal(say: string, mealType: Meal | null, names: string[], o: MealOpts = {}): EvalCase {
   return {
     id: id('d80-meal'), group: 'd80-meal', say, hour: o.hour ?? 13, recent: o.recent,
-    gold: rawPlan([rawTask('log_meal', { meal_type: mealType, date_ref: o.date ?? 'unspecified', items: names.map((x) => rawItem(x)) })]),
+    gold: rawPlan([rawTask('log_meal', { meal_type: mealType, date_ref: o.date ?? 'unspecified', items: names.map((x) => rawItem(x.split('|')[0])) })]),
     check: (p) => {
       const t = one(p, 'log_meal')
       if (!t) return [`expected one log_meal, got [${kinds(p)}]`]
       return [
         ...(mealType ? wrong(t.mealType === mealType, `meal ${t.mealType}, expected ${mealType}`) : []),
         ...(o.date ? wrong(t.dateRef === o.date, `date ${t.dateRef}, expected ${o.date}`) : []),
-        ...names.filter((x) => !t.items.some((i) => i.name.includes(x) || x.includes(i.name))).map((x) => `missing item ${x}`),
+        ...names.filter((x) => !x.split('|').some((alt) => t.items.some((i) => i.name.toLowerCase().includes(alt) || alt.includes(i.name.toLowerCase())))).map((x) => `missing item ${x}`),
         ...(o.noAsk ? wrong(p.clarification === null, 'should not ask') : []),
       ]
     },
@@ -148,7 +148,15 @@ export const CASES_80: EvalCase[] = [
   // ---------------- 60 everyday conversations ----------------
   // meals (22)
   meal('早上一个包子一杯豆浆', 'breakfast', ['包子', '豆浆'], { hour: 8 }),
-  meal('午饭黄焖鸡米饭', 'lunch', ['黄焖鸡']),
+  {
+    ...meal('午饭黄焖鸡米饭', 'lunch', ['黄焖鸡']),
+    gold: rawPlan([rawTask('log_meal', { meal_type: 'lunch', items: [rawItem('黄焖鸡米饭', { amount_value: 1, amount_unit: '份', grams_estimate: 450, estimate_basis: 'model_estimate', dish_kind: 'mixed_dish' })] })]),
+    check: (p) => {
+      const t = one(p, 'log_meal')
+      if (!t) return [`expected one log_meal, got [${kinds(p)}]`]
+      return wrong(t.items.length > 0 && t.items.every((i) => i.grams !== null), `a whole dish with no amount was left without a portion: ${JSON.stringify(t.items)}`)
+    },
+  },
   meal('晚上吃了碗牛肉面', 'dinner', ['牛肉面'], { hour: 20 }),
   meal('下午茶一杯奶茶', 'snack', ['奶茶'], { hour: 16 }),
   meal('昨晚吃了火锅', 'dinner', ['火锅'], { hour: 10, date: 'yesterday' }),
@@ -156,7 +164,7 @@ export const CASES_80: EvalCase[] = [
   meal('刚吃了个苹果', null, ['苹果'], { hour: 15 }),
   meal('吃了麻辣烫，大概加了很多菜', null, ['麻辣烫'], { hour: 19, noAsk: true }),
   meal('早餐 燕麦50g 牛奶250ml 香蕉1根', 'breakfast', ['燕麦', '牛奶', '香蕉'], { hour: 8, noAsk: true }),
-  meal('lunch: chicken salad and a coke', 'lunch', ['salad'], { hour: 13 }),
+  meal('lunch: chicken salad and a coke', 'lunch', ['沙拉|salad'], { hour: 13 }),
   meal('中饭吃了宫保鸡丁盖饭 外加一瓶可乐', 'lunch', ['宫保鸡丁', '可乐']),
   meal('宵夜撸串，十串羊肉串两瓶啤酒', null, ['羊肉串', '啤酒'], { hour: 23 }),
   meal('早上就喝了杯美式', 'breakfast', ['美式'], { hour: 9 }),
