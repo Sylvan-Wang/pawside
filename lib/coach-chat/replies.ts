@@ -50,7 +50,9 @@ export function proposeMealText(payload: MealDraftPayload, supersededOld: boolea
 export function proposeEditText(applied: string[], unmatched: string[]): string {
   const parts: string[] = []
   if (applied.length > 0) parts.push(`按你说的改了：${applied.join('；')}。确认后才会保存。`)
-  if (unmatched.length > 0) parts.push(`这几处我没改成：${unmatched.join('；')}。`)
+  if (unmatched.length > 0) {
+    parts.push(`卡片里没找到「${unmatched.join('」「')}」，没有改。可以点卡片上的「编辑」直接改，或者说清是哪一项，比如「这份只吃了一半」。`)
+  }
   return parts.join('') || TEXT.noPlan
 }
 
