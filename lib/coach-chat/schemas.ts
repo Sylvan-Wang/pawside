@@ -13,7 +13,7 @@ import type { DateRefKind, MealSlot } from './dates'
  */
 
 export const PLAN_SCHEMA_NAME = 'pawside_coach_plan_v1'
-export const PLAN_PROMPT_VERSION = 'coach_chat_plan_v3.1'
+export const PLAN_PROMPT_VERSION = 'coach_chat_plan_v3.2'
 
 export const MAX_TASKS = 4
 export const MAX_ITEMS_PER_MEAL = 12
@@ -274,6 +274,13 @@ const LIANG_UNITS = new Set(['两'])
 const ML_UNITS = new Set(['ml', '毫升'])
 const LITRE_UNITS = new Set(['l', '升'])
 
+/** A body weight a person can have: 20-350 kg, read in the unit given (unit unknown: any of kg / 斤 / lb fits). */
+function plausibleWeight(value: number, unit: 'kg' | 'lb' | 'jin' | null): boolean {
+  const kg = unit === 'jin' ? value / 2 : unit === 'lb' ? value * 0.4536 : value
+  if (unit) return kg >= 20 && kg <= 350
+  return value >= 20 && value <= 700
+}
+
 function finitePositive(value: number | null, max: number): number | null {
   return typeof value === 'number' && Number.isFinite(value) && value > 0 && value <= max ? value : null
 }
@@ -415,7 +422,7 @@ function normalizeTask(task: z.infer<typeof rawTask>, issues: string[]): PlanTas
     }
     case 'log_weight': {
       const value = finitePositive(task.weight_value, 1000)
-      if (value === null) return { kind: 'invalid', intended: 'log_weight', reason: 'bad_weight' }
+      if (value === null || !plausibleWeight(value, task.weight_unit)) return { kind: 'invalid', intended: 'log_weight', reason: 'bad_weight' }
       return { kind: 'log_weight', value, unit: task.weight_unit, ...dateSlots }
     }
     case 'query_day': {
