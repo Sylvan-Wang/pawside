@@ -164,7 +164,7 @@ export const CASES_80: EvalCase[] = [
   meal('刚吃了个苹果', null, ['苹果'], { hour: 15 }),
   meal('吃了麻辣烫，大概加了很多菜', null, ['麻辣烫'], { hour: 19, noAsk: true }),
   meal('早餐 燕麦50g 牛奶250ml 香蕉1根', 'breakfast', ['燕麦', '牛奶', '香蕉'], { hour: 8, noAsk: true }),
-  meal('lunch: chicken salad and a coke', 'lunch', ['salad'], { hour: 13 }),
+  meal('lunch: chicken salad and a coke', 'lunch', ['沙拉'], { hour: 13 }),
   meal('中饭吃了宫保鸡丁盖饭 外加一瓶可乐', 'lunch', ['宫保鸡丁', '可乐']),
   meal('宵夜撸串，十串羊肉串两瓶啤酒', null, ['羊肉串', '啤酒'], { hour: 23 }),
   meal('早上就喝了杯美式', 'breakfast', ['美式'], { hour: 9 }),

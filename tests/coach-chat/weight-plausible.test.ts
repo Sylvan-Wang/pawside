@@ -18,3 +18,15 @@ describe('body weight plausibility', () => {
     expect(kindFor(900, null)).toBe('invalid')
   })
 })
+
+describe('typical serving when the model gave no grams', () => {
+  const item = (unit: string, dish: 'mixed_dish' | 'drink' | 'single') =>
+    normalizePlan(rawPlan([rawTask('log_meal', { items: [{ name: 'x', amount_value: 1, amount_unit: unit, grams_estimate: null, estimate_basis: 'unknown', dish_kind: dish }] })])).tasks[0]
+  it('fills a whole dish and a drink as an estimate', () => {
+    expect(item('份', 'mixed_dish')).toMatchObject({ items: [{ grams: 400, gramsBasis: 'model_estimate' }] })
+    expect(item('罐', 'drink')).toMatchObject({ items: [{ grams: 330, gramsBasis: 'model_estimate' }] })
+  })
+  it('leaves single foods alone', () => {
+    expect(item('个', 'single')).toMatchObject({ items: [{ grams: null }] })
+  })
+})

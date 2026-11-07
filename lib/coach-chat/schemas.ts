@@ -311,13 +311,34 @@ export function deriveGrams(
   return { grams: null, basis: 'unknown' }
 }
 
+/**
+ * Last resort for "一份黄焖鸡饭" / "一杯可乐" when the model gave no gram guess: a typical serving
+ * for that kind of dish, marked as an estimate so the card says 估算 and the user can change it.
+ * Portion templates for known foods still win later (lib/coach-chat/meal.ts chooseWeight).
+ */
+const TYPICAL_SERVING: Partial<Record<DishKind, { units: ReadonlySet<string>; grams: number }>> = {
+  mixed_dish: { units: new Set(['份', '碗', '盘', '盒', '个', 'serving', 'bowl', 'plate']), grams: 400 },
+  drink: { units: new Set(['杯', '瓶', '罐', '份', 'cup', 'can', 'bottle', 'glass']), grams: 330 },
+}
+function withTypicalPortion(
+  derived: { grams: number | null; basis: PlanItem['gramsBasis'] },
+  amountValue: number | null,
+  amountUnit: string | null,
+  dishKind: DishKind,
+): { grams: number | null; basis: PlanItem['gramsBasis'] } {
+  if (derived.grams !== null || !amountUnit) return derived
+  const typical = TYPICAL_SERVING[dishKind]
+  if (!typical || !typical.units.has(amountUnit.toLowerCase())) return derived
+  return { grams: (amountValue ?? 1) * typical.grams, basis: 'model_estimate' }
+}
+
 function normalizeItem(item: z.infer<typeof rawItem>): PlanItem | null {
   const name = cleanText(item.name, MAX_NAME_CHARS)
   if (!name) return null
   const amountValue = finitePositive(item.amount_value, 1_000_000)
   const amountUnit = cleanText(item.amount_unit, 8)
   const estimate = finitePositive(item.grams_estimate, 3000)
-  const derived = deriveGrams(amountValue, amountUnit, estimate, item.estimate_basis)
+  const derived = withTypicalPortion(deriveGrams(amountValue, amountUnit, estimate, item.estimate_basis), amountValue, amountUnit, item.dish_kind)
   // A derived weight must still be believable; otherwise treat the weight as unknown.
   const grams = derived.grams !== null && derived.grams > 0 && derived.grams <= 5000 ? derived.grams : null
   return {
