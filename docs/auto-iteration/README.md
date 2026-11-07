@@ -9,7 +9,7 @@ Pawside 的学习引擎：工作日安静执行已批准的计划；周五晚出
 | 部分 | 在哪 | 什么时候跑 | 做什么 |
 |---|---|---|---|
 | 信号采集 | `tools/signals/` + `.github/workflows/signals-daily.yml` | 每天北京 20:00 | 抓 Reddit、Hacker News、Product Hunt、Google News（中英文）、App Store 竞品评论，清洗后写到 `signals-data` 分支。不调用 AI，不需要密钥 |
-| 例程 | Claude 定时任务，指令是 [DAILY_ROUTINE.md](DAILY_ROUTINE.md) | 每天北京 20:30 | 工作日：读信号、做计划里的任务、在周计划 issue 下追加进展；周五：出周计划；周六：跟进批复；周日：锁定计划 |
+| 例程 | Claude 定时任务，指令是 [DAILY_ROUTINE.md](DAILY_ROUTINE.md) | 周日到周四 9:30、周五周六 20:30（北京） | 工作日：读信号、做计划里的任务、在周计划 issue 下追加进展；周五：出周计划；周六：跟进批复；周日：锁定计划 |
 | 周复盘 | 合并在周计划 issue 里 | 周五晚出，周末批 | 人打分；结论记进 [RETRO_LOG.md](RETRO_LOG.md) |
 
 ## 人和系统的边界

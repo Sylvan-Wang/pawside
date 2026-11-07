@@ -13,7 +13,7 @@ import type { DateRefKind, MealSlot } from './dates'
  */
 
 export const PLAN_SCHEMA_NAME = 'pawside_coach_plan_v1'
-export const PLAN_PROMPT_VERSION = 'coach_chat_plan_v2'
+export const PLAN_PROMPT_VERSION = 'coach_chat_plan_v3.2'
 
 export const MAX_TASKS = 4
 export const MAX_ITEMS_PER_MEAL = 12
@@ -30,6 +30,7 @@ export const TASK_KINDS = [
   'cancel_draft',
   'confirm_draft',
   'smalltalk',
+  'fitness_question',
   'out_of_scope',
 ] as const
 export type TaskKind = (typeof TASK_KINDS)[number]
@@ -244,6 +245,7 @@ export type PlanTask =
   | { kind: 'cancel_draft'; draftRef: string | null }
   | { kind: 'confirm_draft'; draftRef: string | null }
   | { kind: 'smalltalk' }
+  | { kind: 'fitness_question' }
   | { kind: 'out_of_scope'; boundary: Boundary }
   | { kind: 'invalid'; intended: TaskKind; reason: string }
 
@@ -271,6 +273,13 @@ const JIN_UNITS = new Set(['斤'])
 const LIANG_UNITS = new Set(['两'])
 const ML_UNITS = new Set(['ml', '毫升'])
 const LITRE_UNITS = new Set(['l', '升'])
+
+/** A body weight a person can have: 20-350 kg, read in the unit given (unit unknown: any of kg / 斤 / lb fits). */
+function plausibleWeight(value: number, unit: 'kg' | 'lb' | 'jin' | null): boolean {
+  const kg = unit === 'jin' ? value / 2 : unit === 'lb' ? value * 0.4536 : value
+  if (unit) return kg >= 20 && kg <= 350
+  return value >= 20 && value <= 700
+}
 
 function finitePositive(value: number | null, max: number): number | null {
   return typeof value === 'number' && Number.isFinite(value) && value > 0 && value <= max ? value : null
@@ -413,7 +422,7 @@ function normalizeTask(task: z.infer<typeof rawTask>, issues: string[]): PlanTas
     }
     case 'log_weight': {
       const value = finitePositive(task.weight_value, 1000)
-      if (value === null) return { kind: 'invalid', intended: 'log_weight', reason: 'bad_weight' }
+      if (value === null || !plausibleWeight(value, task.weight_unit)) return { kind: 'invalid', intended: 'log_weight', reason: 'bad_weight' }
       return { kind: 'log_weight', value, unit: task.weight_unit, ...dateSlots }
     }
     case 'query_day': {
@@ -428,6 +437,8 @@ function normalizeTask(task: z.infer<typeof rawTask>, issues: string[]): PlanTas
       return { kind: 'confirm_draft', draftRef }
     case 'smalltalk':
       return { kind: 'smalltalk' }
+    case 'fitness_question':
+      return { kind: 'fitness_question' }
     case 'out_of_scope':
       return { kind: 'out_of_scope', boundary: task.boundary ?? 'other' }
   }

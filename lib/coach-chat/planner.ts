@@ -14,17 +14,21 @@ import { isRawPlan, PLAN_JSON_SCHEMA, PLAN_SCHEMA_NAME, type RawPlan } from './s
 
 export type PlannerResult =
   | { ok: true; plan: RawPlan; model: string; latencyMs: number; usage?: OpenAIUsage }
-  | { ok: false; reason: OpenAIFailureReason; model: string; latencyMs: number }
+  | { ok: false; reason: OpenAIFailureReason; model: string; latencyMs: number; detail?: string }
 
 export type Planner = (system: string, input: string) => Promise<PlannerResult>
 
 const PLANNER_TIMEOUT_MS = 15_000
 const PLANNER_MAX_OUTPUT_TOKENS = 1200
 
+/** Retry once only when a second try can plausibly help and still fits the request's time budget. */
+const RETRY_IF_FIRST_UNDER_MS = 6_000
+const NOT_RETRYABLE_STATUS = new Set([400, 401, 403, 404])
+
 export function createPlanner(): Planner {
   return async (system, input) => {
     const startedAt = Date.now()
-    const result = await callStructuredOutput<RawPlan>(
+    const call = () => callStructuredOutput<RawPlan>(
       system,
       input,
       PLAN_SCHEMA_NAME,
@@ -33,8 +37,22 @@ export function createPlanner(): Planner {
       PLANNER_MAX_OUTPUT_TOKENS,
       { model: getChatModel(), timeoutMs: PLANNER_TIMEOUT_MS },
     )
+    let result = await call()
+    let attempts = 1
+    if (
+      !result.ok
+      && (result.reason === 'upstream_error' || result.reason === 'invalid_response')
+      && !(result.httpStatus !== undefined && NOT_RETRYABLE_STATUS.has(result.httpStatus))
+      && Date.now() - startedAt < RETRY_IF_FIRST_UNDER_MS
+    ) {
+      result = await call()
+      attempts = 2
+    }
     const latencyMs = Date.now() - startedAt
-    if (!result.ok) return { ok: false, reason: result.reason, model: result.model, latencyMs }
+    if (!result.ok) {
+      const detail = [result.httpStatus ? `http_${result.httpStatus}` : null, `attempts_${attempts}`].filter(Boolean).join(' ')
+      return { ok: false, reason: result.reason, model: result.model, latencyMs, detail }
+    }
     return { ok: true, plan: result.data, model: result.model, latencyMs, usage: result.usage }
   }
 }

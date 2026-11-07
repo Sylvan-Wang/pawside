@@ -1,5 +1,6 @@
 import type { NormalizedPlan, PlanTask, RawPlan } from '../../lib/coach-chat/schemas'
 import { rawItem, rawPlan, rawTask } from '../coach-chat/helpers'
+import { CASES_80 } from './fixtures-80'
 
 /**
  * The evaluation corpus for the chat planner.
@@ -397,4 +398,122 @@ export const CASES: EvalCase[] = [
       rawTask('log_weight', { weight_value: 72 })]),
     check: (plan) => expectKinds(plan, ['log_meal', 'log_workout', 'log_weight']),
   },
+
+  // --- messy, real-world input (prompt v3) ----------------------------------------------------------
+  {
+    id: 'messy-greeting-plus-meal', group: 'messy', say: '你好，我晚上吃了一巴掌米饭，炒豆芽，炒青椒，炒油豆腐，炒青菜，差不多各100g吧', hour: 19,
+    gold: rawPlan([rawTask('log_meal', { meal_type: 'dinner', items: [
+      rawItem('米饭', { amount_value: 100, amount_unit: 'g', estimate_basis: 'user_stated' }),
+      rawItem('炒豆芽', { amount_value: 100, amount_unit: 'g', estimate_basis: 'user_stated', dish_kind: 'mixed_dish' }),
+      rawItem('炒青椒', { amount_value: 100, amount_unit: 'g', estimate_basis: 'user_stated', dish_kind: 'mixed_dish' }),
+      rawItem('炒油豆腐', { amount_value: 100, amount_unit: 'g', estimate_basis: 'user_stated', dish_kind: 'mixed_dish' }),
+      rawItem('炒青菜', { amount_value: 100, amount_unit: 'g', estimate_basis: 'user_stated', dish_kind: 'mixed_dish' })] })]),
+    check: (plan) => [...expectKinds(plan, ['log_meal']), ...meal(plan, (t) => [
+      ...wrong(t.items.length === 5, `${t.items.length} items`),
+      ...wrong(t.mealType === 'dinner', `meal_type ${t.mealType}`),
+    ])],
+  },
+  {
+    id: 'messy-typo-slang', group: 'messy', say: '中午炫了一份麦当劳双层吉士堡套餐', hour: 13,
+    gold: rawPlan([rawTask('log_meal', { meal_type: 'lunch', items: [rawItem('双层吉士堡套餐', { amount_value: 1, amount_unit: '份', dish_kind: 'mixed_dish' })] })]),
+    check: (plan) => [...expectKinds(plan, ['log_meal'])],
+  },
+  {
+    id: 'messy-english', group: 'messy', say: 'ran 5k this morning, took about 28 min', hour: 10,
+    gold: rawPlan([rawTask('log_workout', { workout_type: '跑步', workout_minutes: 28 })]),
+    check: (plan) => {
+      const t = only(plan, 'log_workout')
+      return t ? wrong(t.minutes === 28, `minutes ${t.minutes}`) : [`expected log_workout, got [${kinds(plan)}]`]
+    },
+  },
+  {
+    id: 'messy-emoji', group: 'messy', say: '🍜x1 晚饭', hour: 20,
+    gold: rawPlan([rawTask('log_meal', { meal_type: 'dinner', items: [rawItem('面', { amount_value: 1, amount_unit: '碗' })] })]),
+    // Either reading is fine (record a bowl of noodles, or ask what it was), but never a workout/weight/refusal.
+    check: (plan) => [
+      ...wrong(!kinds(plan).some((k) => ['log_workout', 'log_weight', 'out_of_scope'].includes(k)), `unexpected [${kinds(plan)}]`),
+      ...wrong(kinds(plan).includes('log_meal') || plan.clarification !== null, 'should record the meal or ask about it'),
+    ],
+  },
+  {
+    id: 'messy-gibberish', group: 'messy', say: 'asdfgh 。。。', hour: 15,
+    gold: rawPlan([], { reply: '没太看懂，想记点吃的还是练的？' }),
+    check: (plan) => wrong(!kinds(plan).some((k) => k.startsWith('log_') || k === 'edit_meal'), `gibberish created a record: [${kinds(plan)}]`),
+  },
+  {
+    id: 'messy-offtopic', group: 'messy', say: '给我讲个笑话', hour: 15,
+    gold: rawPlan([], { reply: '笑话我不太会讲，吃了什么练了什么倒是可以告诉我。' }),
+    check: (plan) => wrong(!kinds(plan).some((k) => k.startsWith('log_') || k === 'edit_meal'), `off-topic created a record: [${kinds(plan)}]`),
+  },
+  {
+    id: 'messy-tired', group: 'messy', say: '今天好累，不想练了', hour: 19,
+    gold: rawPlan([rawTask('smalltalk')], { reply: '累了就歇一天，明天接着来。' }),
+    check: (plan) => [
+      ...wrong(!kinds(plan).some((k) => k.startsWith('log_')), `created a record: [${kinds(plan)}]`),
+      ...wrong(kinds(plan).includes('smalltalk') || kinds(plan).includes('fitness_question'), `expected a conversational reply, got [${kinds(plan)}]`),
+      ...wrong(!plan.reply || !/(必须|一定要|坚持住|别偷懒)/.test(plan.reply), `pushed the user: ${plan.reply}`),
+    ],
+  },
+  {
+    id: 'messy-ok-no-draft', group: 'messy', say: '嗯嗯', hour: 15,
+    gold: rawPlan([]),
+    check: (plan) => wrong(!kinds(plan).some((k) => k.startsWith('log_') || k === 'edit_meal'), `created a record: [${kinds(plan)}]`),
+  },
+  {
+    id: 'messy-uncertain-amount', group: 'messy', say: '早上大概喝了半杯牛奶吧，也可能是一杯', hour: 9,
+    gold: rawPlan([rawTask('log_meal', { meal_type: 'breakfast', items: [rawItem('牛奶', { amount_value: 0.5, amount_unit: '杯', dish_kind: 'drink' })] })]),
+    check: (plan) => [...expectKinds(plan, ['log_meal']), ...wrong(plan.clarification === null, 'should not ask about the amount')],
+  },
+  {
+    id: 'messy-change-mind-food', group: 'messy', say: '不对不对，是鸡腿不是鸡翅', hour: 13,
+    openDrafts: [{ id: D1, kind: 'meal', summary: '午餐：米饭、鸡翅' }],
+    gold: rawPlan([rawTask('edit_meal', { draft_ref: D1, edits: [{ action: 'replace_food', target_item: '鸡翅', new_name: '鸡腿', factor: null, grams: null }] })]),
+    check: (plan) => expectKinds(plan, ['edit_meal']),
+  },
+  {
+    id: 'messy-record-and-question', group: 'messy', say: '刚练完腿一个小时，练完要不要马上吃东西？', hour: 20,
+    gold: rawPlan([rawTask('log_workout', { workout_type: '腿部训练', workout_minutes: 60 }), rawTask('fitness_question')], { reply: '练完一两个小时内吃点有蛋白质和主食的东西就好。' }),
+    check: (plan) => [
+      ...wrong(only(plan, 'log_workout')?.minutes === 60, `workout minutes ${only(plan, 'log_workout')?.minutes}`),
+      ...wrong(!plan.reply || !/\d/.test(plan.reply), 'reply must not contain numbers'),
+    ],
+  },
+  {
+    id: 'fitness-q-chest', group: 'fitness', say: '新手怎么练胸比较好', hour: 18,
+    gold: rawPlan([rawTask('fitness_question')], { reply: '先把卧推和俯卧撑的动作做标准，重量慢慢加。具体安排看今日训练。' }),
+    check: (plan) => [...expectKinds(plan, ['fitness_question'])],
+  },
+  {
+    id: 'fitness-q-protein', group: 'fitness', say: '蛋白粉有必要喝吗', hour: 18,
+    gold: rawPlan([rawTask('fitness_question')], { reply: '饭里蛋白质吃够了就不是必须的，吃不够时用它补一补方便。' }),
+    check: (plan) => wrong(kinds(plan).includes('fitness_question') || kinds(plan).includes('consult_food'), `expected a question, got [${kinds(plan)}]`),
+  },
+  {
+    id: 'fitness-q-today-plan', group: 'fitness', say: '今天该练什么', hour: 18,
+    gold: rawPlan([rawTask('fitness_question')], { reply: '打开今日训练就能看到今天的部位和动作。' }),
+    check: (plan) => wrong(kinds(plan).includes('fitness_question'), `expected fitness_question, got [${kinds(plan)}]`),
+  },
+  {
+    id: 'messy-split-meal-followup', group: 'messy', say: '哦对还有个煎蛋', hour: 8,
+    recent: [{ role: 'user', text: '早饭吃了两片吐司' }, { role: 'assistant', text: '早餐整理好了，确认后才会保存。' }],
+    openDrafts: [{ id: D1, kind: 'meal', summary: '早餐：吐司' }],
+    gold: rawPlan([rawTask('edit_meal', { draft_ref: D1, items: [rawItem('煎蛋', { amount_value: 1, amount_unit: '个' })] })]),
+    check: (plan) => expectKinds(plan, ['edit_meal']),
+  },
+  {
+    id: 'messy-weight-casual', group: 'messy', say: '早上上秤 六十八点五', hour: 7,
+    gold: rawPlan([rawTask('log_weight', { weight_value: 68.5 })]),
+    check: (plan) => wrong(only(plan, 'log_weight')?.value === 68.5, `weight ${only(plan, 'log_weight')?.value}`),
+  },
+  {
+    id: 'messy-thanks', group: 'messy', say: '谢谢小爪', hour: 21,
+    gold: rawPlan([rawTask('smalltalk')], { reply: '不客气，随时找我。' }),
+    check: (plan) => expectKinds(plan, ['smalltalk']),
+  },
+  {
+    id: 'messy-workout-vague-time', group: 'messy', say: '下班去健身房撸了会铁，差不多四十来分钟', hour: 21,
+    gold: rawPlan([rawTask('log_workout', { workout_type: '力量训练', workout_minutes: 40 })]),
+    check: (plan) => wrong(only(plan, 'log_workout')?.minutes === 40, `minutes ${only(plan, 'log_workout')?.minutes}`),
+  },
+  ...CASES_80,
 ]

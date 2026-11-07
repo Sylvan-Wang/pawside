@@ -29,7 +29,7 @@ export interface StructuredOutputOptions {
 
 export type OpenAIResult<T> =
   | { ok: true; data: T; provider: 'openai'; model: string; usage?: OpenAIUsage }
-  | { ok: false; reason: OpenAIFailureReason; provider: 'openai'; model: string }
+  | { ok: false; reason: OpenAIFailureReason; provider: 'openai'; model: string; httpStatus?: number }
 
 export interface DailyReviewPayload {
   summary: string
@@ -228,6 +228,7 @@ export async function callStructuredOutput<T>(
         reason: response.status === 429 ? 'rate_limited' : 'upstream_error',
         provider: 'openai',
         model,
+        httpStatus: response.status,
       }
     }
 
