@@ -6,7 +6,9 @@ import { commitDraft, type CommitOutcome } from '@/lib/coach-chat/commit'
 import { validTimeZone } from '@/lib/coach-chat/dates'
 import { requireCoachUser } from '@/lib/coach-chat/http'
 import { describeError } from '@/lib/coach-chat/store'
-import { conflictText, savedText, TEXT } from '@/lib/coach-chat/replies'
+import { getDayFacts } from '@/lib/coach-chat/day-facts'
+import { conflictText, intakeAfterSaveText, savedText, TEXT } from '@/lib/coach-chat/replies'
+import type { MealDraftPayload } from '@/lib/coach-chat/types'
 import { dateKeyInTimeZone } from '@/lib/utils'
 
 /**
@@ -65,12 +67,24 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       now,
     })
     if (outcome.status === 'not_found') return apiError('NOT_FOUND', TEXT.nothingToCancel, 404)
+    let text = describe(outcome)
+    if (outcome.status === 'saved' && (outcome.draft.kind === 'meal' || outcome.draft.kind === 'meal_edit')) {
+      // 记完即反馈: a best-effort extra line; the save already happened, so a failure here only drops the line.
+      try {
+        const date = (outcome.draft.payload as MealDraftPayload).date
+        const facts = await getDayFacts(gate.supabase, gate.user.id, date, ['nutrition'])
+        const line = intakeAfterSaveText(facts.nutrition)
+        if (line) text = `${text}${line}`
+      } catch (reason) {
+        console.warn('[coach-chat] intake after save skipped', describeError(reason))
+      }
+    }
     return NextResponse.json({
       data: {
         status: outcome.status,
         // Days whose facts changed, so the app can drop its own cached reviews for them.
         affected_dates: outcome.status === 'saved' ? outcome.affectedDates : [],
-        text: describe(outcome),
+        text,
         card: buildCard(outcome.draft, now, dateKeyInTimeZone(now, timeZone)),
       },
     })
