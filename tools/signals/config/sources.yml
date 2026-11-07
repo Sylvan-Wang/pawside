@@ -42,9 +42,15 @@ app_store_apps:
 
 # 行业新闻 RSS（只保留命中任一关键词的条目）
 news_feeds:
+  - {name: Product Hunt, url: "https://www.producthunt.com/feed"}
+  - {name: Google News 健身App, url: "https://news.google.com/rss/search?q=fitness+app+OR+AI+workout&hl=en-US&gl=US&ceid=US:en"}
+  - {name: Google News 健身App 中文, url: "https://news.google.com/rss/search?q=%E5%81%A5%E8%BA%ABApp+OR+AI%E5%81%A5%E8%BA%AB&hl=zh-CN&gl=CN&ceid=CN:zh-Hans"}
   - {name: TechCrunch, url: "https://techcrunch.com/feed/"}
   - {name: The Verge, url: "https://www.theverge.com/rss/index.xml"}
-news_keywords: [fitness, workout, "personal trainer", nutrition, "calorie", strava, whoop, peloton, fitbod, myfitnesspal, "health app"]
+# Hacker News 搜索词（AI 健身产品、出海独立开发者的讨论）
+hn_queries: ["fitness app", "workout app", "AI personal trainer", "calorie tracking", "habit app", "health app"]
+
+news_keywords: [fitness, 健身, 减脂, 增肌, "AI 教练", workout app, workout, "personal trainer", nutrition, "calorie", strava, whoop, peloton, fitbod, myfitnesspal, "health app"]
 
 # 命中这些词的内容直接丢弃（伤病、医疗、进食障碍：不是我们的服务对象，也不拿来做增长）
 exclusion_keywords: [eating disorder, anorexia, bulimia, "self harm", suicide, pregnant, pregnancy, steroid, sarms, injury lawsuit]

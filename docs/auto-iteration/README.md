@@ -1,6 +1,6 @@
 # 自动迭代系统
 
-Pawside 的学习引擎：工作日安静执行已批准的计划；周六晚出周计划（复盘 + 下周任务 + 待批事项），xxa 周日早上用 30–60 分钟批完。
+Pawside 的学习引擎：工作日安静执行已批准的计划；周五晚出周计划（复盘 + 下周任务 + 待批事项），xxa 周六、周日各花半小时左右批完（周日更重），周日晚锁定。
 
 目标（2026-11-07 定）：6 个月内 1000 个注册用户或 DAU 100；同时验证有人愿意付钱；出海和英文本地化已决定要做。
 
@@ -8,9 +8,9 @@ Pawside 的学习引擎：工作日安静执行已批准的计划；周六晚出
 
 | 部分 | 在哪 | 什么时候跑 | 做什么 |
 |---|---|---|---|
-| 信号采集 | `tools/signals/` + `.github/workflows/signals-daily.yml` | 每天北京 20:00 | 抓 Reddit、App Store 竞品评论、行业新闻，清洗后写到 `signals-data` 分支。不调用 AI，不需要密钥 |
-| 例程 | Claude 定时任务，指令是 [DAILY_ROUTINE.md](DAILY_ROUTINE.md) | 每天北京 20:30 | 工作日：读信号、做计划里的任务、在周计划 issue 下追加进展；周六：出周计划；周日：按批复锁定计划 |
-| 周复盘 | 合并在周六的周计划 issue 里 | 周六晚出，周日早上批 | 人打分；结论记进 [RETRO_LOG.md](RETRO_LOG.md) |
+| 信号采集 | `tools/signals/` + `.github/workflows/signals-daily.yml` | 每天北京 20:00 | 抓 Reddit、Hacker News、Product Hunt、Google News（中英文）、App Store 竞品评论，清洗后写到 `signals-data` 分支。不调用 AI，不需要密钥 |
+| 例程 | Claude 定时任务，指令是 [DAILY_ROUTINE.md](DAILY_ROUTINE.md) | 每天北京 20:30 | 工作日：读信号、做计划里的任务、在周计划 issue 下追加进展；周五：出周计划；周六：跟进批复；周日：锁定计划 |
+| 周复盘 | 合并在周计划 issue 里 | 周五晚出，周末批 | 人打分；结论记进 [RETRO_LOG.md](RETRO_LOG.md) |
 
 ## 人和系统的边界
 

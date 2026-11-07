@@ -262,6 +262,39 @@ def collect_news(cfg: dict, health: Health, cutoff: float) -> list[dict]:
     return out
 
 
+# ─── Hacker News（Algolia 公开搜索，稳定、不限流） ─────────────────────────────
+
+def collect_hn(cfg: dict, health: Health, cutoff: float) -> list[dict]:
+    import requests
+    out = []
+    for q in cfg.get("hn_queries", []):
+        try:
+            r = requests.get("https://hn.algolia.com/api/v1/search_by_date",
+                             params={"query": q, "tags": "(story,comment)",
+                                     "numericFilters": f"created_at_i>{int(cutoff)}", "hitsPerPage": 30},
+                             headers={"User-Agent": UA}, timeout=15)
+            hits = r.json().get("hits", []) if r.status_code == 200 else None
+        except Exception:
+            hits = None
+        if hits is None:
+            health.add("hacker_news", q, "algolia", "failed", 0)
+            continue
+        health.add("hacker_news", q, "algolia", "ok", len(hits))
+        for h in hits:
+            title = h.get("title") or h.get("story_title") or ""
+            body = strip_html(h.get("comment_text") or h.get("story_text") or "")
+            oid = h.get("objectID", "")
+            out.append({
+                "id": f"hn:{oid}", "source": "hacker_news", "where": "Hacker News", "via": "algolia",
+                "tracks": ["industry_news"], "matched": q, "title": title, "body": body,
+                "score": h.get("points"), "num_comments": h.get("num_comments"),
+                "created_utc": h.get("created_at"),
+                "url": f"https://news.ycombinator.com/item?id={oid}",
+            })
+        time.sleep(0.5)
+    return out
+
+
 # ─── Clean ──────────────────────────────────────────────────────────────────
 
 def clean(items: list[dict], cfg: dict) -> tuple[list[dict], dict]:
@@ -365,6 +398,7 @@ def main(argv: list[str] | None = None) -> int:
         raw = collect_reddit(cfg, health, cutoff)
         raw += collect_app_reviews(cfg, health)
         raw += collect_news(cfg, health, cutoff)
+        raw += collect_hn(cfg, health, cutoff)
 
     items, stats = clean(raw, cfg)
     out = Path(args.out)
