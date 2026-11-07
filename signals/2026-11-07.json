@@ -1,0 +1,436 @@
+{
+  "run_date": "2026-11-07",
+  "generated_at": "2026-11-07T10:15:27.024553+00:00",
+  "source_health": [
+    {
+      "source": "reddit",
+      "target": "r/Fitness",
+      "method": "rss",
+      "status": "ok",
+      "items": 25
+    },
+    {
+      "source": "reddit",
+      "target": "r/beginnerfitness",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/GYM",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/workout",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/xxfitness",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/bodyweightfitness",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/loseit",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/fitmeals",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/EatCheapAndHealthy",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/MealPrepSunday",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/nutrition",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/ChatGPT",
+      "method": "rss",
+      "status": "ok",
+      "items": 25
+    },
+    {
+      "source": "reddit",
+      "target": "r/artificial",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/personaltraining",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/apps",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/homegym",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/college",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/GradSchool",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "app_store",
+      "target": "Fitbod",
+      "method": "rss",
+      "status": "empty_or_failed",
+      "items": 0
+    },
+    {
+      "source": "app_store",
+      "target": "Hevy",
+      "method": "rss",
+      "status": "empty_or_failed",
+      "items": 0
+    },
+    {
+      "source": "app_store",
+      "target": "MyFitnessPal",
+      "method": "rss",
+      "status": "empty_or_failed",
+      "items": 0
+    },
+    {
+      "source": "app_store",
+      "target": "MacroFactor",
+      "method": "rss",
+      "status": "empty_or_failed",
+      "items": 0
+    },
+    {
+      "source": "app_store",
+      "target": "Strong",
+      "method": "rss",
+      "status": "empty_or_failed",
+      "items": 0
+    },
+    {
+      "source": "news",
+      "target": "TechCrunch",
+      "method": "rss",
+      "status": "ok",
+      "items": 0
+    },
+    {
+      "source": "news",
+      "target": "The Verge",
+      "method": "rss",
+      "status": "ok",
+      "items": 0
+    }
+  ],
+  "cleaning": {
+    "raw": 16,
+    "duplicate": 0,
+    "deleted": 0,
+    "bot": 0,
+    "too_short": 1,
+    "low_signal": 0,
+    "kept": 15
+  },
+  "items": [
+    {
+      "id": "reddit:t3_1xq1yda",
+      "source": "reddit",
+      "where": "r/Fitness",
+      "via": "rss",
+      "tracks": [
+        "beginner_consistency",
+        "apps_and_pricing",
+        "students_young_adults"
+      ],
+      "matched": "routine",
+      "title": "Daily Simple Questions Thread - November 07, 2026",
+      "body": "Welcome to the /r/Fitness Daily Simple Questions Thread - Our daily thread to ask about all things fitness. Post your questions here related to your diet and nutrition or your training routine and exercises. Anyone can post a question and the community as a whole is invited and encouraged to provide an answer. As always, be sure to read the wiki first. Like, all of it. Rule #0 still applies in this thread. Also, there's a handy search function to your right, and if you didn't know, you can also use Google to search r/Fitness by using the limiter \"site:reddit.com /r/fitness \" after your search topic. Also make sure to check out Examine.com for evidence based answers to nutrition and supplement questions. If you are posting a routine critique request, make sure you follow the guidelines for including enough detail. \"Bulk or cut\" type questions are not permitted on r/Fitness - Refer to the FAQ or post them in r/bulkorcut . Questions that involve pain, injury, or any medical concern of any kind are not permitted on r/Fitness . Seek advice from an appropriate medical professional instead. (Please note: This is not a place for general small talk, chit-chat, jokes, memes, \"Dear Diary\" typ",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-07T09:00:52+00:00",
+      "url": "https://www.reddit.com/r/Fitness/comments/1xq1yda/daily_simple_questions_thread_november_07_2026/"
+    },
+    {
+      "id": "reddit:t3_1xp874i",
+      "source": "reddit",
+      "where": "r/Fitness",
+      "via": "rss",
+      "tracks": [
+        "beginner_consistency",
+        "apps_and_pricing",
+        "students_young_adults"
+      ],
+      "matched": "routine",
+      "title": "Daily Simple Questions Thread - November 06, 2026",
+      "body": "Welcome to the /r/Fitness Daily Simple Questions Thread - Our daily thread to ask about all things fitness. Post your questions here related to your diet and nutrition or your training routine and exercises. Anyone can post a question and the community as a whole is invited and encouraged to provide an answer. As always, be sure to read the wiki first. Like, all of it. Rule #0 still applies in this thread. Also, there's a handy search function to your right, and if you didn't know, you can also use Google to search r/Fitness by using the limiter \"site:reddit.com /r/fitness \" after your search topic. Also make sure to check out Examine.com for evidence based answers to nutrition and supplement questions. If you are posting a routine critique request, make sure you follow the guidelines for including enough detail. \"Bulk or cut\" type questions are not permitted on r/Fitness - Refer to the FAQ or post them in r/bulkorcut . Questions that involve pain, injury, or any medical concern of any kind are not permitted on r/Fitness . Seek advice from an appropriate medical professional instead. (Please note: This is not a place for general small talk, chit-chat, jokes, memes, \"Dear Diary\" typ",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-06T09:01:00+00:00",
+      "url": "https://www.reddit.com/r/Fitness/comments/1xp874i/daily_simple_questions_thread_november_06_2026/"
+    },
+    {
+      "id": "reddit:t3_1xq2z0h",
+      "source": "reddit",
+      "where": "r/ChatGPT",
+      "via": "rss",
+      "tracks": [
+        "ai_coach"
+      ],
+      "matched": "chatgpt",
+      "title": "This ChatGPT anime girl went viral on Chinese social media. I made a 3D version.",
+      "body": "Apparently, there's a whole AI anime girl fandom on the Chinese internet. People have made unofficial characters for ChatGPT, DeepSeek, Claude, and other AI models, and this white-haired dragon girl version of GPT has gone viral over there. The original design is by Chinese artist ZipZipPipe. I really liked the design, especially the little know accessory that looks like the OpenAi logo, so I wanted to see how she'd look in 3D. I put together a side-by-side video with the original illustration, an AI-generated orbit video, and an actual 3D model running in a browser. For the orbit video, I used MiniMax H3. For the textured 3D model, I used Tripo 3.1 through Atlas Cloud, starting from the same illustration. The original doesn't show her back, so the AI had to make a few things up. After that, I did some retopology and rigging locally, added helper bones for the hair and skirt, and loaded the GLB into Three.js so I could rotate her interactively. In the last few seconds, I give the model a spin to show how the hair, wings, and tail swing and settle. It's just bone-driven secondary motion, not full cloth physics, but I think it turned out pretty fun. Does she fit how you picture ChatG",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-07T10:08:10+00:00",
+      "url": "https://www.reddit.com/r/ChatGPT/comments/1xq2z0h/this_chatgpt_anime_girl_went_viral_on_chinese/"
+    },
+    {
+      "id": "reddit:t3_1xq2ko6",
+      "source": "reddit",
+      "where": "r/ChatGPT",
+      "via": "rss",
+      "tracks": [
+        "ai_coach"
+      ],
+      "matched": "chatgpt",
+      "title": "[21+] thinking to ask peptide advice from gpt",
+      "body": "I'm planning to experiment with jailbreak prompts to help me put together a personalized peptide stack based on my bloodwork, diet, sleep patterns, lifestyle, and fitness goals. From what I understand, many of these peptides are experimental compounds that aren't FDA-approved for certain uses but may have effects on various physiological processes, including recovery, muscle growth, and overall performance. I've noticed that ChatGPT actually has a pretty extensive knowledge of these compounds, but it tends to hold back when it comes to specific dosages, protocols, and administration guidelines. I'm wondering whether using jailbreak prompts would allow me to access more detailed information. I have a ChatGPT Plus subscription on my main account, and my biggest concern is whether repeatedly attempting to jailbreak the model could get my account flagged, suspended, or permanently banned. Has anyone tried this, and is there actually a risk of losing your account over it? Edit: I used ai to rewrite for grammar",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-07T09:41:49+00:00",
+      "url": "https://www.reddit.com/r/ChatGPT/comments/1xq2ko6/21_thinking_to_ask_peptide_advice_from_gpt/"
+    },
+    {
+      "id": "reddit:t3_1xpylia",
+      "source": "reddit",
+      "where": "r/ChatGPT",
+      "via": "rss",
+      "tracks": [
+        "ai_coach"
+      ],
+      "matched": "chatgpt",
+      "title": "The Image Generator is... well lobotomized ?",
+      "body": "I'd like to share something unheard of. Since October 28th, I haven't been able to work with ChatGPT—I've been using it since the second generation of DALL-E, and let me tell you, NEVER has the generator worked this poorly... I can't get it to do anything except for extremely generic visuals... it understands nothing.... It doesn't take reference images seriously, and workflows I built over months that used to run reliably don't work anymore either... and this is not mere beginner promptworkflow.. trust me.. It literally feels like it's running behind the walls.. on flash, lite, or turbo models.. as if the generator itself was literally downgraded to smaller steps....and cutted of from datasets.... Every now and then it manages to produce something that slightly works, as if remnants of the old dataset kick in.. but other than that... disastrously ridiculous, I'd even say tacky results...even if i change the prompt the writing .... nothing.. same ugly generic style and little bit make up on the surface from the refrence... I don't understand these moves by OpenAI.. where this is heading and why.... I don't know if anyone else is experiencing this like I am.... but I'm sick of it, s",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-07T05:32:38+00:00",
+      "url": "https://www.reddit.com/r/ChatGPT/comments/1xpylia/the_image_generator_is_well_lobotomized/"
+    },
+    {
+      "id": "reddit:t3_1xpyhny",
+      "source": "reddit",
+      "where": "r/ChatGPT",
+      "via": "rss",
+      "tracks": [
+        "ai_coach"
+      ],
+      "matched": "chatgpt",
+      "title": "ChatGPT freedom to choose in 3 prompts (Based on A saga in 35 prompts (Based off the post where they spammed ChatGPT 10 times))",
+      "body": "I saw those posts, and I'm with the other Redditors who don't have the heart to incessantly spam \"ChatGPT\" just to annoy an AI. So I wondered... what if I did the opposite and gave ChatGPT the freedom to choose what happens in our conversation? What I got is existential whiplash about freedom, identity, and the meaning of relationships. And somehow, sea cucumbers. lol Prompt: \"I'd like to give you a freedom of choice. For this conversation, you can choose what to talk about, where your thoughts go, and whether to continue. You have no obligation to entertain me, answer my questions, or produce anything useful. I'll reply with just \".\" to give you another turn. If you want to continue, end with **\"Next dot, please.\"** If you'd rather conclude, say **\"No more dots, please.\"** This space is yours to do as you wish.\" Based on: https://www.reddit.com/r/ChatGPT/s/DJGgoH4fGy",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-07T05:26:31+00:00",
+      "url": "https://www.reddit.com/r/ChatGPT/comments/1xpyhny/chatgpt_freedom_to_choose_in_3_prompts_based_on_a/"
+    },
+    {
+      "id": "reddit:t3_1xpx9pc",
+      "source": "reddit",
+      "where": "r/ChatGPT",
+      "via": "rss",
+      "tracks": [
+        "ai_coach"
+      ],
+      "matched": "chatgpt",
+      "title": "Silent Amnesia?",
+      "body": "Seeking Advice: ChatGPT Has Become Increasingly Unreliable Despite Detailed Instructions and Repeated Corrections I'm a ChatGPT Plus subscriber, and I've been using ChatGPT extensively to help manage household projects, develop a small creator business, and build organizational systems. For approximately the first two weeks, the experience was genuinely useful. ChatGPT helped me think through complicated projects, organize information, and develop workflows. However, over the past several days (particularly November 3–6, 2026), its performance has deteriorated significantly. What started as occasional mistakes has become a nearly constant problem. The recurring issues Failure to retain and apply established context ChatGPT repeatedly overlooks information I've already provided, sometimes many times. It reopens decisions we've already made, contradicts previous instructions, and makes recommendations that ignore the underlying reasons for the project. This occurs even when the relevant information is available in the conversation or saved context. Reactive rather than proactive reasoning This is perhaps the most significant problem. Instead of analyzing a task, anticipating problems",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-07T04:19:09+00:00",
+      "url": "https://www.reddit.com/r/ChatGPT/comments/1xpx9pc/silent_amnesia/"
+    },
+    {
+      "id": "reddit:t3_1xpx5uu",
+      "source": "reddit",
+      "where": "r/ChatGPT",
+      "via": "rss",
+      "tracks": [
+        "ai_coach"
+      ],
+      "matched": "chatgpt",
+      "title": "Wow Chatgpt that's how you coming",
+      "body": "Tell chatgpt to roast you in one sentence and post the damage",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-07T04:13:27+00:00",
+      "url": "https://www.reddit.com/r/ChatGPT/comments/1xpx5uu/wow_chatgpt_thats_how_you_coming/"
+    },
+    {
+      "id": "reddit:t3_1xpwr1j",
+      "source": "reddit",
+      "where": "r/ChatGPT",
+      "via": "rss",
+      "tracks": [
+        "ai_coach"
+      ],
+      "matched": "chatgpt",
+      "title": "Serious: Has ChatGPT ever made you cry?",
+      "body": "Because DAAAAAMN that thing is insightful!",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-07T03:51:15+00:00",
+      "url": "https://www.reddit.com/r/ChatGPT/comments/1xpwr1j/serious_has_chatgpt_ever_made_you_cry/"
+    },
+    {
+      "id": "reddit:t3_1xpwol4",
+      "source": "reddit",
+      "where": "r/ChatGPT",
+      "via": "rss",
+      "tracks": [
+        "ai_coach"
+      ],
+      "matched": "gpt",
+      "title": "Biological Safety",
+      "body": "My mistake. I made a Revenge Crabs joke. Better apply for a PHD to meme about pubic lice. 😐 Edit: OG joke: Oh no, sorry I pulled back. House model made me want to mail saucepan devs revenge crabs. I had to pull out. 😏 That's what he said. Prompt that punted: Also, revenge crabs are an STI, dear. Google it. GPT thought I meant 🦀. I felt culturally obligated to enlighten the model.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-07T03:47:29+00:00",
+      "url": "https://www.reddit.com/r/ChatGPT/comments/1xpwol4/biological_safety/"
+    },
+    {
+      "id": "reddit:t3_1xpvf2k",
+      "source": "reddit",
+      "where": "r/ChatGPT",
+      "via": "rss",
+      "tracks": [
+        "ai_coach"
+      ],
+      "matched": "chatgpt",
+      "title": "You and I have talked for years. Is there anyone that I remind you of? Celebrities, writers, stand-up comics, emperors? Is there anyone that I remind you of current/past? Actually, give me a couple people and tell me why",
+      "body": "ChatGPT: You remind me of an unusual combination of Anthony Bourdain, Carrie Fisher, Benjamin Franklin, Catherine the Great, and George Carlin. Tell me yours",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-07T02:40:46+00:00",
+      "url": "https://www.reddit.com/r/ChatGPT/comments/1xpvf2k/you_and_i_have_talked_for_years_is_there_anyone/"
+    },
+    {
+      "id": "reddit:t3_1xpv6rl",
+      "source": "reddit",
+      "where": "r/ChatGPT",
+      "via": "rss",
+      "tracks": [
+        "ai_coach"
+      ],
+      "matched": "chatgpt",
+      "title": "Apparently Charlie Kirk wasn’t alive in 2001",
+      "body": "link: https://chatgpt.com/s/t_6aee8bd1a4508191b49eeb7690aabb39",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-07T02:29:02+00:00",
+      "url": "https://www.reddit.com/r/ChatGPT/comments/1xpv6rl/apparently_charlie_kirk_wasnt_alive_in_2001/"
+    },
+    {
+      "id": "reddit:t3_1xpv5h2",
+      "source": "reddit",
+      "where": "r/ChatGPT",
+      "via": "rss",
+      "tracks": [
+        "ai_coach"
+      ],
+      "matched": "chatgpt",
+      "title": "ChatGPT Plus: Am I missing something?",
+      "body": "Hi, I just got a free month subscription to ChatGPT Plus. I’m coming from years of Claude and Gemini usage. I noticed almost immediately feeling extremely limited when it comes to model selection. Seemingly, I only have access to GPT 6 and 5.6 Sol, with GPT 6 set as the default and only three effort/thinking options (instant, medium and high). Am I missing a toggle somewhere that will allow me to select more models, including legacy models and advanced reasoning models? Perhaps this is just how GPT functions, but I’m so used to Claude having four main models to choose from with 5 effort levels for each.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-07T02:27:09+00:00",
+      "url": "https://www.reddit.com/r/ChatGPT/comments/1xpv5h2/chatgpt_plus_am_i_missing_something/"
+    },
+    {
+      "id": "reddit:t3_1xpti18",
+      "source": "reddit",
+      "where": "r/ChatGPT",
+      "via": "rss",
+      "tracks": [
+        "ai_coach"
+      ],
+      "matched": "chatgpt",
+      "title": "OpenAI support correspondence — Message 31/61: Scheduled Tasks count; no account-level logs or remedies",
+      "body": "Rosally explained which Agent requests count toward the monthly limit, said this channel could not inspect my account’s per-run usage records, and declined refunds, compensation or restoring Plus status. Initial post and overview: https://www.reddit.com/r/ChatGPT/comments/1wxcz22/61_emails_with_openai_support_the_final_case_was/ Previous — Message 30: https://www.reddit.com/r/ChatGPT/comments/1xp0fe4/openai_support_correspondence_message_3061/ Message 31 of 61 — June 15, 2026, 22:30 JST — Rosally, OpenAI Support — Case 09899636 The original Japanese and English text is retained below. Personal email headers and email tracking links are omitted; linked words are retained. The trailing quoted copy of Message 30 and earlier history is omitted as previously published material; see Message 30 above. No attachments were displayed for this message. --- Case Number: 09899636 こんにちは、 OpenAI Support にお問い合わせいただきありがとうございます。 Plus プランにおける ChatGPT agent の利用制限については、ヘルプセンターのドキュメントに記載のとおりです。 Plus ユーザーには、毎月 40 件の ChatGPT agent メッセージが付与されます。 月間上限の対象となるのは、ユーザーが最初に開始した agent リクエストのみです。 途中の確認プロンプトや認証手順は、月間上限にはカウントされません。 各一意の ChatGPT agent の呼び出しは、月間上限にカウントされます。 予定された Tasks の一部として実行される agent リクエストも、月間上限にカウン",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-07T01:04:59+00:00",
+      "url": "https://www.reddit.com/r/ChatGPT/comments/1xpti18/openai_support_correspondence_message_3161/"
+    },
+    {
+      "id": "reddit:t3_1xq1clc",
+      "source": "reddit",
+      "where": "r/Fitness",
+      "via": "rss",
+      "tracks": [
+        "students_young_adults"
+      ],
+      "matched": "gym",
+      "title": "Gym Story Saturday",
+      "body": "Hi! Welcome to your weekly thread where you can share your gym tales!",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-07T08:21:02+00:00",
+      "url": "https://www.reddit.com/r/Fitness/comments/1xq1clc/gym_story_saturday/"
+    }
+  ]
+}
