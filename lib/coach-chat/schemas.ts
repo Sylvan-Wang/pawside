@@ -13,7 +13,7 @@ import type { DateRefKind, MealSlot } from './dates'
  */
 
 export const PLAN_SCHEMA_NAME = 'pawside_coach_plan_v1'
-export const PLAN_PROMPT_VERSION = 'coach_chat_plan_v2'
+export const PLAN_PROMPT_VERSION = 'coach_chat_plan_v3'
 
 export const MAX_TASKS = 4
 export const MAX_ITEMS_PER_MEAL = 12
@@ -30,6 +30,7 @@ export const TASK_KINDS = [
   'cancel_draft',
   'confirm_draft',
   'smalltalk',
+  'fitness_question',
   'out_of_scope',
 ] as const
 export type TaskKind = (typeof TASK_KINDS)[number]
@@ -244,6 +245,7 @@ export type PlanTask =
   | { kind: 'cancel_draft'; draftRef: string | null }
   | { kind: 'confirm_draft'; draftRef: string | null }
   | { kind: 'smalltalk' }
+  | { kind: 'fitness_question' }
   | { kind: 'out_of_scope'; boundary: Boundary }
   | { kind: 'invalid'; intended: TaskKind; reason: string }
 
@@ -428,6 +430,8 @@ function normalizeTask(task: z.infer<typeof rawTask>, issues: string[]): PlanTas
       return { kind: 'confirm_draft', draftRef }
     case 'smalltalk':
       return { kind: 'smalltalk' }
+    case 'fitness_question':
+      return { kind: 'fitness_question' }
     case 'out_of_scope':
       return { kind: 'out_of_scope', boundary: task.boundary ?? 'other' }
   }

@@ -554,6 +554,7 @@ async function runTask(ctx: Ctx, task: PlanTask, plan: NormalizedPlan): Promise<
       return none(lines.join('\n'))
     }
     case 'smalltalk': return none(plan.reply ?? TEXT.smalltalk)
+    case 'fitness_question': return none(plan.reply ?? TEXT.fitnessFallback)
     case 'out_of_scope': return none(TEXT[task.boundary])
     case 'invalid': {
       if (task.reason === 'no_food_items') return none(TEXT.needsFoodWhat)
@@ -758,8 +759,9 @@ export async function handleChatTurn(deps: TurnDeps, input: TurnInput): Promise<
       payload: { open_drafts: openDrafts.length, input_chars: text.length },
       status: 'failed',
       failReason: mapPlannerFailure(planned.reason),
+      failDetail: planned.detail ?? null,
     })
-    return finish(ctx, stored.message, TEXT.aiUnavailable, [])
+    return finish(ctx, stored.message, planned.reason === 'rate_limited' ? TEXT.aiBusy : TEXT.aiUnavailable, [])
   }
 
   const plan = normalizePlan(planned.plan)
