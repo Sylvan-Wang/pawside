@@ -36,8 +36,8 @@ const DESCRIPTION =
 export const metadata: Metadata = {
   title: { absolute: TITLE },
   description: DESCRIPTION,
-  alternates: { canonical: '/welcome' },
-  openGraph: { type: 'website', locale: 'zh_CN', siteName: '爪边 Pawside', title: TITLE, description: DESCRIPTION, url: '/welcome', images: [OG_IMAGE] },
+  alternates: { canonical: '/' },
+  openGraph: { type: 'website', locale: 'zh_CN', siteName: '爪边 Pawside', title: TITLE, description: DESCRIPTION, url: '/', images: [OG_IMAGE] },
   twitter: { card: 'summary_large_image', title: TITLE, description: DESCRIPTION, images: [OG_IMAGE.url] },
 }
 
@@ -84,7 +84,7 @@ export default function WelcomePage() {
         applicationCategory: 'HealthApplication',
         operatingSystem: 'Web（可添加到手机主屏幕）',
         description: DESCRIPTION,
-        url: `${SITE_URL}/welcome`,
+        url: `${SITE_URL}/`,
         inLanguage: 'zh-CN',
         publisher: { '@id': `${SITE_URL}/#org` },
       },

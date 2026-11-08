@@ -1,15 +1,18 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
-// SEO: the bare domain is the strongest page. Logged-out visitors and crawlers must
-// land on the public site (/welcome), never on the noindex login page.
-describe('root path for logged-out visitors', () => {
-  it('proxy sends logged-out "/" to /welcome', () => {
-    const src = readFileSync('proxy.ts', 'utf8')
-    expect(src).toMatch(/!user && pathname === '\/'[\s\S]{0,120}new URL\('\/welcome'/)
+// SEO: the public homepage lives at the bare domain. Logged-out visitors and crawlers get
+// it served at "/" (a rewrite, not a redirect); the old /welcome address moves there for good.
+describe('homepage at the bare domain', () => {
+  const proxy = readFileSync('proxy.ts', 'utf8')
+  it('serves the homepage at "/" for logged-out visitors', () => {
+    expect(proxy).toMatch(/!user && pathname === '\/'[\s\S]{0,80}NextResponse\.rewrite\(new URL\('\/welcome'/)
   })
-  it('root page falls back to /welcome, not /auth', () => {
-    const src = readFileSync('app/page.tsx', 'utf8')
-    expect(src).toContain("if (!user) redirect('/welcome')")
+  it('permanently moves /welcome to "/"', () => {
+    expect(proxy).toMatch(/pathname === '\/welcome'[\s\S]{0,200}NextResponse\.redirect\(target, 308\)/)
+  })
+  it('homepage canonical and sitemap point at the bare domain', () => {
+    expect(readFileSync('app/welcome/page.tsx', 'utf8')).toContain("canonical: '/'")
+    expect(readFileSync('app/sitemap.ts', 'utf8')).not.toContain("path: '/welcome',")
   })
 })

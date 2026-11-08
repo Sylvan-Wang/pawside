@@ -5,7 +5,7 @@ export default function SiteHeader() {
   return (
     <header className="site-header">
       <div className="wrap site-header__inner">
-        <Link href="/welcome" className="brand" aria-label="爪边 Pawside 首页">
+        <Link href="/" className="brand" aria-label="爪边 Pawside 首页">
           <span className="brand__mark"><PawMark size={20} /></span>
           爪边
         </Link>

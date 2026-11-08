@@ -50,9 +50,19 @@ export async function proxy(request: NextRequest) {
     process.env.PAWSIDE_VISUAL_PREVIEW === '1' &&
     (pathname.startsWith('/training/method') || pathname === '/onboarding')
 
-  // Logged-out visitors (and search engines) on the bare domain see the public site, not the login page.
+  // The public site lives at the bare domain: logged-out visitors (and search engines) get the
+  // homepage served at "/" itself; the old /welcome address moves there permanently.
+  if (pathname === '/welcome') {
+    const target = new URL('/', request.url)
+    target.search = request.nextUrl.search
+    const moved = NextResponse.redirect(target, 308)
+    supabaseResponse.cookies.getAll().forEach((cookie) => moved.cookies.set(cookie))
+    return moved
+  }
   if (!user && pathname === '/') {
-    return redirectWithAuthCookies(new URL('/welcome', request.url), supabaseResponse)
+    const homepage = NextResponse.rewrite(new URL('/welcome', request.url))
+    supabaseResponse.cookies.getAll().forEach((cookie) => homepage.cookies.set(cookie))
+    return homepage
   }
 
   if (!user && !isPublic && !isLocalMethodPreview && !pathname.startsWith('/api')) {

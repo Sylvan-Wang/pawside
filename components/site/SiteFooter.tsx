@@ -9,7 +9,7 @@ export default function SiteFooter() {
       <div className="wrap">
         <div className="site-footer__grid">
           <div>
-            <Link href="/welcome" className="brand">
+            <Link href="/" className="brand">
               <span className="brand__mark"><PawMark size={20} /></span>
               爪边 Pawside
             </Link>

@@ -5,6 +5,8 @@ import CoachHost from '@/components/coach/CoachHost'
 export const metadata: Metadata = {
   title: '爪边 Pawside',
   description: '爪边 Pawside：打开就知道今天练什么，训练和饮食顺手记下来，晚上看看今天怎么样。',
+  // Search engine ownership checks (public codes, not secrets).
+  verification: { other: { 'baidu-site-verification': 'codeva-3FUP0ENXZ6' } },
   manifest: '/manifest.webmanifest',
   appleWebApp: {
     capable: true,
