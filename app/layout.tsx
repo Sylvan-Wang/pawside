@@ -4,7 +4,7 @@ import CoachHost from '@/components/coach/CoachHost'
 
 export const metadata: Metadata = {
   title: '爪边 Pawside',
-  description: '移动端健身记录 App',
+  description: '爪边 Pawside：打开就知道今天练什么，训练和饮食顺手记下来，晚上看看今天怎么样。',
   manifest: '/manifest.webmanifest',
   appleWebApp: {
     capable: true,
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: '/icon.svg',
-    apple: '/apple-touch-icon.svg',
+    apple: '/apple-touch-icon.png',
   },
 }
 
