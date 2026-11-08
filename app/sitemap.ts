@@ -3,7 +3,7 @@ import { SITE_URL } from '@/lib/site/content'
 
 // Update `lastModified` when a page's content really changes, not on every build.
 const PAGES: { path: string; lastModified: string; priority: number }[] = [
-  { path: '/welcome', lastModified: '2026-10-23', priority: 1 },
+  { path: '', lastModified: '2026-11-08', priority: 1 },
   { path: '/welcome/method', lastModified: '2026-10-07', priority: 0.8 },
   { path: '/welcome/roadmap', lastModified: '2026-10-23', priority: 0.6 },
   { path: '/privacy', lastModified: '2026-10-23', priority: 0.3 },

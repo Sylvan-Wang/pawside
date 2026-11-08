@@ -5,7 +5,7 @@ export default async function RootPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user) redirect('/welcome')
+  if (!user) redirect('/auth') // normally unreachable: the proxy serves the homepage at "/"
 
   const { data: profile } = await supabase
     .from('user_profiles')
