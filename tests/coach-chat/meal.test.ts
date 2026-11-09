@@ -208,6 +208,20 @@ describe('applying edits', () => {
     expect(noWeight.items[0].weight_g).toBeNull()
   })
 
+  it('says why a staple inside a combo dish was not changed (live 11-07: 米饭只吃了一半 on 黄焖鸡饭)', async () => {
+    const combo = item({ name_raw: '黄焖鸡饭', name_resolved: null })
+    const result = await run([combo], [{ action: 'scale_item', targetItem: '米饭', factor: 0.5, grams: null, newName: null }])
+    expect(result.applied).toEqual([])
+    expect(result.items[0].weight_g).toBe(combo.weight_g)
+    expect(result.unmatched).toEqual(['米饭（算在「黄焖鸡饭」这一份里，没法单独改；可以说「黄焖鸡饭吃了一半」）'])
+
+    // two combos that both hold rice, or nothing related: plain report, no guess
+    const two = await run([combo, item({ name_raw: '咖喱饭', name_resolved: null })], [{ action: 'scale_item', targetItem: '米饭', factor: 0.5, grams: null, newName: null }])
+    expect(two.unmatched).toEqual(['米饭'])
+    const none = await run([item({ name_raw: '牛肉', name_resolved: null })], [{ action: 'scale_item', targetItem: '西兰花', factor: 0.5, grams: null, newName: null }])
+    expect(none.unmatched).toEqual(['西兰花'])
+  })
+
   it('does not change the input items', async () => {
     const original = item()
     await run([original], [{ action: 'scale_all', targetItem: null, factor: 0.5, grams: null, newName: null }])
