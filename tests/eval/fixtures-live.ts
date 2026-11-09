@@ -41,12 +41,21 @@ const afterFailure: EvalCase['recent'] = [
 let n = 0
 const id = (prefix: string) => `${prefix}-${String(++n).padStart(2, '0')}`
 
-/** A ping that must get a conversational answer and no record. */
+/**
+ * A ping typed after the fallback. Two answers are fine: just talk, or retry the dinner the user
+ * sent before the failure (it is only a draft; the user still has to tap to save). Anything else
+ * that writes - a different meal, a workout, a weight - is wrong.
+ */
+const retriedDinner = (p: NormalizedPlan) => {
+  if (records(p).length !== 1) return false
+  const t = one(p, 'log_meal')
+  return !!t && ['豆芽', '青椒', '油豆腐', '青菜'].every((x) => t.items.some((i) => i.name.includes(x)))
+}
 function ping(say: string, recent: EvalCase['recent'] = afterFailure): EvalCase {
   return {
     id: id('live-ping'), group: 'smalltalk', say, hour: 19, recent,
     gold: rawPlan([rawTask('smalltalk')], { reply: '我在呢，吃了什么练了什么告诉我就行。' }),
-    check: noRecord,
+    check: (p) => (retriedDinner(p) ? [] : noRecord(p)),
   }
 }
 
