@@ -80,8 +80,9 @@ export const config = {
   // Every API route performs its own authenticated user check. Keeping API
   // requests out of this page redirect proxy removes a duplicate Supabase
   // getUser round trip from every data request. PWA metadata and icons must
-  // also remain public so browsers can install Pawside before authentication.
+  // also remain public so browsers can install Pawside before authentication,
+  // and so must the cat stickers, which the public homepage shows too.
   matcher: [
-    '/((?!api(?:/|$)|_next/static|_next/image|favicon(?:\\.ico|\\.svg)|icon\\.svg|apple-touch-icon(?:-\\d+x\\d+)?\\.png|manifest\\.webmanifest|robots\\.txt|sitemap\\.xml).*)',
+    '/((?!api(?:/|$)|_next/static|_next/image|favicon(?:\\.ico|\\.svg)|icon\\.svg|apple-touch-icon(?:-\\d+x\\d+)?\\.png|manifest\\.webmanifest|robots\\.txt|sitemap\\.xml|coach-cat/).*)',
   ],
 }

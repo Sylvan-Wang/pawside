@@ -28,6 +28,7 @@ describe('authentication proxy matcher', () => {
       '/apple-touch-icon.png',
       '/robots.txt',
       '/sitemap.xml',
+      '/coach-cat/dumbbell-large.png',
     ]) {
       expect(matches(path), path).toBe(false)
     }

@@ -6,8 +6,6 @@ import PhoneDemo, { type DemoStep } from '@/components/site/PhoneDemo'
 import Reveal from '@/components/site/Reveal'
 import StatusBadge from '@/components/site/StatusBadge'
 import {
-  CowCatPeek,
-  CowCatWithDumbbell,
   IconCamera,
   IconBowl,
   IconChat,
@@ -123,7 +121,8 @@ export default function WelcomePage() {
             </div>
             <p className="hero__note">手机上打开就能用，也可以添加到主屏幕。</p>
           </div>
-          <CowCatWithDumbbell className="hero__art" />
+          {/* eslint-disable-next-line @next/next/no-img-element -- static sticker from /public/coach-cat */}
+          <img src="/coach-cat/dumbbell-large.png" alt="小爪举着哑铃" width={741} height={768} className="hero__art" decoding="async" fetchPriority="high" />
         </div>
         <PawTrail className="hero__trail" />
       </section>
@@ -288,7 +287,8 @@ export default function WelcomePage() {
             </div>
           </div>
           <div className="seed__card">
-            <CowCatPeek className="seed__cat" />
+            {/* eslint-disable-next-line @next/next/no-img-element -- static sticker from /public/coach-cat */}
+            <img src="/coach-cat/avatar-peek.png" alt="" aria-hidden="true" width={228} height={145} className="seed__cat" loading="lazy" decoding="async" />
             <SeedForm />
           </div>
         </div>
