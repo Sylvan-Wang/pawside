@@ -11,6 +11,7 @@ export default function SiteHeader() {
         </Link>
         <nav className="nav" aria-label="主导航">
           <Link href="/welcome/method">训练方法</Link>
+          <Link href="/welcome/guides">训练指南</Link>
           <Link href="/welcome/roadmap">路线图</Link>
           <Link href="/auth" className="btn btn--ink btn--small">开始使用</Link>
         </nav>
