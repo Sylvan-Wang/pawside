@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   description: '爪边如何收集、使用和保存你的训练、饮食与身体数据',
 }
 
-const UPDATED_AT = '2026 年 10 月 22 日'
+const UPDATED_AT = '2026 年 11 月 9 日'
 const CONTACT_EMAIL = 'refrigerium@qq.com'
 
 function Section({
@@ -73,6 +73,7 @@ export default function PrivacyPage() {
             '对 AI 反馈的评价：你标记的「有帮助」或「没帮助」。',
             '小爪对话：你发给小爪的文字、小爪的回复，以及你还没确认的饮食、运动、体重草稿。你可以随时在小爪里点「清空」删除对话；你已经确认保存的记录是普通记录，不会随对话一起删除。',
             '种子用户登记：如果你在官网留下称呼和邮箱，我们会保存这两项。称呼可以不填。',
+            '注册来源：如果你是先打开官网再注册的，我们会在账号里记下你第一次是从哪里来到官网的（例如搜索引擎、小红书，或链接里带的推广标记）、来源网站的域名和第一次打开的官网页面。它只用来统计哪个渠道带来了用户，不包含你在其他网站上的任何信息。',
           ]}
         />
 
@@ -80,7 +81,8 @@ export default function PrivacyPage() {
           title="二、我们不收集什么"
           paragraphs={[
             '我们不收集你的位置、通讯录、照片或支付信息。',
-            '应用内没有广告，也没有第三方统计脚本。',
+            '应用内（登录后的页面）没有广告，也没有第三方统计脚本。',
+            '官网页面（首页、训练方法、训练指南、路线图）用 Cloudflare Web Analytics 统计访问量。它不使用 cookie，不识别你是谁，只统计页面被看了多少次、从哪个网站点进来、大致的国家或地区和设备类型。',
             '如果你以后连接了智能戒指，那部分数据由你在设备厂商那边授权后才会读取，范围见第五节。',
           ]}
         />
@@ -126,6 +128,7 @@ export default function PrivacyPage() {
           bullets={[
             'Supabase：托管我们的数据库和登录系统，保存上面列出的全部内容。',
             'Netlify：托管网站和静态文件，会记录访问日志和 IP 地址。',
+            'Cloudflare：只在官网页面上统计访问量（见第二节），不接触你的训练、饮食和身体数据。',
             'OpenAI：生成文字反馈，处理我们发给它的数据摘要。',
             'Oura：你授权连接后，按你的授权范围提供睡眠、准备度、活动和运动数据。',
           ]}
@@ -181,7 +184,7 @@ export default function PrivacyPage() {
         <Section
           title="十二、第三方服务的条款"
           paragraphs={[
-            'Oura、OpenAI、Supabase 和 Netlify 都有自己的服务条款和隐私政策。使用爪边的同时，你也在使用这些服务，受它们的条款约束。',
+            'Oura、OpenAI、Supabase、Netlify 和 Cloudflare 都有自己的服务条款和隐私政策。使用爪边的同时，你也在使用这些服务，受它们的条款约束。',
             '爪边与 Oura 没有官方合作关系，不使用 Oura 的标识。',
           ]}
         />

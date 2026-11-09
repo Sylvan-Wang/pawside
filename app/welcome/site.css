@@ -387,3 +387,17 @@ body:has(.site-shell) {
   .site-shell .seed { grid-template-columns: 1fr; gap: 28px; }
   .site-shell .seed__card { margin-top: 48px; padding: 22px; }
 }
+
+/* ---- training guides (/welcome/guides) ---- */
+.site-shell .guide-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 16px; }
+.site-shell .guide-card { display: block; text-decoration: none; color: inherit; }
+.site-shell .guide-card:hover .card__title { text-decoration: underline; text-underline-offset: 4px; }
+.site-shell .guide__title { font-size: clamp(32px, 5vw, 56px); }
+.site-shell .guide { max-width: 720px; }
+.site-shell .guide > p { margin: 16px 0 0; line-height: 1.9; }
+.site-shell .guide__h2 { margin-top: 48px; font-size: clamp(24px, 3vw, 32px); }
+.site-shell .guide__note { margin-top: 40px; }
+.site-shell .guide__table { margin-top: 16px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.site-shell .guide__table table { width: 100%; min-width: 520px; border-collapse: collapse; font-size: 15px; background: #fff; }
+.site-shell .guide__table th, .site-shell .guide__table td { padding: 10px 12px; border: 1.5px solid var(--line); text-align: left; vertical-align: top; line-height: 1.6; }
+.site-shell .guide__table th { background: var(--warm); font-weight: 800; }

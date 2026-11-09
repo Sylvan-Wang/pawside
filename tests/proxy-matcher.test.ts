@@ -29,6 +29,7 @@ describe('authentication proxy matcher', () => {
       '/robots.txt',
       '/sitemap.xml',
       '/coach-cat/dumbbell-large.png',
+      '/bf6f6f523cba5dcce8d0115ef05204d3.txt', // IndexNow key file (netlify/plugins/indexnow)
     ]) {
       expect(matches(path), path).toBe(false)
     }

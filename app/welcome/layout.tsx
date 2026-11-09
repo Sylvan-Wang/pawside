@@ -1,4 +1,6 @@
 import type { Metadata } from 'next'
+import FirstTouch from '@/components/site/FirstTouch'
+import SiteAnalytics from '@/components/SiteAnalytics'
 import SiteFooter from '@/components/site/SiteFooter'
 import SiteHeader from '@/components/site/SiteHeader'
 import { SITE_NAME, SITE_URL } from '@/lib/site/content'
@@ -24,6 +26,8 @@ export default function WelcomeLayout({ children }: { children: React.ReactNode 
       <SiteHeader />
       <main id="main">{children}</main>
       <SiteFooter />
+      <FirstTouch />
+      <SiteAnalytics />
     </div>
   )
 }
