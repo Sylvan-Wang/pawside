@@ -15,4 +15,9 @@ describe('homepage at the bare domain', () => {
     expect(readFileSync('app/welcome/page.tsx', 'utf8')).toContain("canonical: '/'")
     expect(readFileSync('app/sitemap.ts', 'utf8')).not.toContain("path: '/welcome',")
   })
+  it('structured data never links to the redirected /welcome address', () => {
+    for (const file of ['app/welcome/method/page.tsx', 'app/welcome/roadmap/page.tsx', 'app/welcome/guides/page.tsx', 'app/welcome/guides/[slug]/page.tsx']) {
+      expect(readFileSync(file, 'utf8'), file).not.toMatch(/\$\{SITE_URL\}\/welcome`/)
+    }
+  })
 })

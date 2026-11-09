@@ -51,7 +51,12 @@ export function proposeEditText(applied: string[], unmatched: string[]): string 
   const parts: string[] = []
   if (applied.length > 0) parts.push(`按你说的改了：${applied.join('；')}。确认后才会保存。`)
   if (unmatched.length > 0) {
-    parts.push(`卡片里没找到「${unmatched.join('」「')}」，没有改。可以点卡片上的「编辑」直接改，或者说清是哪一项，比如「这份只吃了一半」。`)
+    // "名字（原因）" entries were found but could not be changed; say why instead of "没找到".
+    const reasoned = unmatched.map((u) => /^(.+?)（(.+)）$/.exec(u)).filter((m): m is RegExpExecArray => m !== null)
+    const missing = unmatched.filter((u) => !/^(.+?)（(.+)）$/.test(u))
+    if (missing.length > 0) parts.push(`卡片里没找到「${missing.join('」「')}」，没有改。`)
+    for (const [, name, why] of reasoned) parts.push(`「${name}」没有改：${why}。`)
+    parts.push(missing.length > 0 ? '可以点卡片上的「编辑」直接改，或者说清是哪一项，比如「这份只吃了一半」。' : '也可以点卡片上的「编辑」直接改。')
   }
   return parts.join('') || TEXT.noPlan
 }
