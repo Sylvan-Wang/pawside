@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import sitemap from '@/app/sitemap'
 import { GUIDES, guidePath } from '@/lib/site/guides'
-import { INDEXNOW_KEY, sitemapUrls } from '../../netlify/plugins/indexnow/index.js'
+import { INDEXNOW_KEY, sitemapUrls } from '../../netlify/plugins/indexnow/indexnow.js'
 
 describe('training guides (/welcome/guides)', () => {
   it('have unique slugs and complete metadata', () => {
