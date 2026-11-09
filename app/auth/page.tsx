@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient, setAuthPersistence } from '@/lib/supabase/client'
 import { clearTrainingNavigationCache } from '@/lib/training-navigation-cache'
+import { signupSourceMetadata } from '@/lib/site/attribution'
 
 function getAuthErrorMessage(err: unknown) {
   const code = typeof err === 'object' && err !== null && 'code' in err
@@ -58,7 +59,8 @@ export default function AuthPage() {
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo },
+          // Which channel brought this sign-up (lib/site/attribution.ts); empty if none.
+          options: { emailRedirectTo, data: signupSourceMetadata() },
         })
         if (error) throw error
         setRegistrationResult(data.session ? 'signed-in' : 'confirmation-pending')

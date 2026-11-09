@@ -19,6 +19,7 @@ export default function SiteFooter() {
           </div>
           <ul>
             <li><Link href="/welcome/method">训练方法</Link></li>
+            <li><Link href="/welcome/guides">训练指南</Link></li>
             <li><Link href="/welcome/roadmap">路线图</Link></li>
             <li><Link href="/privacy">隐私政策</Link></li>
             <li><Link href="/terms">服务条款</Link></li>

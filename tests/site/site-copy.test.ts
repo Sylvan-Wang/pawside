@@ -15,6 +15,7 @@ const SITE_FILES = [
   ...files(join(ROOT, 'app/welcome')),
   ...files(join(ROOT, 'components/site')),
   join(ROOT, 'lib/site/content.ts'),
+  join(ROOT, 'lib/site/guides.ts'),
   join(ROOT, 'app/privacy/page.tsx'),
   join(ROOT, 'app/terms/page.tsx'),
 ].filter((path) => /\.(tsx?|css)$/.test(path))
@@ -59,7 +60,7 @@ describe('public site copy', () => {
   })
 
   it('has exactly one h1 per page', () => {
-    for (const page of ['app/welcome/page.tsx', 'app/welcome/method/page.tsx', 'app/welcome/roadmap/page.tsx']) {
+    for (const page of ['app/welcome/page.tsx', 'app/welcome/method/page.tsx', 'app/welcome/roadmap/page.tsx', 'app/welcome/guides/page.tsx', 'app/welcome/guides/[slug]/page.tsx']) {
       const source = readFileSync(join(ROOT, page), 'utf8')
       expect(source.match(/<h1[\s>]/g)?.length).toBe(1)
     }

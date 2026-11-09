@@ -82,6 +82,6 @@ export const config = {
   // getUser round trip from every data request. PWA metadata and icons must
   // also remain public so browsers can install Pawside before authentication.
   matcher: [
-    '/((?!api(?:/|$)|_next/static|_next/image|favicon(?:\\.ico|\\.svg)|icon\\.svg|apple-touch-icon(?:-\\d+x\\d+)?\\.png|manifest\\.webmanifest|robots\\.txt|sitemap\\.xml).*)',
+    '/((?!api(?:/|$)|_next/static|_next/image|favicon(?:\\.ico|\\.svg)|icon\\.svg|apple-touch-icon(?:-\\d+x\\d+)?\\.png|manifest\\.webmanifest|robots\\.txt|sitemap\\.xml|[0-9a-f]{32}\\.txt).*)',
   ],
 }
