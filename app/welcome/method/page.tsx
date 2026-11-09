@@ -29,7 +29,7 @@ export default function MethodPage() {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: '爪边', item: `${SITE_URL}/welcome` },
+      { '@type': 'ListItem', position: 1, name: '爪边', item: SITE_URL },
       { '@type': 'ListItem', position: 2, name: '训练方法', item: `${SITE_URL}/welcome/method` },
     ],
   }
