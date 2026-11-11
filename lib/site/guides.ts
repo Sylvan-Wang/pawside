@@ -167,5 +167,13 @@ export const GUIDES: Guide[] = [
   },
 ]
 
+/** 文章分享图（scripts/site/og-guides.mjs 生成，改了标题要重跑）。 */
+export const guideOgImage = (guide: Pick<Guide, 'slug' | 'title'>) => ({
+  url: `/og/guides/${guide.slug}.png`,
+  width: 1200,
+  height: 630,
+  alt: `爪边 Pawside 训练指南：${guide.title}`,
+})
+
 export const guideBySlug = (slug: string) => GUIDES.find((guide) => guide.slug === slug)
 export const guidePath = (guide: Guide) => `/welcome/guides/${guide.slug}`

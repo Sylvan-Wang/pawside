@@ -24,7 +24,24 @@ const SET_TYPES = [
   { name: '递减组', text: '做完之后降低重量，接着再做一轮。' },
 ]
 
+// 页面内容最近一次实际改动的日期（和 app/sitemap.ts 保持一致）。
+const PUBLISHED = '2026-10-07'
+const UPDATED = '2026-10-07'
+
 export default function MethodPage() {
+  const article = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: '三分化和四分化怎么练',
+    description: DESCRIPTION,
+    datePublished: PUBLISHED,
+    dateModified: UPDATED,
+    inLanguage: 'zh-CN',
+    mainEntityOfPage: `${SITE_URL}/welcome/method`,
+    image: `${SITE_URL}${OG_IMAGE.url}`,
+    author: { '@type': 'Organization', name: '爪边 Pawside', url: SITE_URL },
+    publisher: { '@type': 'Organization', name: '爪边 Pawside', url: SITE_URL },
+  }
   const crumbs = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
@@ -35,6 +52,7 @@ export default function MethodPage() {
   }
   return (
     <>
+      <JsonLd data={article} />
       <JsonLd data={crumbs} />
       <section className="page-hero">
         <div className="wrap">

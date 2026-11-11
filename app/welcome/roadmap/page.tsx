@@ -8,7 +8,7 @@ import { SITE_URL, OG_IMAGE } from '@/lib/site/content'
 import { featureById, featuresByStatus } from '@/lib/site/features'
 
 const TITLE = '路线图｜爪边 Pawside'
-const DESCRIPTION = '爪边现在能做什么，接下来想做什么。'
+const DESCRIPTION = '爪边现在能做什么、接下来想做什么：选训练方法、今天练什么、逐组记录、饮食记录和一句话记录已经能用；拍照识别外卖、更多设备接入还在规划中。'
 
 export const metadata: Metadata = {
   title: { absolute: TITLE },
