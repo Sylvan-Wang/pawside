@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import JsonLd from '@/components/site/JsonLd'
-import { GUIDES, guideBySlug, guidePath, type GuideBlock } from '@/lib/site/guides'
-import { OG_IMAGE, SITE_NAME, SITE_URL } from '@/lib/site/content'
+import { GUIDES, guideBySlug, guideOgImage, guidePath, type GuideBlock } from '@/lib/site/guides'
+import { SITE_NAME, SITE_URL } from '@/lib/site/content'
 
 export const dynamicParams = false
 
@@ -17,15 +17,16 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!guide) return {}
   const title = `${guide.seoTitle}｜爪边 Pawside`
   const url = guidePath(guide)
+  const image = guideOgImage(guide)
   return {
     title: { absolute: title },
     description: guide.description,
     alternates: { canonical: url },
     openGraph: {
-      type: 'article', locale: 'zh_CN', siteName: SITE_NAME, title, description: guide.description, url, images: [OG_IMAGE],
+      type: 'article', locale: 'zh_CN', siteName: SITE_NAME, title, description: guide.description, url, images: [image],
       publishedTime: guide.published, modifiedTime: guide.updated,
     },
-    twitter: { card: 'summary_large_image', title, description: guide.description, images: [OG_IMAGE.url] },
+    twitter: { card: 'summary_large_image', title, description: guide.description, images: [image.url] },
   }
 }
 
@@ -62,7 +63,7 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
     dateModified: guide.updated,
     inLanguage: 'zh-CN',
     mainEntityOfPage: url,
-    image: `${SITE_URL}${OG_IMAGE.url}`,
+    image: `${SITE_URL}${guideOgImage(guide).url}`,
     author: { '@type': 'Organization', name: SITE_NAME, url: SITE_URL },
     publisher: { '@type': 'Organization', name: SITE_NAME, url: SITE_URL },
   }
