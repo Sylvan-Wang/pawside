@@ -38,6 +38,8 @@ export interface DayFacts {
     /** The day's list is only trustworthy as a total when every item has calories. */
     complete: boolean
     remaining_kcal: number | null
+    /** Sum of protein, only when the day is complete AND every item's protein is known. */
+    known_protein_g: number | null
     targets: NutrientTargets
   }
   workouts: DayWorkout[]
@@ -62,6 +64,7 @@ export async function getDayFacts(
       unknown_item_count: 0,
       complete: false,
       remaining_kcal: null,
+      known_protein_g: null,
       targets: { calories_kcal: null, protein_g: null, carbs_g: null, fat_g: null },
     },
     workouts: [],
@@ -112,6 +115,9 @@ export async function getDayFacts(
       // "Remaining" is only said out loud when it is not distorted by unknown items.
       remaining_kcal: complete && targets.calories_kcal !== null && knownKcal !== null
         ? targets.calories_kcal - knownKcal
+        : null,
+      known_protein_g: complete && rows.every((row) => row.protein_g !== null && row.protein_g !== undefined)
+        ? rows.reduce((sum, row) => sum + (row.protein_g ?? 0), 0)
         : null,
       targets,
     }

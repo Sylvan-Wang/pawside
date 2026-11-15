@@ -146,7 +146,7 @@ describe('what the assistant says after saving', () => {
 describe('day facts in words', () => {
   const empty: DayFacts = {
     date: '2026-10-22', aspects: ['meals', 'nutrition', 'workouts', 'weight'], meals: [],
-    nutrition: { target_kcal: 2000, known_kcal: null, unknown_item_count: 0, complete: false, remaining_kcal: null, targets: { calories_kcal: 2000, protein_g: null, carbs_g: null, fat_g: null } },
+    nutrition: { target_kcal: 2000, known_kcal: null, unknown_item_count: 0, complete: false, remaining_kcal: null, known_protein_g: null, targets: { calories_kcal: 2000, protein_g: null, carbs_g: null, fat_g: null } },
     workouts: [], unfinished_sessions: 0, weight_kg: null,
   }
 

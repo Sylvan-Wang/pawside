@@ -66,6 +66,7 @@ import type {
   WeightDraftPayload,
   WorkoutDraftPayload,
 } from './types'
+import { asksForMealIdeas, coachMealIdeasKilled, mealIdeasText, pickMealIdeas } from './meal-ideas'
 import { pickRecipes, recipeText } from './recipes'
 import { buildWeightPayload } from './weight'
 import { buildWorkoutPayload } from './workout'
@@ -526,6 +527,42 @@ async function runCancel(ctx: Ctx, task: Extract<PlanTask, { kind: 'cancel_draft
   return { drafts: [], texts: ['好，这条不记了。'] }
 }
 
+/** A recipe/what-to-eat question is about food, not training (「今天练什么」 stays a fitness question). */
+const FOOD_ASK = /(食谱|菜谱|吃|饭|餐|菜|做法)/
+
+/**
+ * 「想吃 / 吃什么 / 推荐个食谱」. When the user is asking for something to eat, the answer is
+ * two concrete dishes with ingredients in grams, calories and protein, chosen in code against
+ * today's target and what is already logged (meal-ideas.ts); the model's one-line reply is
+ * dropped then, because it is generic by design (it may not contain numbers). A yes/no question
+ * («奶茶能喝吗») keeps the model's reply and the day summary, as before.
+ */
+async function runConsultFood(ctx: Ctx, topic: string | null, reply: string | null): Promise<TaskResult> {
+  ctx.calls += 1
+  const facts = await getDayFacts(ctx.deps.supabase, ctx.userId, ctx.today, ['nutrition'])
+  const lines: string[] = []
+  const wantsIdeas = !coachMealIdeasKilled() && asksForMealIdeas(ctx.rawText)
+  const ideas = wantsIdeas
+    ? mealIdeasText(pickMealIdeas(`${ctx.rawText} ${topic ?? ''}`, ctx.hour, ctx.today, {
+      targetKcal: facts.nutrition.target_kcal,
+      targetProtein: facts.nutrition.targets.protein_g,
+      eatenKcal: facts.nutrition.complete ? facts.nutrition.known_kcal : facts.meals.length === 0 ? 0 : null,
+      eatenProtein: facts.nutrition.known_protein_g ?? (facts.meals.length === 0 ? 0 : null),
+    }))
+    : ''
+  if (ideas) {
+    lines.push(ideas)
+  } else {
+    lines.push(reply ?? TEXT.consultFallback)
+    if (facts.meals.length > 0) {
+      lines.push(`${dayFactsText(facts, ctx.today)}\n（只算已记录的，可能不完整。）`)
+    }
+  }
+  const suggestions = recipeText(await pickRecipes(ctx.deps.supabase, topic, ctx.today))
+  if (suggestions) lines.push(suggestions)
+  return none(lines.join('\n'))
+}
+
 async function runTask(ctx: Ctx, task: PlanTask, plan: NormalizedPlan): Promise<TaskResult> {
   const features = ctx.deps.features ?? {}
   if ((task.kind === 'log_meal' || task.kind === 'edit_meal') && features.meals === false) return none(TEXT.featureOff)
@@ -542,19 +579,12 @@ async function runTask(ctx: Ctx, task: PlanTask, plan: NormalizedPlan): Promise<
     case 'query_day': return runQueryDay(ctx, task)
     case 'cancel_draft': return runCancel(ctx, task)
     case 'confirm_draft': return none(TEXT.confirmByButton)
-    case 'consult_food': {
-      ctx.calls += 1
-      const facts = await getDayFacts(ctx.deps.supabase, ctx.userId, ctx.today, ['nutrition'])
-      const lines = [plan.reply ?? TEXT.consultFallback]
-      if (facts.meals.length > 0) {
-        lines.push(`${dayFactsText(facts, ctx.today)}\n（只算已记录的，可能不完整。）`)
-      }
-      const suggestions = recipeText(await pickRecipes(ctx.deps.supabase, task.topic, ctx.today))
-      if (suggestions) lines.push(suggestions)
-      return none(lines.join('\n'))
-    }
+    case 'consult_food': return runConsultFood(ctx, task.topic, plan.reply)
     case 'smalltalk': return none(plan.reply ?? TEXT.smalltalk)
-    case 'fitness_question': return none(plan.reply ?? TEXT.fitnessFallback)
+    case 'fitness_question':
+      // 「晚上推荐个食谱」被模型当成一般问题时，照样给具体菜谱，而不是一句「吃清淡点」。
+      if (asksForMealIdeas(ctx.rawText) && FOOD_ASK.test(ctx.rawText)) return runConsultFood(ctx, null, plan.reply)
+      return none(plan.reply ?? TEXT.fitnessFallback)
     case 'out_of_scope':
       // A medical reply may use the model's own wording only when it still hands off to a professional;
       // otherwise the fixed line is used. Free text has already passed the no-numbers/no-internals filter.

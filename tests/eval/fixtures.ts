@@ -2,6 +2,7 @@ import type { NormalizedPlan, PlanTask, RawPlan } from '../../lib/coach-chat/sch
 import { rawItem, rawPlan, rawTask } from '../coach-chat/helpers'
 import { CASES_80 } from './fixtures-80'
 import { CASES_LIVE } from './fixtures-live'
+import { CASES_RECIPES } from './fixtures-recipes'
 
 /**
  * The evaluation corpus for the chat planner.
@@ -518,4 +519,5 @@ export const CASES: EvalCase[] = [
   },
   ...CASES_80,
   ...CASES_LIVE,
+  ...CASES_RECIPES,
 ]
