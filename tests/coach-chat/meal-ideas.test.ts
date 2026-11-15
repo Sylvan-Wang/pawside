@@ -28,6 +28,10 @@ describe('meal ideas data', () => {
 
   const foods = csv('supabase/seeds/foods_clean.csv')
   const nutrition = csv('supabase/seeds/food_nutrition_clean.csv')
+  for (const [id, row] of csv('supabase/seeds/foods_usda_supplement.csv')) {
+    foods.set(id, row)
+    nutrition.set(id, row)
+  }
 
   it('copies every per-100g number from the food library exactly', () => {
     for (const [id, food] of Object.entries(IDEA_FOODS)) {
@@ -58,6 +62,23 @@ describe('meal ideas data', () => {
     const { kcal, protein } = ideaNutrition(idea)
     expect(kcal).toBeCloseTo(1.5 * 133 + 2 * 33 + 0.08 * 899 + 1.5 * 114, 5)
     expect(protein).toBeCloseTo(1.5 * 19.4 + 2 * 4.1 + 1.5 * 2.5, 5)
+  })
+})
+
+describe('USDA supplement', () => {
+  const rows = [...csv('supabase/seeds/foods_usda_supplement.csv').values()]
+  const sql = readFileSync('supabase/seeds/seed_usda_supplement.sql', 'utf8')
+  it('every row names its USDA source, sits above the Chinese table ids, and is in the seed SQL', () => {
+    expect(rows.length).toBeGreaterThan(10)
+    for (const row of rows) {
+      expect(Number(row.food_id)).toBeGreaterThan(2000)
+      expect(row.fdc_id).toMatch(/^\d{6,7}$/)
+      expect(sql).toContain(`fdcId ${row.fdc_id}: `)
+      expect(sql).toContain(`(${row.food_id}, ${row.energy_kcal_100g}, ${row.protein_g_100g}, `)
+      // Energy roughly agrees with 4/4/9 kcal per g of protein, carbohydrate and fat.
+      const atwater = 4 * Number(row.protein_g_100g) + 4 * Number(row.carb_g_100g) + 9 * Number(row.fat_g_100g)
+      expect(Math.abs(atwater - Number(row.energy_kcal_100g)) / Number(row.energy_kcal_100g), row.canonical_name).toBeLessThan(0.2)
+    }
   })
 })
 
@@ -102,7 +123,7 @@ describe('picking', () => {
   it('a generic fish fits the fish dishes, a named other fish does not', () => {
     const pick = pickMealIdeas('晚上想吃鱼', 18, DAY, NO_TARGET)
     for (const { idea } of pick.ideas) expect(idea.keywords).toContain('鱼')
-    expect(pickMealIdeas('金枪鱼怎么做', 18, DAY, NO_TARGET).topicMissed).toBe(true)
+    expect(pickMealIdeas('龙利鱼怎么做', 18, DAY, NO_TARGET).topicMissed).toBe(true)
     const named = pickMealIdeas('带鱼怎么做', 18, DAY, NO_TARGET)
     for (const { idea } of named.ideas) expect(idea.keywords).toContain('带鱼')
   })
@@ -114,7 +135,7 @@ describe('picking', () => {
   })
 
   it('says so when the named food is not in the list, instead of pretending', () => {
-    const pick = pickMealIdeas('三文鱼怎么做', 18, DAY, NO_TARGET)
+    const pick = pickMealIdeas('比目鱼怎么做', 18, DAY, NO_TARGET)
     expect(pick.topicMissed).toBe(true)
     expect(mealIdeasText(pick)).toContain('还没有现成的做法')
   })
@@ -165,5 +186,13 @@ describe('variety', () => {
       for (const { idea } of pickMealIdeas('晚上推荐个食谱', 18, `2026-11-${String(d).padStart(2, '0')}`, NO_TARGET).ideas) seen.add(idea.code)
     }
     expect(seen.size).toBeGreaterThanOrEqual(15)
+  })
+})
+
+describe('foods from the USDA supplement', () => {
+  it('「三文鱼怎么做」 now gets salmon dishes', () => {
+    const pick = pickMealIdeas('三文鱼怎么做', 18, DAY, NO_TARGET)
+    expect(pick.topicMissed).toBe(false)
+    for (const { idea } of pick.ideas) expect(idea.ingredients.some((i) => i.food === 2001)).toBe(true)
   })
 })

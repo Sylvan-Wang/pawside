@@ -1,5 +1,6 @@
 // Regenerates lib/coach-chat/meal-ideas-foods.ts: the per-100g numbers for every food_id the
-// meal-idea dishes use, copied from supabase/seeds/*.csv. Run after adding a dish:
+// meal-idea dishes use, copied from supabase/seeds/*.csv
+// (China Food Composition Table, plus the USDA FoodData Central supplement). Run after adding a dish:
 //   node scripts/coach/gen-idea-foods.mjs
 import { readFileSync, writeFileSync } from 'node:fs'
 
@@ -14,6 +15,11 @@ function csv(path) {
 }
 const foods = csv('supabase/seeds/foods_clean.csv')
 const nutrition = csv('supabase/seeds/food_nutrition_clean.csv')
+// Common foods the Chinese table lacks, from USDA FoodData Central (seed_usda_supplement.sql).
+for (const [id, row] of csv('supabase/seeds/foods_usda_supplement.csv')) {
+  foods.set(id, row)
+  nutrition.set(id, row)
+}
 
 const sources = ['lib/coach-chat/meal-ideas.ts', 'lib/coach-chat/meal-ideas-more.ts'].map((p) => readFileSync(p, 'utf8')).join('\n')
 const ids = new Set()
