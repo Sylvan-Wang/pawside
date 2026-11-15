@@ -1,4 +1,6 @@
 import { inferMealSlot, type MealSlot } from './dates'
+import { IDEA_FOODS } from './meal-ideas-foods'
+import { MORE_IDEAS } from './meal-ideas-more'
 
 /**
  * 「吃什么 / 推荐个食谱」的具体回答：小爪自己的一人份家常菜（菜名、食材克数、做法一句话），
@@ -7,45 +9,11 @@ import { inferMealSlot, type MealSlot } from './dates'
  *
  * 和 recipes.ts（B 站视频指针）一样，模型不参与：它不挑菜、不写食材、不写数字。
  * 这里的菜谱是我们自己写的、能核对的数据，所以可以给出数字；每个数字都能从
- * IDEA_FOODS 的每 100 g 数值和克数复算（tests/coach-chat/meal-ideas.test.ts 会对照 CSV 校验）。
+ * IDEA_FOODS（meal-ideas-foods.ts，由脚本从食物库生成）的每 100 g 数值和克数复算（tests/coach-chat/meal-ideas.test.ts 会对照 CSV 校验）。
  * 推荐不会写进用户的饮食记录：用户吃了以后自己说「晚饭吃了 X」，走正常的草稿确认。
  */
 
-/** 每 100 g 数值，逐条抄自 food_nutrition_clean.csv（food_id 一致，测试会核对）。 */
-export const IDEA_FOODS = {
-  1581: { name: '鸡胸脯肉', kcal: 133, protein: 19.4 },
-  1584: { name: '鸡蛋(白皮)', kcal: 138, protein: 12.7 },
-  1516: { name: '鲈鱼', kcal: 100, protein: 18.6 },
-  1116: { name: '菠菜', kcal: 24, protein: 2.6 },
-  608: { name: '牛肉(瘦)', kcal: 106, protein: 20.2 },
-  607: { name: '牛肉(后腿)', kcal: 98, protein: 19.8 },
-  653: { name: '猪肉(瘦)', kcal: 143, protein: 20.3 },
-  207: { name: '对虾', kcal: 93, protein: 18.6 },
-  1555: { name: '鳕鱼(鳕狭)', kcal: 88, protein: 20.4 },
-  1258: { name: '豆腐', kcal: 81, protein: 8.1 },
-  461: { name: '毛豆(青豆)', kcal: 123, protein: 13.1 },
-  1252: { name: '豆浆', kcal: 13, protein: 1.8 },
-  1348: { name: '酸奶', kcal: 72, protein: 2.5 },
-  515: { name: '洋葱', kcal: 39, protein: 1.1 },
-  958: { name: '胡萝卜(红)', kcal: 37, protein: 1 },
-  209: { name: '小白菜', kcal: 15, protein: 1.5 },
-  733: { name: '番茄', kcal: 19, protein: 0.9 },
-  95: { name: '卷心菜', kcal: 22, protein: 1.5 },
-  1379: { name: '金针菇', kcal: 26, protein: 2.4 },
-  1245: { name: '西葫芦', kcal: 18, protein: 0.8 },
-  1657: { name: '黄瓜', kcal: 15, protein: 0.8 },
-  1234: { name: '西兰花', kcal: 33, protein: 4.1 },
-  1478: { name: '香菇(鲜)', kcal: 19, protein: 2.2 },
-  129: { name: '土豆', kcal: 76, protein: 2 },
-  865: { name: '红薯', kcal: 99, protein: 1.1 },
-  687: { name: '玉米(鲜)', kcal: 106, protein: 4 },
-  821: { name: '米饭(蒸,籼米)', kcal: 114, protein: 2.5 },
-  1437: { name: '面条(干)', kcal: 355, protein: 11 },
-  1468: { name: '馒头(蒸,富强粉)', kcal: 208, protein: 6.2 },
-  577: { name: '燕麦片', kcal: 367, protein: 15 },
-  211: { name: '小米粥', kcal: 46, protein: 1.4 },
-  1016: { name: '花生油', kcal: 899, protein: 0 },
-} as const
+export { IDEA_FOODS } from './meal-ideas-foods'
 
 export type IdeaFoodId = keyof typeof IDEA_FOODS
 
@@ -73,7 +41,7 @@ export interface MealIdea {
 const OIL = (grams: number): IdeaIngredient => ({ label: '油', food: 1016, grams })
 const RICE = (grams: number): IdeaIngredient => ({ label: '米饭', food: 821, grams, note: '熟' })
 
-export const MEAL_IDEAS: MealIdea[] = [
+const FIRST_IDEAS: MealIdea[] = [
   // --- 午饭 / 晚饭 ---------------------------------------------------------------------
   {
     code: 'MI-01', name: '西兰花炒鸡胸 + 米饭', slot: 'main', keywords: ['鸡胸', '鸡肉', '西兰花'],
@@ -163,6 +131,9 @@ export const MEAL_IDEAS: MealIdea[] = [
     steps: '带壳毛豆加盐和八角煮 10 分钟，放凉吃。',
   },
 ]
+
+/** 全部菜谱：第一批 + meal-ideas-more.ts 的第二批。 */
+export const MEAL_IDEAS: MealIdea[] = [...FIRST_IDEAS, ...MORE_IDEAS]
 
 export interface IdeaNutrition {
   kcal: number
@@ -263,7 +234,16 @@ function keywordHits(idea: MealIdea, text: string): number {
  * 不能拿鲈鱼冒充。
  */
 function mentionsAnyFish(text: string): boolean {
-  return /(^|[^\p{Script=Han}]|[吃想条的点些蒸煮做买有块])鱼/u.test(text.replace(/(鲈鱼|鳕鱼)/g, ''))
+  let rest = text
+  for (const name of knownFish()) rest = rest.split(name).join('')
+  return /(^|[^\p{Script=Han}]|[吃想条的点些蒸煮做买有块])鱼/u.test(rest)
+}
+
+let fishNames: string[] | null = null
+/** 清单里点名的鱼（「带鱼」「鲈鱼」…），由各道菜的关键词得出。 */
+function knownFish(): string[] {
+  fishNames ??= [...new Set(MEAL_IDEAS.flatMap((idea) => idea.keywords).filter((w) => w.length > 1 && w.endsWith('鱼')))]
+  return fishNames
 }
 
 export const IDEA_LIMIT = 2
@@ -315,7 +295,8 @@ export function pickMealIdeas(text: string, hour: number, today: string, budget:
   const best = Math.max(...scored.map((entry) => entry.score))
   const tier = (score: number) => (score >= best - 3 ? 0 : 1 + Math.floor((best - score) / 3))
   const anyHit = scored.some((entry) => entry.hits > 0)
-  const askedForFood = /(鸡|鱼|虾|牛|猪|羊|肉|蛋|豆腐|豆|菜|面|粥|饭)/.test(normalized.replace(/(蛋白|晚饭|午饭|早饭|吃饭|带饭)/g, ''))
+  // 点名了某种食材（「菜」「饭」太泛，不算点名）。
+  const askedForFood = /(鸡|鱼|虾|牛|猪|羊|肉|蛋|豆|面|粥|笋|菇|瓜|茄|蟹|贝)/.test(normalized.replace(/(蛋白)/g, ''))
   const ranked = scored
     .filter((entry) => !anyHit || entry.hits > 0)
     .sort((a, b) =>

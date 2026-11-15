@@ -19,6 +19,13 @@ const NO_TARGET: DayBudget = { targetKcal: null, targetProtein: null, eatenKcal:
 const DAY = '2026-11-15'
 
 describe('meal ideas data', () => {
+  it('has a real menu: 100+ dishes, enough for every meal', () => {
+    expect(MEAL_IDEAS.length).toBeGreaterThanOrEqual(120)
+    expect(MEAL_IDEAS.filter((i) => i.slot === 'main').length).toBeGreaterThanOrEqual(80)
+    expect(MEAL_IDEAS.filter((i) => i.slot === 'breakfast').length).toBeGreaterThanOrEqual(15)
+    expect(MEAL_IDEAS.filter((i) => i.slot === 'snack').length).toBeGreaterThanOrEqual(10)
+  })
+
   const foods = csv('supabase/seeds/foods_clean.csv')
   const nutrition = csv('supabase/seeds/food_nutrition_clean.csv')
 
@@ -95,7 +102,9 @@ describe('picking', () => {
   it('a generic fish fits the fish dishes, a named other fish does not', () => {
     const pick = pickMealIdeas('晚上想吃鱼', 18, DAY, NO_TARGET)
     for (const { idea } of pick.ideas) expect(idea.keywords).toContain('鱼')
-    expect(pickMealIdeas('带鱼怎么做', 18, DAY, NO_TARGET).topicMissed).toBe(true)
+    expect(pickMealIdeas('金枪鱼怎么做', 18, DAY, NO_TARGET).topicMissed).toBe(true)
+    const named = pickMealIdeas('带鱼怎么做', 18, DAY, NO_TARGET)
+    for (const { idea } of named.ideas) expect(idea.keywords).toContain('带鱼')
   })
 
   it('follows the ingredient the user names', () => {
@@ -142,5 +151,19 @@ describe('text', () => {
     expect(text).toMatch(/② /)
     expect(text).toContain('做法：')
     expect(text).not.toMatch(/清淡的家常晚餐/)
+  })
+})
+
+describe('variety', () => {
+  it('a vague 「做什么菜」 is not treated as a food we lack', () => {
+    expect(pickMealIdeas('晚上做什么菜', 18, DAY, NO_TARGET).topicMissed).toBe(false)
+    expect(pickMealIdeas('推荐个食谱', 12, DAY, NO_TARGET).topicMissed).toBe(false)
+  })
+  it('over two weeks of 「晚上推荐个食谱」 shows many different dinners', () => {
+    const seen = new Set<string>()
+    for (let d = 1; d <= 14; d++) {
+      for (const { idea } of pickMealIdeas('晚上推荐个食谱', 18, `2026-11-${String(d).padStart(2, '0')}`, NO_TARGET).ideas) seen.add(idea.code)
+    }
+    expect(seen.size).toBeGreaterThanOrEqual(15)
   })
 })
