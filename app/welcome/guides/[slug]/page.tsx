@@ -36,6 +36,14 @@ function Block({ block }: { block: GuideBlock }) {
     case 'p': return <p>{block.text}</p>
     case 'list': return <ul className="list">{block.items.map((item) => <li key={item}>{item}</li>)}</ul>
     case 'note': return <p className="muted small guide__note">{block.text}</p>
+    case 'cat':
+      return (
+        <figure className="guide__cat">
+          {/* eslint-disable-next-line @next/next/no-img-element -- 和首页一样用原图，不走图片优化接口 */}
+          <img src={`/coach-cat/${block.pose}.png`} alt="" width={120} height={120} loading="lazy" />
+          <figcaption>{block.caption}</figcaption>
+        </figure>
+      )
     case 'table':
       return (
         <div className="guide__table">

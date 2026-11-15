@@ -16,6 +16,14 @@ export type GuideBlock =
   | { type: 'list'; items: string[] }
   | { type: 'table'; head: string[]; rows: string[][] }
   | { type: 'note'; text: string }
+  /** 小爪插图：pose 是 public/coach-cat/ 里的文件名，caption 是旁边气泡里的一句话。 */
+  | { type: 'cat'; pose: CatPose; caption: string }
+
+/** 文章里能用的小爪姿势（public/coach-cat/<pose>.png，都是品牌原图）。 */
+export const CAT_POSES = [
+  'confused', 'dumbbell', 'notes', 'cry', 'sleep', 'cool', 'celebrate', 'love', 'playful', 'scale', 'eating', 'rocket',
+] as const
+export type CatPose = (typeof CAT_POSES)[number]
 
 export interface Guide {
   slug: string
@@ -173,10 +181,11 @@ export const GUIDES: Guide[] = [
       '第一次上器械不知道放多重？用「还能再做几次」找到合适的重量：先轻后重、按目标次数调整，什么时候该加、什么时候先别加，新手照着做就行。',
     lede: '选重量不靠猜，也不看别人放多少。看你做完这组，还能再做几次。',
     published: '2026-11-13',
-    updated: '2026-11-13',
+    updated: '2026-11-15',
     minutes: 4,
     body: [
       { type: 'p', text: '站在器械前，最常见的纠结是：放多重？放轻了怕白练，放重了怕受伤，看旁边的人放多少又没参考意义。其实有一个很简单的判断标准，每个人都能用：这一组做完，如果非要继续，我还能再做几次。' },
+      { type: 'cat', pose: 'confused', caption: '放多重？先别看旁边的人放了多少。' },
 
       { type: 'h2', text: '合适的重量长什么样' },
       { type: 'p', text: '大部分正式组的目标是：做到计划写的次数时，还能再做 1 到 2 次，而且每一次动作都标准。' },
@@ -195,6 +204,7 @@ export const GUIDES: Guide[] = [
         '把最后觉得「正好」的重量记下来，下次直接从这里开始。',
       ] },
       { type: 'p', text: '第一次练的几组，本来就是在找重量，不算浪费。宁可轻一点，先把动作做对；动作稳了，再往上加，比一开始放太重、动作变形要快。' },
+      { type: 'cat', pose: 'dumbbell', caption: '第一次练的那几组，本来就是在找重量。' },
 
       { type: 'h2', text: '单侧动作和腿的动作，先求稳' },
       { type: 'p', text: '单腿硬拉、保加利亚分腿蹲这类单侧动作，对平衡要求高。刚开始的目标不是练多重，而是两边都能稳稳做完所有次数。哪一组身体晃了、膝盖内扣了，就先降重量。左右两边力量不一样很常见，按弱的一边选重量。' },
@@ -206,6 +216,7 @@ export const GUIDES: Guide[] = [
         '加了之后做不满目标次数，很正常。先在这个重量上练几次，做满了再说。',
         '睡得不好、状态差的那天，用上次的重量甚至轻一点，都没关系。',
       ] },
+      { type: 'cat', pose: 'notes', caption: '同一个重量连续两次都做满，再加最小的一档。' },
 
       { type: 'h2', text: '在爪边里怎么用' },
       { type: 'p', text: '在爪边里，每做完一组点一下，记下这组的重量和次数，之后在记录里能回头查。腿日和弯举现在处在找重量的阶段，练完的反馈会说明「还在找合适的重量」，不会把它说成进步或退步，照着上面的思路慢慢调就行。' },
@@ -220,10 +231,11 @@ export const GUIDES: Guide[] = [
       '练完第二天浑身酸，还要不要去？分清普通的肌肉酸痛和需要停下来的疼痛，用三分化轮着练，让酸的部位歇着、别的部位接着练。',
     lede: '酸不等于练得好，也不等于不能练。关键是分清「酸」和「疼」。',
     published: '2026-11-13',
-    updated: '2026-11-13',
+    updated: '2026-11-15',
     minutes: 4,
     body: [
       { type: 'p', text: '刚开始练或者隔了一段时间再练，第二天、第三天浑身发酸是很常见的事：下楼梯腿软，抬手臂胳膊酸。很多人这时候会犹豫：今天还去不去？去了会不会练坏？' },
+      { type: 'cat', pose: 'cry', caption: '下楼梯腿软？先分清是酸，还是疼。' },
 
       { type: 'h2', text: '先分清：酸，还是疼' },
       { type: 'table', head: ['', '常见的肌肉酸痛', '需要停下来的疼'], rows: [
@@ -243,9 +255,11 @@ export const GUIDES: Guide[] = [
 
       { type: 'h2', text: '三分化为什么适合新手' },
       { type: 'p', text: '三分化把全身分成推、拉、腿三块轮着练。今天练的那块，要隔两次训练才会再轮到它，中间正好有时间恢复。按顺序走、不按日历走：多歇了一天，下次就接着练原本那一天，不用补。' },
+      { type: 'cat', pose: 'sleep', caption: '今天练的那块，正好歇两次再轮到它。' },
 
       { type: 'h2', text: '酸痛不是练得好不好的标准' },
       { type: 'p', text: '有人觉得不酸就是没练到，于是越练越猛。其实刚开始练、换了新动作、隔久了再练，酸得最明显；练习一段时间以后，同样的训练就不那么酸了，这不代表白练。判断练没练到，看的是动作做得标准、目标次数做满了，而不是第二天有多酸。' },
+      { type: 'cat', pose: 'cool', caption: '不怎么酸了，也不代表白练。' },
 
       { type: 'h2', text: '在爪边里怎么用' },
       { type: 'p', text: '在爪边里可以用 1 到 5 分记下睡得怎么样、练后恢复得怎么样，自己回头看什么时候恢复得快、什么时候慢。今天练哪一天，按你练完的顺序往下排，多歇一天也不会乱。' },

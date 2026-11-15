@@ -404,6 +404,16 @@ body:has(.site-shell) {
 .site-shell .guide__table table { width: 100%; min-width: 520px; border-collapse: collapse; font-size: 15px; background: #fff; }
 .site-shell .guide__table th, .site-shell .guide__table td { padding: 10px 12px; border: 1.5px solid var(--line); text-align: left; vertical-align: top; line-height: 1.6; }
 .site-shell .guide__table th { background: var(--warm); font-weight: 800; }
+.site-shell .guide__cat { display: flex; align-items: center; gap: 16px; margin: 28px 0; }
+.site-shell .guide__cat img { flex: 0 0 auto; width: 120px; height: 120px; object-fit: contain; }
+.site-shell .guide__cat figcaption {
+  position: relative; padding: 12px 16px; border-radius: 16px; background: var(--warm);
+  border: 1.5px solid var(--line); font-weight: 700; line-height: 1.6;
+}
+.site-shell .guide__cat figcaption::before {
+  content: ''; position: absolute; left: -8px; top: 50%; width: 14px; height: 14px; margin-top: -7px;
+  background: var(--warm); border-left: 1.5px solid var(--line); border-bottom: 1.5px solid var(--line); transform: rotate(45deg);
+}
 @media (max-width: 379px) {
   /* 很窄的屏幕只留「训练指南」，训练方法在首页正文和页脚都有入口。 */
   .site-shell .nav a.nav__narrow-hide { display: none; }

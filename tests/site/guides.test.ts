@@ -25,6 +25,17 @@ describe('training guides (/welcome/guides)', () => {
     }
   })
 
+  it('only use cat illustrations that exist, with a caption', () => {
+    for (const guide of GUIDES) {
+      for (const block of guide.body) {
+        if (block.type !== 'cat') continue
+        expect(existsSync(`public/coach-cat/${block.pose}.png`), block.pose).toBe(true)
+        expect(block.caption.length, guide.slug).toBeGreaterThan(4)
+        expect(block.caption.length, guide.slug).toBeLessThan(40)
+      }
+    }
+  })
+
   it('are all in the sitemap', () => {
     const urls = sitemap().map((entry) => entry.url)
     for (const guide of GUIDES) expect(urls).toContain(`https://paw-side.com${guidePath(guide)}`)
