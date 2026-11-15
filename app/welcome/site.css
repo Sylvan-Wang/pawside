@@ -331,7 +331,10 @@ body:has(.site-shell) {
   .site-shell .glossary, .site-shell .site-footer__grid { grid-template-columns: 1fr; }
   .site-shell .hero__art { max-width: 280px; order: -1; }
   .site-shell .hero__trail { display: none; }
-  .site-shell .nav a:not(.btn) { display: none; }
+  /* 手机上留住「训练方法」「训练指南」两个入口，路线图在页脚。 */
+  .site-shell .nav { gap: 14px; margin-left: 12px; }
+  .site-shell .nav a:not(.btn) { font-size: 14px; white-space: nowrap; }
+  .site-shell .nav a.nav__wide { display: none; }
   .site-shell .demo { grid-template-columns: 1fr; gap: 20px; }
   .site-shell .demo__steps { position: static; flex-direction: row; overflow-x: auto; gap: 10px; padding: 6px 8px 12px; margin: 0 -8px; scroll-snap-type: x proximity; }
   .site-shell .step { flex: 0 0 auto; width: 76%; scroll-snap-align: start; padding: 14px 16px; }
@@ -401,3 +404,7 @@ body:has(.site-shell) {
 .site-shell .guide__table table { width: 100%; min-width: 520px; border-collapse: collapse; font-size: 15px; background: #fff; }
 .site-shell .guide__table th, .site-shell .guide__table td { padding: 10px 12px; border: 1.5px solid var(--line); text-align: left; vertical-align: top; line-height: 1.6; }
 .site-shell .guide__table th { background: var(--warm); font-weight: 800; }
+@media (max-width: 379px) {
+  /* 很窄的屏幕只留「训练指南」，训练方法在首页正文和页脚都有入口。 */
+  .site-shell .nav a.nav__narrow-hide { display: none; }
+}
