@@ -289,6 +289,25 @@ export function findItemIndex(items: MealDraftItem[], target: string): number | 
   return partial.length === 1 ? partial[0] : null
 }
 
+/** The staple part of a combo dish a user may name on its own: 米饭 in 黄焖鸡饭, 面条 in 牛肉面. */
+const STAPLE_PARTS = ['饭', '面', '粉', '粥', '饼'] as const
+
+/**
+ * When an edit names a staple (「米饭只吃了一半」) that is not its own item but is part of exactly
+ * one combo dish on the card (黄焖鸡饭), returns that dish's name so the reply can say why nothing
+ * changed. It never edits the dish: how much of a combo the rice is would be a nutrition guess.
+ */
+export function comboContaining(items: MealDraftItem[], target: string): string | null {
+  const wanted = normalizeFoodName(target)
+  const part = STAPLE_PARTS.find((p) => wanted.includes(p))
+  if (!part) return null
+  const hits = items.filter((item) => {
+    const name = normalizeFoodName(item.name_raw)
+    return name.includes(part) && name !== wanted && name.length > part.length
+  })
+  return hits.length === 1 ? hits[0].name_raw : null
+}
+
 function rescale(item: MealDraftItem, grams: number, basis: WeightBasis): MealDraftItem {
   const factor = item.weight_g && item.weight_g > 0 ? grams / item.weight_g : null
   if (item.fixed_actuals && item.nutrition && factor !== null) {
@@ -379,7 +398,8 @@ export async function applyEdits(input: {
     const target = edit.targetItem as string
     const index = findItemIndex(items, target)
     if (index === null) {
-      unmatched.push(target)
+      const whole = comboContaining(items, target)
+      unmatched.push(whole ? `${target}（算在「${whole}」这一份里，没法单独改；可以说「${whole}吃了一半」）` : target)
       continue
     }
     const item = items[index]

@@ -32,7 +32,7 @@ export default function RoadmapPage() {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: '爪边', item: `${SITE_URL}/welcome` },
+      { '@type': 'ListItem', position: 1, name: '爪边', item: SITE_URL },
       { '@type': 'ListItem', position: 2, name: '路线图', item: `${SITE_URL}/welcome/roadmap` },
     ],
   }

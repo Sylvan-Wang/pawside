@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { buildCard } from '../../lib/coach-chat/cards'
-import { dayFactsText, savedText, TEXT } from '../../lib/coach-chat/replies'
+import { dayFactsText, proposeEditText, savedText, TEXT } from '../../lib/coach-chat/replies'
 import type { DayFacts } from '../../lib/coach-chat/day-facts'
 import { buildMealPayload } from '../../lib/coach-chat/meal'
 import type { ClarifyPayload, DraftRow, MealDraftItem, WeightDraftPayload, WorkoutDraftPayload } from '../../lib/coach-chat/types'
@@ -206,5 +206,18 @@ describe('edit link on a saved meal', () => {
     expect(buildCard(draft({}), NOW, '2026-10-22').edit_href).toBeNull()
     expect(saved({ result: { legacy_food_log_id: '../../admin' } }).edit_href).toBeNull()
     expect(saved({ result: { food_log_id: 'x' } }).edit_href).toBeNull()
+  })
+})
+
+describe('edit replies', () => {
+  it('says "not found" only for names that are not on the card, and gives the reason for the rest', () => {
+    expect(proposeEditText([], ['西兰花'])).toBe('卡片里没找到「西兰花」，没有改。可以点卡片上的「编辑」直接改，或者说清是哪一项，比如「这份只吃了一半」。')
+    expect(proposeEditText([], ['米饭（算在「黄焖鸡饭」这一份里，没法单独改；可以说「黄焖鸡饭吃了一半」）'])).toBe(
+      '「米饭」没有改：算在「黄焖鸡饭」这一份里，没法单独改；可以说「黄焖鸡饭吃了一半」。也可以点卡片上的「编辑」直接改。')
+    const mixed = proposeEditText(['牛肉 减半'], ['汤（没有记过重量）'])
+    expect(mixed).toContain('按你说的改了：牛肉 减半')
+    expect(mixed).toContain('「汤」没有改：没有记过重量。')
+    expect(mixed).not.toContain('没找到')
+    expect(findInternalTerms([mixed])).toEqual([])
   })
 })
