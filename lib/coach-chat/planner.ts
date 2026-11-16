@@ -50,7 +50,7 @@ export function createPlanner(): Planner {
     }
     const latencyMs = Date.now() - startedAt
     if (!result.ok) {
-      const detail = [result.httpStatus ? `http_${result.httpStatus}` : null, `attempts_${attempts}`].filter(Boolean).join(' ')
+      const detail = [result.detail ?? (result.httpStatus ? `http_${result.httpStatus}` : null), `attempts_${attempts}`].filter(Boolean).join(' ')
       return { ok: false, reason: result.reason, model: result.model, latencyMs, detail }
     }
     return { ok: true, plan: result.data, model: result.model, latencyMs, usage: result.usage }

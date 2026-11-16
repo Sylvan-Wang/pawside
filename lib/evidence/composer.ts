@@ -272,7 +272,8 @@ export async function composeWithEvidence(input: ComposeInput): Promise<ComposeR
     const latencyMs = Date.now() - attemptStartedAt
     if (!result.ok) {
       await logAttempt({
-        attemptNumber, payload, status: 'failed', failReason: result.reason, model: result.model, latencyMs,
+        attemptNumber, payload, status: 'failed', failReason: result.reason, failDetail: result.detail ?? null,
+        model: result.model, latencyMs,
       })
       return { kind: 'provider_failure', reason: result.reason, model: result.model }
     }

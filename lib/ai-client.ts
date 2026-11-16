@@ -29,7 +29,19 @@ export interface StructuredOutputOptions {
 
 export type OpenAIResult<T> =
   | { ok: true; data: T; provider: 'openai'; model: string; usage?: OpenAIUsage }
-  | { ok: false; reason: OpenAIFailureReason; provider: 'openai'; model: string; httpStatus?: number }
+  | {
+      ok: false
+      reason: OpenAIFailureReason
+      provider: 'openai'
+      model: string
+      httpStatus?: number
+      /**
+       * Short machine-readable cause, safe to store in ai_generations.fail_detail
+       * (never contains model output or user content), e.g. `http_500`,
+       * `incomplete:max_output_tokens`, `no_output_text`, `bad_json`, `failed_validation`.
+       */
+      detail?: string
+    }
 
 export interface DailyReviewPayload {
   summary: string
@@ -177,6 +189,15 @@ function extractOutputText(payload: unknown): string | null {
   return parts?.length ? parts.join('') : null
 }
 
+/** `incomplete_details.reason` of a Responses API body whose status is "incomplete", else null. */
+export function incompleteReason(payload: unknown): string | null {
+  if (!payload || typeof payload !== 'object') return null
+  const body = payload as { status?: unknown; incomplete_details?: { reason?: unknown } | null }
+  if (body.status !== 'incomplete') return null
+  const reason = body.incomplete_details?.reason
+  return typeof reason === 'string' && /^[a-z_]{1,40}$/.test(reason) ? reason : 'unknown'
+}
+
 export async function callStructuredOutput<T>(
   instructions: string,
   input: string,
@@ -229,27 +250,34 @@ export async function callStructuredOutput<T>(
         provider: 'openai',
         model,
         httpStatus: response.status,
+        detail: `http_${response.status}`,
       }
     }
 
     const responseBody: unknown = await response.json()
+    // A response cut off by max_output_tokens (or a content filter) comes back as
+    // HTTP 200 with status "incomplete": the JSON is missing or truncated. Name it,
+    // so the log says *why* instead of a bare invalid_response.
+    const incomplete = incompleteReason(responseBody)
     const outputText = extractOutputText(responseBody)
     if (!outputText) {
-      console.error('[ai-client] OpenAI response did not contain output text')
-      return { ok: false, reason: 'invalid_response', provider: 'openai', model }
+      const detail = incomplete ? `incomplete:${incomplete}` : 'no_output_text'
+      console.error(`[ai-client] OpenAI response did not contain output text (${detail})`)
+      return { ok: false, reason: 'invalid_response', provider: 'openai', model, detail }
     }
 
     let parsed: unknown
     try {
       parsed = JSON.parse(outputText)
     } catch {
-      console.error('[ai-client] OpenAI structured output was not valid JSON')
-      return { ok: false, reason: 'invalid_response', provider: 'openai', model }
+      const detail = incomplete ? `incomplete:${incomplete}` : 'bad_json'
+      console.error(`[ai-client] OpenAI structured output was not valid JSON (${detail})`)
+      return { ok: false, reason: 'invalid_response', provider: 'openai', model, detail }
     }
 
     if (!validate(parsed)) {
       console.error('[ai-client] OpenAI structured output failed local validation')
-      return { ok: false, reason: 'invalid_response', provider: 'openai', model }
+      return { ok: false, reason: 'invalid_response', provider: 'openai', model, detail: 'failed_validation' }
     }
 
     return { ok: true, data: parsed, provider: 'openai', model, usage: extractUsage(responseBody) }
@@ -263,6 +291,7 @@ export async function callStructuredOutput<T>(
       reason: isTimeout ? 'timeout' : 'upstream_error',
       provider: 'openai',
       model,
+      detail: isTimeout ? 'timeout' : 'fetch_failed',
     }
   }
 }
