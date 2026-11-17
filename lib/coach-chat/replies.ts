@@ -1,4 +1,5 @@
 import { formatNumber } from '../coach/display'
+import { isWithinTolerance, ON_TARGET_TOLERANCE, proteinGapInPalms } from '../nutrition/portions'
 import { describeDate } from './dates'
 import type { DayFacts } from './day-facts'
 import { MEAL_LABELS } from './meal'
@@ -91,12 +92,32 @@ export function savedText(draft: DraftRow): string {
  */
 export function intakeAfterSaveText(n: DayFacts['nutrition']): string | null {
   if (n.known_kcal === null || !n.complete) return null
+  const known = formatNumber(n.known_kcal, 'kcal')
   if (n.target_kcal !== null && n.remaining_kcal !== null) {
-    return n.remaining_kcal >= 0
-      ? `这一天已记约 ${formatNumber(n.known_kcal, 'kcal')} kcal，离目标还差 ${formatNumber(n.remaining_kcal, 'kcal')} kcal。`
-      : `这一天已记约 ${formatNumber(n.known_kcal, 'kcal')} kcal，比目标多 ${formatNumber(-n.remaining_kcal, 'kcal')} kcal。`
+    const lines: string[] = []
+    if (isWithinTolerance(n.known_kcal, n.target_kcal)) {
+      // ±10% 算到位：不再报「多了 43 kcal」这种没有意义的零头。
+      lines.push(`这一天已记约 ${known} kcal，和目标相差不到一成，算到位了。`)
+    } else if (n.remaining_kcal >= 0) {
+      lines.push(`这一天已记约 ${known} kcal，离目标还差 ${formatNumber(n.remaining_kcal, 'kcal')} kcal。`)
+    } else {
+      lines.push(`这一天已记约 ${known} kcal，比目标多 ${formatNumber(-n.remaining_kcal, 'kcal')} kcal。`)
+    }
+    const protein = proteinGapText(n)
+    if (protein && n.known_kcal <= n.target_kcal * (1 + ON_TARGET_TOLERANCE)) lines.push(protein)
+    return lines.join('')
   }
-  return `这一天已记约 ${formatNumber(n.known_kcal, 'kcal')} kcal。`
+  return `这一天已记约 ${known} kcal。`
+}
+
+/** 蛋白质还差多少，换成掌心说。只在全天每一项的蛋白质都已知、且有蛋白质参考时才说。 */
+function proteinGapText(n: DayFacts['nutrition']): string | null {
+  const target = n.targets?.protein_g ?? null
+  if (target === null || n.known_protein_g === null || n.known_protein_g === undefined) return null
+  const gap = target - n.known_protein_g
+  const palms = proteinGapInPalms(gap)
+  if (palms === null) return null
+  return `蛋白质还差约 ${Math.round(gap / 5) * 5}g，${palms}。`
 }
 
 export function conflictText(kind: 'meal' | 'edited'): string {
@@ -132,7 +153,10 @@ export function dayFactsText(facts: DayFacts, today: string): string {
       lines.push(`已知热量约 ${formatNumber(n.known_kcal, 'kcal')} kcal，另有 ${n.unknown_item_count} 项营养待补，所以现在还不能算剩余。`)
     } else if (n.target_kcal !== null && n.remaining_kcal !== null) {
       const diff = n.remaining_kcal
-      lines.push(`已记录约 ${formatNumber(n.known_kcal, 'kcal')} kcal，你的热量目标是 ${formatNumber(n.target_kcal, 'kcal')} kcal，${diff >= 0 ? `按已记录的算还差 ${formatNumber(diff, 'kcal')} kcal` : `已记录的比目标多 ${formatNumber(-diff, 'kcal')} kcal`}。`)
+      const where = isWithinTolerance(n.known_kcal, n.target_kcal)
+        ? '相差不到一成，算到位了'
+        : diff >= 0 ? `按已记录的算还差 ${formatNumber(diff, 'kcal')} kcal` : `已记录的比目标多 ${formatNumber(-diff, 'kcal')} kcal`
+      lines.push(`已记录约 ${formatNumber(n.known_kcal, 'kcal')} kcal，你的热量目标是 ${formatNumber(n.target_kcal, 'kcal')} kcal，${where}。`)
       lines.push('这只是目前已记录的部分，可能还有没记的。')
     } else {
       lines.push(`已记录约 ${formatNumber(n.known_kcal, 'kcal')} kcal（还没有设置热量目标）。`)

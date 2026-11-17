@@ -146,7 +146,7 @@ describe('what the assistant says after saving', () => {
 describe('day facts in words', () => {
   const empty: DayFacts = {
     date: '2026-10-22', aspects: ['meals', 'nutrition', 'workouts', 'weight'], meals: [],
-    nutrition: { target_kcal: 2000, known_kcal: null, unknown_item_count: 0, complete: false, remaining_kcal: null, targets: { calories_kcal: 2000, protein_g: null, carbs_g: null, fat_g: null } },
+    nutrition: { target_kcal: 2000, known_kcal: null, unknown_item_count: 0, complete: false, remaining_kcal: null, known_protein_g: null, targets: { calories_kcal: 2000, protein_g: null, carbs_g: null, fat_g: null } },
     workouts: [], unfinished_sessions: 0, weight_kg: null,
   }
 
@@ -175,6 +175,16 @@ describe('day facts in words', () => {
     }, '2026-10-22')
     expect(text).toContain('按已记录的算还差 1768 kcal')
     expect(text).toContain('可能还有没记的')
+  })
+
+  it('calls a day within ±10% of the target on target instead of reporting the leftover', () => {
+    const text = dayFactsText({
+      ...empty,
+      meals: [{ id: 'm', meal_type: 'dinner', created_at: '', items: [{ name: '米饭', weight_g: 200, energy_kcal: 1950 }], unknown_item_count: 0, known_energy_kcal: 1950 }],
+      nutrition: { ...empty.nutrition, known_kcal: 1950, complete: true, remaining_kcal: 50 },
+    }, '2026-10-22')
+    expect(text).toContain('相差不到一成，算到位了')
+    expect(text).not.toContain('还差 50')
   })
 
   it('keeps an unfinished training session out of the done list', () => {
