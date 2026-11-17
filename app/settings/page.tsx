@@ -1,4 +1,5 @@
 'use client'
+import LanguageSwitch from '@/components/LanguageSwitch'
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -261,6 +262,8 @@ export default function SettingsPage() {
             </div>
           </div>
         </div>
+
+        <LanguageSwitch />
 
         {/* Goals */}
         <div className="bg-white rounded-2xl p-4">
