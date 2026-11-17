@@ -1,0 +1,42 @@
+food_id,canonical_name,category,fdc_id,usda_description,energy_kcal_100g,protein_g_100g,fat_g_100g,carb_g_100g,fiber_g_100g,sodium_mg_100g
+2001,"三文鱼(大西洋鲑,养殖,生)",肉禽水产,175167,"Fish, salmon, Atlantic, farmed, raw",208,20.4,13.4,0,0,59
+2002,牛奶(全脂),乳制品,171265,"Milk, whole, 3.25% milkfat, with added vitamin D",61,3.15,3.25,4.8,0,43
+2003,牛奶(脱脂),乳制品,171269,"Milk, nonfat, fluid, with added vitamin A and vitamin D (fat free or skim)",34,3.37,0.08,4.96,0,42
+2004,牛奶(低脂1%),乳制品,170872,"Milk, lowfat, fluid, 1% milkfat, with added vitamin A and vitamin D",42,3.37,0.97,4.99,0,44
+2005,糙米饭(熟),主食及谷物,169704,"Rice, brown, long-grain, cooked",123,2.74,0.97,25.6,1.6,4
+2006,藜麦(熟),主食及谷物,168917,"Quinoa, cooked",120,4.4,1.92,21.3,2.8,7
+2007,橄榄油,油脂类,171413,"Oil, olive, salad or cooking",884,0,100,0,0,2
+2008,"金枪鱼罐头(水浸,沥干)",肉禽水产,171986,"Fish, tuna, light, canned in water, without salt, drained solids",116,25.5,0.82,0,0,50
+2009,鹰嘴豆(煮熟),豆类及制品,173757,"Chickpeas (garbanzo beans, bengal gram), mature seeds, cooked, boiled, without salt",164,8.86,2.59,27.4,7.6,7
+2010,牛油果,水果类,171705,"Avocados, raw, all commercial varieties",160,2,14.7,8.53,6.7,7
+2011,"希腊酸奶(无脂,原味)",乳制品,170894,"Yogurt, Greek, plain, nonfat",59,10.2,0.39,3.6,0,36
+2012,全麦面包,主食及谷物,172688,"Bread, whole-wheat, commercially prepared",252,12.4,3.5,42.7,6,455
+2013,"鸡腿肉(去皮,生)",肉禽水产,173627,"Chicken, broilers or fryers, dark meat, thigh, meat only, raw",121,19.7,4.12,0,0,95
+2014,蓝莓,水果类,171711,"Blueberries, raw",57,0.74,0.33,14.5,2.4,1
+2015,茅屋奶酪(低脂),乳制品,172182,"Cheese, cottage, lowfat, 2% milkfat",81,10.4,2.27,4.76,0,308
+2016,意面(熟),主食及谷物,169737,"Pasta, cooked, enriched, without added salt",158,5.8,0.93,30.9,1.8,1
+2017,奇亚籽,坚果种子,170554,"Seeds, chia seeds, dried",486,16.5,30.7,42.1,34.4,16
+2018,小扁豆(煮熟),豆类及制品,172421,"Lentils, mature seeds, cooked, boiled, without salt",116,9.02,0.38,20.1,7.9,2
+2019,切达奶酪,乳制品,173414,"Cheese, cheddar (Includes foods for USDA's Food Distribution Program)",403,22.9,33.3,3.37,0,653
+2020,马苏里拉奶酪(部分脱脂),乳制品,170847,"Cheese, mozzarella, part skim milk",254,24.3,15.9,2.77,0,619
+2021,腰果(生),坚果种子,170162,"Nuts, cashew nuts, raw",553,18.2,43.8,30.2,3.3,12
+2022,开心果(生),坚果种子,170184,"Nuts, pistachio nuts, raw",560,20.2,45.3,27.2,10.6,1
+2023,巴旦木(美国大杏仁),坚果种子,170567,"Nuts, almonds",579,21.2,49.9,21.6,12.5,1
+2024,亚麻籽,坚果种子,169414,"Seeds, flaxseed",534,18.3,42.2,28.9,27.3,30
+2025,蛋黄酱,调味品,171009,"Salad dressing, mayonnaise, regular",680,0.96,74.8,0.57,0,635
+2026,树莓,水果类,167755,"Raspberries, raw",52,1.2,0.65,11.9,6.5,1
+2027,西柚(红肉),水果类,174673,"Grapefruit, raw, pink and red, all areas",42,0.77,0.14,10.7,1.6,0
+2028,哈密瓜,水果类,169092,"Melons, cantaloupe, raw",34,0.84,0.19,8.16,0.9,16
+2029,紫甘蓝,蔬菜类,169977,"Cabbage, red, raw",31,1.43,0.16,7.37,2.1,27
+2030,红甜椒,蔬菜类,170108,"Peppers, sweet, red, raw",26,0.99,0.3,6.03,2.1,4
+2031,羽衣甘蓝,蔬菜类,168421,"Kale, raw",35,2.92,1.49,4.42,4.1,53
+2032,抱子甘蓝,蔬菜类,170383,"Brussels sprouts, raw",43,3.38,0.3,8.95,3.8,25
+2033,芝麻菜,蔬菜类,169387,"Arugula, raw",25,2.58,0.66,3.65,1.6,27
+2034,牛腩(生),肉禽水产,168664,"Beef, brisket, whole, separable lean and fat, trimmed to 1/8"" fat, all grades, raw",253,18.4,19.1,0.56,0,69
+2035,天贝,豆类及制品,174272,Tempeh,192,20.3,10.8,7.64,,9
+2036,鹰嘴豆泥,豆类及制品,174289,"Hummus, commercial",237,7.78,17.8,15,5.5,426
+2037,贝果,主食及谷物,174899,"Bagels, plain, enriched, with calcium propionate (includes onion, poppy, sesame)",264,10.6,1.32,52.4,1.6,422
+2038,荞麦面(熟),主食及谷物,168907,"Noodles, japanese, soba, cooked",99,5.06,0.1,21.4,,60
+2039,藜麦(生),主食及谷物,168874,"Quinoa, uncooked",368,14.1,6.07,64.2,7,5
+2040,杏仁奶(无糖),饮品,174832,"Beverages, almond milk, unsweetened, shelf stable",15,0.4,0.96,1.31,0.2,72
+2041,黑巧克力(70-85%),零食甜品,170273,"Chocolate, dark, 70-85% cacao solids",598,7.79,42.6,45.9,10.9,20
