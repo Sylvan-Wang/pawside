@@ -5,8 +5,8 @@ import {
 } from '../../lib/coach-chat/meal-ideas'
 
 function csv(path: string): Map<string, Record<string, string>> {
-  // Quoted cells may hold commas («"米饭(蒸,籼米)"»).
-  const split = (line: string) => [...line.matchAll(/("([^"]*)"|[^,]*)(,|$)/g)].map((m) => m[2] ?? m[1])
+  // Quoted cells may hold commas («"米饭(蒸,籼米)"») and doubled quotes («1/8"" fat»).
+  const split = (line: string) => [...line.matchAll(/("((?:[^"]|"")*)"|[^,]*)(,|$)/g)].map((m) => m[2]?.replace(/""/g, '"') ?? m[1])
   const [header, ...rows] = readFileSync(path, 'utf8').replace(/^﻿/, '').trim().split(/\r?\n/)
   const keys = split(header)
   return new Map(rows.map((line) => {
@@ -69,14 +69,16 @@ describe('USDA supplement', () => {
   const rows = [...csv('supabase/seeds/foods_usda_supplement.csv').values()]
   const sql = readFileSync('supabase/seeds/seed_usda_supplement.sql', 'utf8')
   it('every row names its USDA source, sits above the Chinese table ids, and is in the seed SQL', () => {
-    expect(rows.length).toBeGreaterThan(10)
+    expect(rows.length).toBeGreaterThanOrEqual(40)
     for (const row of rows) {
       expect(Number(row.food_id)).toBeGreaterThan(2000)
       expect(row.fdc_id).toMatch(/^\d{6,7}$/)
       expect(sql).toContain(`fdcId ${row.fdc_id}: `)
       expect(sql).toContain(`(${row.food_id}, ${row.energy_kcal_100g}, ${row.protein_g_100g}, `)
-      // Energy roughly agrees with 4/4/9 kcal per g of protein, carbohydrate and fat.
-      const atwater = 4 * Number(row.protein_g_100g) + 4 * Number(row.carb_g_100g) + 9 * Number(row.fat_g_100g)
+      expect(sql).not.toContain('usda_sr_legacy') // same data_version as the existing rows
+      // Energy roughly agrees with 4/4/9 kcal per g of protein, carbohydrate and fat (fiber counted at 2).
+      const fiber = Number(row.fiber_g_100g || 0)
+      const atwater = 4 * Number(row.protein_g_100g) + 4 * (Number(row.carb_g_100g) - fiber) + 2 * fiber + 9 * Number(row.fat_g_100g)
       expect(Math.abs(atwater - Number(row.energy_kcal_100g)) / Number(row.energy_kcal_100g), row.canonical_name).toBeLessThan(0.2)
     }
   })
