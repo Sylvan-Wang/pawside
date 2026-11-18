@@ -52,7 +52,7 @@ Your plan moves by sessions, not by calendar dates. If you train Monday and come
 
 **Your week, your target.**
 
-Set how many workouts you want this week. Home shows "2 of 3". Rest days are just rest days.
+Set how many workouts you want this week. Home shows "2 / 3 workouts". Rest days are just rest days.
 
 依据：`weekly-progress`。
 
@@ -68,7 +68,7 @@ Write down what you ate. Pawside estimates calories and protein and shows a refe
 
 ### 底部
 
-**Pawside is free while we build it.** English is the next big step. Leave your email and you'll be among the first to try it.
+**English is the next big step for Pawside.** Leave your email and you'll be among the first to try it.
 
 [ Tell me when English is ready ]
 
@@ -81,7 +81,7 @@ Write down what you ate. Pawside estimates calories and protein and shows a refe
 | 结果承诺（lose X kg, build muscle in N weeks） | MESSAGE_HOUSE 第 9 节 |
 | photo logging、wearables | `features.ts` 里是 `planned` |
 | "15 minutes" | 最短 30 分钟 |
-| "free forever" | 定价没定；只说 "free while we build it" |
+| "free" / "free forever" | 定价没定（付费意向实验见 #64），任何价格说法都等 xxa |
 
 ## 上线前要做的
 
