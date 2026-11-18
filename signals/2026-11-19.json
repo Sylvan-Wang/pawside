@@ -1,0 +1,1695 @@
+{
+  "run_date": "2026-11-19",
+  "generated_at": "2026-11-18T20:05:59.746775+00:00",
+  "source_health": [
+    {
+      "source": "reddit",
+      "target": "r/Fitness",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/beginnerfitness",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/GYM",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/workout",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/xxfitness",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/bodyweightfitness",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/loseit",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/fitmeals",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/EatCheapAndHealthy",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/MealPrepSunday",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/nutrition",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/ChatGPT",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/artificial",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/personaltraining",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/apps",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/homegym",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/college",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/GradSchool",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "app_store",
+      "target": "Fitbod",
+      "method": "rss",
+      "status": "empty_or_failed",
+      "items": 0
+    },
+    {
+      "source": "app_store",
+      "target": "Hevy",
+      "method": "rss",
+      "status": "ok",
+      "items": 50
+    },
+    {
+      "source": "app_store",
+      "target": "MyFitnessPal",
+      "method": "rss",
+      "status": "empty_or_failed",
+      "items": 0
+    },
+    {
+      "source": "app_store",
+      "target": "MacroFactor",
+      "method": "rss",
+      "status": "empty_or_failed",
+      "items": 0
+    },
+    {
+      "source": "app_store",
+      "target": "Strong",
+      "method": "rss",
+      "status": "empty_or_failed",
+      "items": 0
+    },
+    {
+      "source": "news",
+      "target": "Product Hunt",
+      "method": "rss",
+      "status": "ok",
+      "items": 1
+    },
+    {
+      "source": "news",
+      "target": "Google News 健身App",
+      "method": "rss",
+      "status": "ok",
+      "items": 2
+    },
+    {
+      "source": "news",
+      "target": "Google News 健身App 中文",
+      "method": "rss",
+      "status": "ok",
+      "items": 0
+    },
+    {
+      "source": "news",
+      "target": "TechCrunch",
+      "method": "rss",
+      "status": "ok",
+      "items": 0
+    },
+    {
+      "source": "news",
+      "target": "The Verge",
+      "method": "rss",
+      "status": "ok",
+      "items": 0
+    },
+    {
+      "source": "hacker_news",
+      "target": "fitness app",
+      "method": "algolia",
+      "status": "ok",
+      "items": 8
+    },
+    {
+      "source": "hacker_news",
+      "target": "workout app",
+      "method": "algolia",
+      "status": "ok",
+      "items": 10
+    },
+    {
+      "source": "hacker_news",
+      "target": "AI personal trainer",
+      "method": "algolia",
+      "status": "ok",
+      "items": 5
+    },
+    {
+      "source": "hacker_news",
+      "target": "calorie tracking",
+      "method": "algolia",
+      "status": "ok",
+      "items": 0
+    },
+    {
+      "source": "hacker_news",
+      "target": "habit app",
+      "method": "algolia",
+      "status": "ok",
+      "items": 9
+    },
+    {
+      "source": "hacker_news",
+      "target": "health app",
+      "method": "algolia",
+      "status": "ok",
+      "items": 30
+    }
+  ],
+  "cleaning": {
+    "raw": 95,
+    "duplicate": 2,
+    "deleted": 0,
+    "bot": 0,
+    "too_short": 3,
+    "low_signal": 0,
+    "kept": 90
+  },
+  "items": [
+    {
+      "id": "appstore:Hevy:14801622824",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Can’t imagine life without",
+      "body": "Never reviewed an app before and probably never will again, but man I can’t stress enough how helpful this has been for an average gym goer like me.\nWas just looking for something to help me remember what weight I used for different exercises, and it’s not only helped me do that, but add structure to my workouts, fix my form via the examples shown, and discover different exercises I’de never heard of just by typing in a body part I’m working.\nReally solid app.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-17T06:05:52-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14801602483",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Game changer for tracking",
+      "body": "This is an awesome app! Tracking weights can be tedious, but Hevy makes it simple, convenient, and enjoyable. I especially love the built-in tutorials for new exercises, which make it easy to learn proper movements and try something new.\n\nThe encouragement when I hit a new PR is another great feature. It’s rewarding to see that recognition, but more importantly, it helps me see how much I’m progressing over time. The one-rep max calculator is also incredibly helpful because it gives me a benchmark to work toward and helps me set realistic goals while still pushing myself.\n\nOverall, Hevy makes tracking workouts feel less like a chore and more like part of the motivation to keep improving. Great app!",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-17T05:59:55-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14801593348",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Хорошее приложение",
+      "body": "Достойное приложение для просмотра прогресса тренировок. Есть некоторые не точности к примеру названия упражнений могут отличаться это раз во-вторых можно было сделать так,чтобы записывать когда отказеой подход когда что,правда это можео сделать в заметках над упражнением. А так я доволен 👍",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-17T05:57:11-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14801523273",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Still not optimized for iPhone Duo",
+      "body": "Hevy still isn't optimized for iPhone Duo. On the inner display it runs as a phone-sized app instead of using the full screen, which wastes the main reason to own the device. Apple says over 200,000 apps have already been updated for Duo, and the latest Hevy update (3.2.7) doesn't even mention it. I'll raise my rating once Duo support ships",
+      "score": 1,
+      "num_comments": null,
+      "created_utc": "2026-11-17T05:36:17-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14801420111",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Great ux! Needs some more customization",
+      "body": "I switched my client software to Hevy coach because of the Ux and easy access. I would love a height metric to track for exercises and the ability to add more than one metric to track. Like height and weight for step ups.",
+      "score": 4,
+      "num_comments": null,
+      "created_utc": "2026-11-17T05:05:07-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14801373298",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Love it!",
+      "body": "After recently moving from a competitor’s app, I’m impressed by Hevy’s app experience. The different ways of viewing my workout have allowed me to include muscle groups I didn’t know I was missing. Love the summaries and tracking.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-17T04:50:51-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14800473540",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Fantastic tracking app",
+      "body": "Kinda obsessed with how easy it makes to track and the integration with my Apple Watch. Has become essential to use with every workout and literally don’t have enough good things to say about it. Only thing is sometimes wish there was a way to track other activities too (sports or outdoor runs) but fantastic for when you’re actually at the gym",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-16T22:43:34-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14800382314",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Terrific app - even the free version",
+      "body": "Love this app. I’ve already recommended it to several people. Been helping me stay on track. I love how customizable it is.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-16T21:59:15-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14800165376",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "So easy",
+      "body": "Hevy makes it so easy for me to track my workouts and make changes and updates.  I really like seeing the progress I’ve made and this app has tons of options and workouts to have great variety.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-16T20:16:48-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14799885300",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Best Workout App",
+      "body": "I love the light social feature and the process graphs!",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-16T18:21:10-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14799727553",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "good",
+      "body": "very useful app for tracking gym progress and keeping track of workouts! 5 stars",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-16T17:21:12-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14799675845",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Works great!",
+      "body": "Been using it for about 2 years now, works great and i love how i can check my friends activity while also keeping track of how im doing in the gym.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-16T17:01:49-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14799476190",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Great App",
+      "body": "Very user friendly, you get a lot out of the free features that the app has. Does a great job of keeping track of workouts and showing which workouts are best for muscle groups. Highly recommended to everyone",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-16T15:45:00-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14799448248",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Great app",
+      "body": "Makes working out like a video game. So easy to track progress. Motivating as well.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-16T15:33:59-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14799378917",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Great free app",
+      "body": "works super well, intuitive, don’t need to upgrade to pro for the app to be usable or anything like that like some other apps",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-16T15:07:11-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14799226851",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "I’m enjoying it",
+      "body": "This is my first workout app. I’m a fan, it does pretty much anything I’d like it to",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-16T14:08:26-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14799202839",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "superb",
+      "body": "I’m a newbie to strength training, just 6m in, and can honestly say Hevy has been instrumental in keeping me consistent and also motivated to push numbers ever higher. \n\nSimple clean interface, easy exporting text (to my AI agent for feedback) and intuitive functionality.\n\nLong may it be free!",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-16T13:59:19-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14799039301",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Missing a lot exercises",
+      "body": "Good app. Missing a lot of basic exercises on basic machines or movements.",
+      "score": 3,
+      "num_comments": null,
+      "created_utc": "2026-11-16T12:58:48-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14799013767",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Amazingg",
+      "body": "never knew what I was missing until I got this app. Covers everything you could think of",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-16T12:49:31-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14798794509",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Great fitness app!!",
+      "body": "Wow, this app is exactly what I need for my weightlifting progression. I love how it has so many kinds of exercised pre-saved, and even if you can't find one, you can just create a custom one. It's super easy to navigate, and it readily gives you data of your progression so you know which weights to hit next. I definitely recommend",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-16T11:32:15-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14798673172",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Favorite Gym App!",
+      "body": "I’ve been using Hevy for about 2 years now and I found everything in this so helpful.  As a person coming back to the gym it’s been so much easier to track what set I’m on, how many reps I should do, and tracking my progress when I’m at the gym. It’s encouraged me to actively go to the gym. And the social media aspect is great too, I love being able to see my friends gym progress pics, compare what their push, pull and leg day is like. I recommend it to all my friends. It’s my must when I’m at the gym.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-16T10:51:40-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14798619807",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "My favorite no-nonsense tracker",
+      "body": "I was looking for essentially a blank notebook to track my workouts, but also something that could suggest workouts if I didn’t want to think about it, but also something that could help identify the muscle groups I’m working with each exercise, a place to track those workouts, and the ability to save them for the future. Hevy is everything I was looking for. I love the UI, the feed of all my recent workouts, the ability to duplicate and change workouts, the ability to choose from pre-set exercises or create my own. The only thing I would change is to have a more compressed view of completed workouts to easily see exercises or share workouts. Minor nitpick but I love this app and will be a longterm user for sure.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-16T10:34:06-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14798463076",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Love this for Progressive Overload!",
+      "body": "My friend showed me this app to help keep up to date with my weight and to ensure that it was going up and it has made tracking so much easier! I love that it already has many exercises loaded into the app and it gives you short examples on how to do them if you aren’t sure while also telling you what muscle group it targets! 5 stars",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-16T09:43:19-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14798121991",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Great tracking and videos",
+      "body": "I’ve completed 50 workouts on this app, and I am enjoying seeing my progress tract, and when I have questions, there’s great little videos show the motion and the muscles worked",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-16T07:58:07-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14798119038",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Wish I found this app sooner!!!",
+      "body": "Haven’t found a better app to track strength training than Hevy! I have been a decade plus long user of MyFitnessPal where I tracked nutrition and exercises but then I found Hevy for tracking exercises and Cronometer for tracking nutrition and never went back!",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-16T07:57:14-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14798112278",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Love this app",
+      "body": "It gives me great workout and what I love about it is that I can customize my way!",
+      "score": 2,
+      "num_comments": null,
+      "created_utc": "2026-11-16T07:55:13-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14798063769",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Went up in weight so much thanks to tracking it!",
+      "body": "I really like this app.. for a few reasons.. one, the free functionality is great, I love to see how I’ve gone up in weight, and the fact that my phone buzzes everytime I hit a new PR, it’s such a seratonin boost 😂",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-16T07:40:33-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "news:2370e13cf4ef",
+      "source": "news",
+      "where": "Product Hunt",
+      "via": "rss",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "workout",
+      "title": "Orken",
+      "body": "Tell it your time and gear. Get a workout built for you. Discussion | Link",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-17T14:48:27+00:00",
+      "url": "https://www.producthunt.com/products/orken"
+    },
+    {
+      "id": "news:7ef5c1aef40d",
+      "source": "news",
+      "where": "Google News 健身App",
+      "via": "rss",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "workout",
+      "title": "Actor Arti Singh’s gym workout: 3 exercises for strength, agility, and core - The Indian Express",
+      "body": "Actor Arti Singh’s gym workout: 3 exercises for strength, agility, and core The Indian Express",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-18T04:00:03+00:00",
+      "url": "https://news.google.com/rss/articles/CBMiyAFBVV95cUxQeklpb3NvWGdoZGpaM0ZmcTV3cGtxLVVMOTZ3dW9BVXNGanlDQVE5VUJObXBxSlUxQk9fR25URnZyUHVmUXN2TGQ1M3ppYlY2RThmWjh1a0FpRnE1RVdPVjBsQ1c0aXAzYWhlRDVMQmtWTlBSTnNoa3VRWWw0ZTRtOGM5NWc2ZjkyRUV6T2dIbnNKeW1OR3R5LU01anJWZFR3eWNkMWU2Ym02NHNWekpXWjl3UHhLSUcyVnV6OHRaS0ozak13LXpvMdIBzwFBVV95cUxPaFowQzRkYlo2RkZpdGF4ZGMtUWdZVUF1V3BDM0NqTmZuWlFYU3BaM3pXaE9wckRvdEd6X1J5dHlwQWlFNUVtRjNicWEyMzk4U0NEN3pjTGlWaEkzWUcyX09HMXpvaldmcGpWZzJDdThhWkFwZ0xWS0h0TjNLV19hSzVMbkZmVVJwNHQzTmhYbW5KRVdBQlU4UExadTI2TGJTTERGSU1ySWg0QUo5VmpYaVg2SVZmdkFST2JiWWEyRjhuUGVmVGh5MGZEOVRjY3M?oc=5"
+    },
+    {
+      "id": "news:6c7dc0f4f634",
+      "source": "news",
+      "where": "Google News 健身App",
+      "via": "rss",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "fitness",
+      "title": "From incorrect posture to poor recovery: Fitness expert explains the risks of blindly following AI workout plans | Health - Hindustan Times",
+      "body": "From incorrect posture to poor recovery: Fitness expert explains the risks of blindly following AI workout plans | Health Hindustan Times",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-17T09:19:49+00:00",
+      "url": "https://news.google.com/rss/articles/CBMijAJBVV95cUxPUE1DV3VFRlA2eGFpOTVzRTVNaG9EWEEzd0VNU3ZvMExWVEtWT05wdjZLeHN4TVRTV094NXRWQnlLdzlFQTF3MVVRYkFaNkg1RkI2RUtjU1N4dXNyamNUUERyVUh3NWIzVUZvRndncUZrNWJEbDRtZGVRR1dKZ2RzZlY5ZE5VRVlRY0g1RnpHV0lMb3VDQ2NSTkhDZzNMSzhmeHJFYU9lV0NaRDVNTU1TVUFJeUpfV3JPYWxleFMtS1VPTnpyUEZOSGp4RnhiQ2lGYlBvYU1NUmF0ekg4NlU2cUthcDFkbGFqblFxeXo5TVZUaExaQUZ3Y1RtbFVBZXpORFg2dU4tdzk0N3V30gGSAkFVX3lxTE9HaTNrTjRkQmI5SEZJNTVTSW5OZF9hWXppLXZBTHJGb1JCUGQ2UExYbkNwaXMya1ppS2NIazVlWTRGRE9PYURJSmkzVVZpNUpqeEcwSFZKZjh6cWN5aEdxVkF3dWVWOVNRVG1MOFhnTlpHTU10Y2dKNEhkX2dLdlcyejhNNnB1VHd2QmFmVG0temVaNjNBVXk2VFBDOTZ2SXlZdEI4UWFsaG1FQ05HZUZzZmFfeFIxcEpsWkZhQUFEUW9sQzdRRWpmb1Q0SGFrY2FqeVlCZmotcXNPdDk3aGlDcC1WSFMzZ1FYaklaWHU5QVdnaG5RWTE3X3kzWG95R0JlNmdyQzFwbmZmZkptNFMwWlE?oc=5"
+    },
+    {
+      "id": "hn:50547590",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "fitness app",
+      "title": "Dutch resist 'unacceptable' US bid to tighten semiconductor export controls",
+      "body": "Obviously the Netherlands does have such a national security issue, and furthermore they are dependent on US help in order to be able to militarily resist other countries, including China. Since they&#x27;re making it easier for China to attack mostly other countries with this move, I can only assume appropriately massive amounts, I mean it&#x27;s China so it would have to be absurd like 100x Dutch GDP, probably even more than that, have been allocated in the Dutch government budget to provide aid to the countries whose lives they&#x27;re making more difficult. By the way, since the Netherlands is partly responsible for giving Pakistan and then in turn North Korea nuclear weapons (yes, really, look it up), I&#x27;d love to hear an update on how they&#x27;ve helped the target of those nukes, India and South Korea, militarily. I mean, legally speaking, speaking of fairness, that&#x27;s what they&#x27;d have to do, isn&#x27;t it? Again, easily 10x the entire GDP of the Netherlands wouldn&#x27;t even come close to how much those countries have to invest to deal with the fallout of that Dutch fuckup, so I&#x27;m preparing to be thoroughly impressed by the amounts ... Because if they don",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-18T15:36:17Z",
+      "url": "https://news.ycombinator.com/item?id=50547590"
+    },
+    {
+      "id": "hn:50547193",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "fitness app",
+      "title": "Archive Team is archiving the Apple Support Community",
+      "body": "Sometimes you’d get an Apple employee who didn’t understand the problem, ask for more information and tell you to toggle an unrelated setting in a UI. In fairness to apple, you could probably find related questions on the MS and Apple forums using simple keyword similarity, swap the answers between the two forums, and on one would notice.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-18T15:07:05Z",
+      "url": "https://news.ycombinator.com/item?id=50547193"
+    },
+    {
+      "id": "hn:50545176",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "fitness app",
+      "title": "SpaceX catches the Starship to end Flight 15",
+      "body": "They made a lot of them. Hydrogen vs RP1. Hydrogen sounds good and it was the &#x27;new hotness&#x27; but if you are strictly talking about a first stage, RP1 is clearly better. So for hydrogen to make sense you need to run it the whole way up or only as second stage. If you do that then you can&#x27;t use hydrogen on the first stage, and instead you end up with a compromise solution where you have boosters combined with engines that need to run the whole time. They didn&#x27;t want the engine to turn on in flight. Because these fancy engines were so expensive, they wanted them on the Shuttler Orbiter. Now you are in a position where you need to side-mount the orbiter. And now the tank is just a &#x27;dumb tank&#x27; that you can throw away, making it so you will never actually have a full reusable vehicle. And then because again of development cost, they used solid fuel rockets rather then liquid, making it so you can&#x27;t meaningfully reuse the boosters. All this happened before, the white house security advisers came in. Ironically it wasn&#x27;t really the &#x27;DoD&#x27;. It was people at the white house. This is exactly why the Soviets didn&#x27;t believe it was a peaceful,",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-18T11:52:54Z",
+      "url": "https://news.ycombinator.com/item?id=50545176"
+    },
+    {
+      "id": "hn:50544979",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "fitness app",
+      "title": "Google's AI answers reducing search traffic by 40%",
+      "body": "Google is... google. This is exaxctly how they built out their dominance in search. Good, high quality answers, no ads. Get the users in the door. Become synonymous with search. Google absolutely bled cash for their first three years, because they were investing in acquisition. Here we are again. Then, little by little, you monetise, until the product is once again awful. They repeated this process with YouTube, for a larger example of \"burn cash on user acquisition until vast profits\". We&#x27;ll see the same with their AI offering. It&#x27;ll take 10-15 years to the \"hot trash\" stage, it&#x27;ll be WILDLY profitable (think of the targetting opportunities!), and then they&#x27;ll have to pivot to the new hotness, whatever that is.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-18T11:28:13Z",
+      "url": "https://news.ycombinator.com/item?id=50544979"
+    },
+    {
+      "id": "hn:50542085",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "fitness app",
+      "title": "Frame – 31.5\" color ePaper display",
+      "body": "> I think the gay rights &#x2F; marriage equality movements represent social progress at its finest. Some of the most effective advocacy was making something that had seemed threatening or alien feel fundamentally human. Most of the important work around gay rights probably happened not online, right? Perhaps that&#x27;s why it worked so well -- even though it did take quite a long time.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-18T05:02:35Z",
+      "url": "https://news.ycombinator.com/item?id=50542085"
+    },
+    {
+      "id": "hn:50530055",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "fitness app",
+      "title": "Squircles",
+      "body": "Some years ago I had to add a squircle to a UI system that lacked one. I compared Figma&#x27;s approach to Apple&#x27;s and found out they do not match well. So, then I just drew a default rounded rectangle path in Apple&#x27;s playground and read the Bézier curves from that path. I got my control points I could use to perfectly represent Apple&#x27;s approach! One interesting detail I noticed: in Apple&#x27;s squircles the rounded corners are slightly pushing outwards from the flatness of a side. But the absolute value is very low, so the effect isn&#x27;t visible unless you specifically look for it.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-17T11:30:35Z",
+      "url": "https://news.ycombinator.com/item?id=50530055"
+    },
+    {
+      "id": "hn:50527867",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "fitness app",
+      "title": "'Grey Rocking': The Life-Improving Power of Being Really, Really Boring (2021)",
+      "body": "Ok in all fairness, you do make several good points. The behaviors you are describing are abusive. I don’t have any direct experience with that. If the techniques described in those videos helped you deal with these situations, I stand corrected, there may be something to them. I generally have a knee-jerk reaction to pathologizing every human behavior and the use of labels like “narcissist”, etc. which these kind of YouTube channels are popularizing. But yes, these are toxic and abusive behaviors. > Dr Ramani actually addresses the issue of exact labels. She says in one video that a diagnosis does not matter. If you are faced with that sort of behaviour then you use the appropriate ways of dealing with it. That makes sense to me.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-17T05:43:06Z",
+      "url": "https://news.ycombinator.com/item?id=50527867"
+    },
+    {
+      "id": "hn:50526828",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "fitness app",
+      "title": "Researchers track whole body movement with just a smartwatch",
+      "body": "If you’re on Apple Watch, look up Motra (formerly Train Fitness). Been using it for a year in the gym and it feels like magic! Accuracy is perhaps 60-80% for the kinds of exercises I do - doesn’t sound like a lot but still saves time (and more importantly, reduces the need to fiddle with a screen during workouts). Sensible defaults + great UX helps in cases where the auto-detection fails. (Not affiliated in any way, just a happy user)",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-17T02:57:54Z",
+      "url": "https://news.ycombinator.com/item?id=50526828"
+    },
+    {
+      "id": "hn:50549018",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "workout app",
+      "title": "Dutch resist 'unacceptable' US bid to tighten semiconductor export controls",
+      "body": "Here’s the most critical paragraph from TFA: > ASML has never shipped its most advanced extreme ultraviolet, or EUV, machines to China. The Netherlands already introduced export controls on less advanced deep ultraviolet, or DUV, machines back in 2023. The MATCH Act would expand those controls to more types of DUV chipmaking equipment and tighten rules on servicing machines already in China. In this case, the US should work with The Netherlands specifically, and the EU in general, to work out the systems that will or will not be exportable to China. They can make whatever noise they want about what trade export controls they want, but the final decision lies with NL and EU. On the flip side, I worked at ASML years ago as a contractor. I ended up running their in-house e-mail systems. I even got a nice invited talk out of it: http:&#x2F;&#x2F;shub-internet.org&#x2F;brad&#x2F;papers&#x2F;sistpni&#x2F; But what I saw from was that the ASML sales agents in China were casually sharing entire 100GB+ DVD and Blu-Ray video libraries with their Chinese clients, and sending those by e-mail. Across a single E-1 line back to HQ in Veldhoven, and from there out to the broader Internet. This clo",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-18T17:16:07Z",
+      "url": "https://news.ycombinator.com/item?id=50549018"
+    },
+    {
+      "id": "hn:50546090",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "workout app",
+      "title": "Harvard researchers find AI coding agents shifted the bottleneck to code review",
+      "body": "So one shift we have been talking about internally is just skipping a deep code review. Run AI on it, ask some questions, but as humans, we should not be trying to pull the code apart. AI does that part better. Instead, we&#x27;re front-loading the human part in the design phase. Humans review a high-level design; AI implements the design based on the design decisions humans made. That way we can avoid having someone dig through a 10K-line PR for a major change. Not sure if this is going to work out. We will probably still have some cadence of human-driven and AI-assisted DRY and de-sprawl of code. But AI does a really good job of implementation in our particular area (robotics).",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-18T13:30:12Z",
+      "url": "https://news.ycombinator.com/item?id=50546090"
+    },
+    {
+      "id": "hn:50545115",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "workout app",
+      "title": "Show HN: Unref – A Python dead code finder built on Ruff's parser",
+      "body": "Thanks for trying it and for the feedback! I&#x27;m working on making popular frameworks work out of the box, and Flask clearly needs more work. Feel free to open a GitHub issue with a few of the false positives: https:&#x2F;&#x2F;github.com&#x2F;Apakottur&#x2F;unref&#x2F;issues",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-18T11:44:48Z",
+      "url": "https://news.ycombinator.com/item?id=50545115"
+    },
+    {
+      "id": "hn:50538624",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "workout app",
+      "title": "Researchers track whole body movement with just a smartwatch",
+      "body": "On the web site yea - app update incoming today. As part of this and my other workouts app that uses stick figures (Streaks Workout, been out since 2015), I have a whole workflow&#x2F;pipeline for generating stick figure animations. Need to do a writeup on all that some day.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-17T21:42:50Z",
+      "url": "https://news.ycombinator.com/item?id=50538624"
+    },
+    {
+      "id": "hn:50536053",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "workout app",
+      "title": "New Evidence Shows School Phone Bans Are Gradually Improving Test Scores",
+      "body": "I spent an hour or so analyzing these data a little while after we had kids, to see if school shootings were something I should spend any effort or money trying to hedge against, or any brain-space worrying about, whatsoever. The TL;DR is \"no, not at all, it&#x27;s not a close call\". Even with extremely generous assumptions (and no attempt at all to adjust for differences in distributions of incidents, geographically) I landed on a pretty small, though very much not zero (this was years ago, but IIRC ~2.5%) chance a given child of mine would even be on on campus for the most generous definition of a \"school shooting\", which can include negligent discharge anywhere on school property , any kind of murder or suicide (the murders are almost always targeted at one person, often against an adult, like jilted-lover or angry-spouse stuff, or targeted gang&#x2F;drug-trade related violence, plus this can include incidents that involve nobody attached to the school but happen on e.g. a street corner that&#x27;s school property), and loads of other stuff that aren&#x27;t \"person with gun starts randomly murdering anyone they see in a school\", at any time, for their entire k-12 education. Sinc",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-17T18:35:40Z",
+      "url": "https://news.ycombinator.com/item?id=50536053"
+    },
+    {
+      "id": "hn:50535805",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "workout app",
+      "title": "We don't need more apps. We need better open source",
+      "body": "I&#x27;m still hoping we work out a useful taxonomy. Slop coding, vibe coding, AI-assisted coding, perhaps distinguishing coding from design, ... Hopefully we can identify the useful dimensions and then come up with some terms that fit the important points in the space. I have a project where I barely look at the code, but I&#x27;ve put a ton of time into iterating over the design and look&feel. I think of it as \"high-effort slop coding\", which in my mind is meaningfully different from \"true vibe coding\", but there&#x27;s too much self-deprecation in the former term for it to be the right one. (It makes sense when referring to your own stuff, but not when applied to others&#x27;.)",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-17T18:20:18Z",
+      "url": "https://news.ycombinator.com/item?id=50535805"
+    },
+    {
+      "id": "hn:50534241",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "workout app",
+      "title": "Windows 11 is collecting data on which coding agents and developer tools you use",
+      "body": "I use homebrew in Linux for any CLI utilities as well, otherwise flatpak and then apt last. There is also KDE connect for syncing things with Android. You definitely need to be more of a computer geek to use Linux well however I think you can expect the basics to just work out of the box these days, way better than windows will at least.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-17T16:49:53Z",
+      "url": "https://news.ycombinator.com/item?id=50534241"
+    },
+    {
+      "id": "hn:50532727",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "workout app",
+      "title": "We don't need more apps. We need better open source",
+      "body": "Just because you can build something with the help of AI doesn&#x27;t mean it even works the way you intended it to. At worst, you probably may not have the ability to actually verify if it even works. A very common project that most guys who find this \"vibe coding\" do is make a calorie tracker, so they ask Claude to build them a calorie tracker, then they add some data from an Apple Watch and Garmin. Now they believe they&#x27;ve built a \"dieting app.\" It&#x27;s just funny how many of them actually take data from Garmin and an Apple Watch and add a bunch of activities to work out a \"calorie burn of the day\" and how inaccurate it is. Apple and Garmin are not accurate for this, read this: https:&#x2F;&#x2F;macrocodex.app&#x2F;knowledge&#x2F;rethink&#x2F;how-many-calories-d... But very few of them actually bother to check whether their \"calorie burn estimate\" even works to achieve the rate of loss or gain they set. Not everyone is \"doing better with AI\", many of them are doing worse, they just don&#x27;t know!",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-17T15:30:22Z",
+      "url": "https://news.ycombinator.com/item?id=50532727"
+    },
+    {
+      "id": "hn:50522735",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "workout app",
+      "title": "Researchers track whole body movement with just a smartwatch",
+      "body": "Thanks for the feedback - I actually traced the form for the animation from the manual (pamphlet?) that comes with the RowErg but I hear what you’re saying. The differentiator of this app initially is more about the focus on making rowing a habit (we also make Streaks, a well-known habit tracker), and deeper integration with things like Apple Health and Apple Watch. We’ve only just released it recently, but further customization of workouts and the display is where we’re heading.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-16T20:27:17Z",
+      "url": "https://news.ycombinator.com/item?id=50522735"
+    },
+    {
+      "id": "hn:50550948",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "AI personal trainer",
+      "title": "Codeberg.org Not Reachable",
+      "body": "IONOS? Just me ranting but: I had a domain with them that I ... had on a 3-year renewal + auto-renewal set up, and the system tried to charge the renewal at the end of the first year(why?) which failed for unrelated reason, then apparently perma-deleted my billing account after few automatic warnings but with the DNS running for 2 more years(why?), plus a week or two after full grace period after expiry with zero communication(why?), and btw they no longer accept chat or email(why?), and only option is to call, which goes to Philippines anyway(why?), which got hanged up(why?) likely by call screening AI for my weird likely Fable-triggering Gmail address read aloud, which caused the support person to call me back for the rest of the call that lasted an hour(umm), and I apparently have $17 outstanding invoice that I need to pay, which is such an old invoice that they only take payment through bank transfer (why?) which is not trivial or cheap for me, for what? A thing that never happened because it never went through 2 years ago? Like, this could have been extremely cheap email and a Visa payment if they didn&#x27;t permanently close the billing account tied to an active contract the",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-18T19:32:29Z",
+      "url": "https://news.ycombinator.com/item?id=50550948"
+    },
+    {
+      "id": "hn:50548247",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "AI personal trainer",
+      "title": "Show HN: Lex Cloak, detect and redact PII in PDFs, runs locally",
+      "body": "A colleague asked me to redact some sensitive documents before sending them to AI for analysis. I considered Adobe and other tools, but none could detect personal data (PII) automatically without sending it to a large AI model. The documents also had low-quality scanned pages, bar codes, signatures, rotated and skewed pages. I set out to solve each of those challenges in a user-friendly way. The result was Lex Cloak, an application that continues to evolve. Lex Cloak is a desktop app for Windows and Macs. We run OCR (Tesseract) on every page to read the text. We found the embedded document text layer was often inaccurate and unreliable. The application then finds categories of PII based on pattern rules and a small machine learning model (BERT) trained on names. It runs ONNX Runtime locally, no LLM. Other model enhancements detect barcodes and signatures. The user reviews the matches and either removes false positives or adds further redactions. Each match has a confidence score. Lex Cloak also handles other \"gotchas\", such as hidden text (white-on-white), text under a previous black-box redaction, and document metadata. Local processing means you can work entirely offline. The onl",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-18T16:24:26Z",
+      "url": "https://news.ycombinator.com/item?id=50548247"
+    },
+    {
+      "id": "hn:50547394",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "AI personal trainer",
+      "title": "When AI Knows More Than It Can Offer",
+      "body": "In this example, it&#x27;s not an alignment thing. It&#x27;s more that its just reguritating the lazy, shallow garbage what would fare well in SEO or would be the most common reply in most online forums before. As digital signals to training and among inexpert RLHF reviewers, it has all the marks of being a good answer to the question as asked. So of course models happily repeat it, even though it&#x27;s largely naive and wrong-headed and useless. It&#x27;s the kind of question, with vague-but-typical phrasing, that most people don&#x27;t have good insight into but that many people feel like can speak to (bullshit to) anyway by transposing some trendy generalized answer. In the real world, you ask 10 people, get 6 of these shitty answers, and then 1 person who actually knows what they&#x27;re talking about chimes in and you go \"oh, yeah, that&#x27;s what I was looking for, thanks!\" Because of how they work, LLM&#x27;s, even with RLHF, have a very strong bias towards giving one of those 6 shitty answers when presented with this kind of question. The seeming fix right now is to train them to be more inquisitive, to prompt users to think about and provide more refining context after t",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-18T15:20:55Z",
+      "url": "https://news.ycombinator.com/item?id=50547394"
+    },
+    {
+      "id": "hn:50545420",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "AI personal trainer",
+      "title": "Google's AI answers reducing search traffic by 40%",
+      "body": "Whether it goes into training data is irrelevant. The AI agent (whether embedded into google&#x27;s search or otherwise) will do the search on behalf of the person, find the answer in your page and return the answer, rather than your page. It&#x27;s the ability of AI to search and summarize that has changed things. Not whether the LLM itself has absorbed your particular information. Once LLM&#x27;s were good enough to make reasonable tools calls to search the web it was game over. It&#x27;s just like how calling a library to ask a factual question of a librarian, rather than having to locate the information in a primary (or secondary) source yourself disintermediated the encylopedia publishers. It&#x27;s just that calling librarians was never particular efficient or practical.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-18T12:19:21Z",
+      "url": "https://news.ycombinator.com/item?id=50545420"
+    },
+    {
+      "id": "hn:50537464",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "AI personal trainer",
+      "title": "MAI Code 2 and Code 2 Flash",
+      "body": "Yeah, there is a limit to how much you can get from capturing reasoning traces. (Traditional distillation of weights is not possible via the API.) Patrick Toulme noted a while ago that the biggest advantage of that in his opinion came from bootstrapping the post-training process: https:&#x2F;&#x2F;xxcancel.com&#x2F;PatrickToulme&#x2F;status&#x2F;206921157543762774... At Thinking Machines, they explicitly said that they used open-weights models for bootstrapping post-training, including Kimi K2.5: https:&#x2F;&#x2F;thinkingmachines.ai&#x2F;news&#x2F;introducing-inkling&#x2F; Speaking of Thinking Machines, that&#x27;s another data point. Their Inkling Small 2 model is just a bit behind DeepSeek V4.1 Flash 1017 in benchmark, and in my tests, that seems to be accurate, but mostly because they used less training data for pre-training, so they have less of a knowledge base, while similar reasoning capabilities. (One of the most interesting parts of Inkling Small 2 is that their training must have been very cost-efficient, apparently using less, but higher quality training data.) And we&#x27;re now seeing more and more Western near-frontier models from labs other than Anthropic and OpenAI",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-17T20:11:16Z",
+      "url": "https://news.ycombinator.com/item?id=50537464"
+    },
+    {
+      "id": "hn:50546629",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "habit app",
+      "title": "Show HN: Helio, compare your energy on days with and without each habit",
+      "body": "",
+      "score": 1,
+      "num_comments": 0,
+      "created_utc": "2026-11-18T14:19:13Z",
+      "url": "https://news.ycombinator.com/item?id=50546629"
+    },
+    {
+      "id": "hn:50544629",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "habit app",
+      "title": "Quad9's withdrawal from France: A canary in the coal mine",
+      "body": "Huh? No, on the road you only find road-legal vehicles piloted by people with a driver&#x27;s license, which is inaccessible to people known for doing crimes relating to the infrastructure etc etc. Roads are then governed by strict rules and you lose your access to those if you do not comply. Meaning that roads (just like all shared infrastructure) are already a state-filtered thing. The filters are just calibrated sensibly, meaning that your first thought was not \"they&#x27;re policed and I am oppressed\" but \"huh, but roads are free, actually?\" __ I did feed this exchange into gemini after the fact and it painted this nice picture that I think might be helpful to better convey what I am trying to convey: > Actual freedom on a highway would mean dodging uninspected, brake-less, 10-ton vehicles driven by 12-year-olds at 150 miles per hour. That would be terrifying. > What the user calls \"freedom\" is actually just a highly restrictive environment where the restrictions perfectly align with his personal habits. Because the user doesn&#x27;t want to drive a homemade tank drunk at 150mph, he never hits the invisible wall of state friction. Therefore, he assumes the wall doesn&#x27;t exi",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-18T10:50:22Z",
+      "url": "https://news.ycombinator.com/item?id=50544629"
+    },
+    {
+      "id": "hn:50544188",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "habit app",
+      "title": "Bank CEOs, NSA Tell Congress That AI-Driven Patches Are Behind Outages",
+      "body": "Scala was a bit tongue in cheek. Not sure why your style preferences are relevant to the point. Not sure there is an obligation to avoid points others may not like. If capitalism priced in externalities it would fall apart and as a result we seem to have fallen into a cognitive habit of ignoring our own existence in deference to dogma, refuse any sort of reflection that may ultimately help solve unsolved problems; we quit learning of we just \"this is fine\" our way through Such a narcissistic, head in sand culture. Don&#x27;t look up!",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-18T09:52:59Z",
+      "url": "https://news.ycombinator.com/item?id=50544188"
+    },
+    {
+      "id": "hn:50542202",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "habit app",
+      "title": "Google's AI answers reducing search traffic by 40%",
+      "body": "Something something old habits die hard, can&#x27;t teach an old dog new tricks. I am here on HN on chrome mobile. The omnibox is there right at the top for me to quickly search something. That muscle memory and flow is deeply deeply ingrained even if Claude or Gemini is the adjacent app open",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-18T05:24:08Z",
+      "url": "https://news.ycombinator.com/item?id=50542202"
+    },
+    {
+      "id": "hn:50535269",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "habit app",
+      "title": "We don't need more apps, we need better open source",
+      "body": "Recently I see even mobile apps that are just LLM wrappers (or not even) charging 5 - 20$ for premium versions and can be one shot with claude or codex. For example, like you mentioned habit tracking, gym tracking, pdf reader, scanners, language learning and so on. Also, its hard for me to trust their AIs and feed again and again my information to many different apps and their AIs. If you think about it, you need one claude or codex subscription and you can generate your own apps with your own AI models that I trust more than ones used in the apps. Recently I started working on open source local app playstore. Would appreciate your feedback and any input - ( https:&#x2F;&#x2F;github.com&#x2F;Ersho&#x2F;sayn )",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-17T17:49:03Z",
+      "url": "https://news.ycombinator.com/item?id=50535269"
+    },
+    {
+      "id": "hn:50534585",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "habit app",
+      "title": "Show HN: HabitStats – a free habit tracker with heatmaps and real stats",
+      "body": "I built this for myself to track habits. Ultimately there are a bunch of these apps out there but I just wanted it to work the way I wanted it to work and with AI now the barrier to entry is so low. It should work well on all devices. Stack: FastAPI, Postgres and React, on a single $10&#x2F;month server. Feel free to use it and provide feedback if you like. You can always play with the demo before you even signup https:&#x2F;&#x2F;app.habitstats.app&#x2F;demo",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-17T17:10:02Z",
+      "url": "https://news.ycombinator.com/item?id=50534585"
+    },
+    {
+      "id": "hn:50534521",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "habit app",
+      "title": "Show HN: HabitStats – a free habit tracker with heatmaps and real stats",
+      "body": "",
+      "score": 2,
+      "num_comments": 1,
+      "created_utc": "2026-11-17T17:06:30Z",
+      "url": "https://news.ycombinator.com/item?id=50534521"
+    },
+    {
+      "id": "hn:50526593",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "habit app",
+      "title": "Windows 11 is collecting data on which coding agents and developer tools you use",
+      "body": "Serious question I have anytime people get upset about telemetry like this with Windows: why isn&#x27;t there a similar level of outrage against Android, iOS, ChromeOS, Googlebook OS, and Mac? The real outlier in all of this are Linux distros. Every other commercial OS is tracking a lot, but it seems like Windows is the only commercial OS people expect to not track you? There is no way Apple and Google don&#x27;t know which apps people are using on their OSes too. Google is the worst offender of this by far. They&#x27;ll correlate data across every Google thing you do (every email, browser history, app usage, audio recordings, car driving habits, etc) and very effectively sell&#x2F;manipulate you with ads based on that. Microsoft only wishes they were half as good at milking and monetizing tracking like Google.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-17T02:20:38Z",
+      "url": "https://news.ycombinator.com/item?id=50526593"
+    },
+    {
+      "id": "hn:50551362",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "Genie 4 is now available",
+      "body": "> he underestimated how much unhappiness came with plagues and dysentery... we just got out of a pandemic which didn&#x27;t kill as much as the black death but probably caused depression &#x2F; mental health issues in a large part of the population. we die less, suffer more because of tech",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-18T20:01:55Z",
+      "url": "https://news.ycombinator.com/item?id=50551362"
+    },
+    {
+      "id": "hn:50550988",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "A Perfect SimCity",
+      "body": "It&#x27;s all interlocking because many cities have been built around cars. Everything&#x27;s further apart because of parking lots so everything takes longer to get to so everyone needs a car. There are cities where public transit is decent, most amenities are a walk or ride away. It&#x27;s a big wheel to break. Like many of our problems (recycling, pollution, health, schools), it&#x27;s a system problem that we&#x27;re told is an individual problem.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-18T19:35:19Z",
+      "url": "https://news.ycombinator.com/item?id=50550988"
+    },
+    {
+      "id": "hn:50550575",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "All civilizational wealth comes from invention",
+      "body": "\"Civilizational wealth comes from invention\". Big if true. However, there is a corollary: civilizational destruction happens when wealth inequality reaches an advanced enough state. The Roman republic failed to meet the problems of the times (conquest leading to the senatorial class to enrich themselves and replace waged labor with slave labor). This led to the breakdown of old customs and laws, ending in the death of Tiberius Gracchus. Eventually, this gave space for Caesar to seize power (the populace wanted someone to kick in the senator&#x27;s teeth). In the now empire, there was a struggle between the emperors and the senators. As long as this battle waged, things stabilized. Once the emperors won the war, the power they collected was so absolute it drove them insane - to have one person wield that much power means that they have infinitely corrupting effects on the rest of the system. In post WW1 Germany it was not the weakness of the Weimar Republic that allowed Hitler to gain power. It was the ridiculous war reparations and inflation inflicted upon Germany by the European nations that made the capitalist and manufacturing classes support someone as crazy as Hitler. The patt",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-18T19:03:21Z",
+      "url": "https://news.ycombinator.com/item?id=50550575"
+    },
+    {
+      "id": "hn:50550312",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "Energy drinks linked to 11 times more reports of cardiac arrest",
+      "body": "When I was an alcoholic, and worked a high intensity job, I was drinking at least 3 a day. Sometimes more. I fortunately didn&#x27;t end up in the hospital but I realized it was building up in my system when I had a period of about 2 days in a row with no sleep. I&#x27;m a person who sleeps a LOT. I cut back but it took about 4 more years before quitting drinking alcohol altogether. I still drink 2-3 energy drinks a day (180-240 mg). I do think it&#x27;s not just the caffeine. I don&#x27;t get the same \"perk\" from regular coffee. That said I&#x27;m trying to get dx&#x27;d for ADHD which I&#x27;m sure I&#x27;ve had my entire life, and modern world has not improved it (in fact in 2000 I wanted to make an arty&#x2F;farty website about tech&#x27;s ability to \"amplify\" ADHD tendencies, before I was even aware I actually might have it, like maybe I suspected, but not the extent. Age + brain damage from years of alcohol abuse + tech use means it&#x27;s caught up with me. I&#x27;m very non-functional and I dislike it, and hope I can get proper meds, because self-medicating with energy drinks isn&#x27;t healthy. If I can get proper meds, I hope to cut back on this shit and just have a nice ",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-18T18:42:36Z",
+      "url": "https://news.ycombinator.com/item?id=50550312"
+    },
+    {
+      "id": "hn:50550233",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "Highly classified US national security communications network goes down",
+      "body": "If AI data center production continues at pace, you really think that those emissions are going to continue being negligible? Of course it&#x27;s negligible when you compare a few years to 200 years of industrial revolution. When you steal a movie from archive.is and watch it what is the result? You stole .00012c from copyrightholders? Are you stopping them from making new movies or taking new revenue streams or setting up your own theatre to profit? no. When an AI companies steals decades of information, uses it to produce copies, and sells those copies, it is monumentally different. Aaron Schwartz was supremely aware of class issues in this country, and did not believe meritocracy was real. I sincerely doubt that he would be in support of the upper classes stealing the wealth of information from the lower, and using it to make themselves even more tremendously wealthy while skirting the law. The point of my illustration is that this is a class issue, corporations are viewed as ultra-persons capable of skirting the law all the way to profitability to serve their masters. Meanwhile we are all little peasants that get to watch it happen, but if one of us tries to do the same we will",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-18T18:37:35Z",
+      "url": "https://news.ycombinator.com/item?id=50550233"
+    },
+    {
+      "id": "hn:50549924",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "Energy drinks linked to 11 times more reports of cardiac arrest",
+      "body": "No, that is not generally accepted. > The latest research indicates that consuming up to 400 mg of caffeine&#x2F;day (equivalent to up to 5, 8-ounce cups of caffeinated coffee per day) is generally safe for most adults and appears to be linked to a lower risk of several cardiovascular conditions, including heart failure, heart disease and stroke in some individuals. https:&#x2F;&#x2F;newsroom.heart.org&#x2F;news&#x2F;coffee-and-heart-health-how-...",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-18T18:16:57Z",
+      "url": "https://news.ycombinator.com/item?id=50549924"
+    },
+    {
+      "id": "hn:50549188",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "Launch HN: Maritime (YC F26) – A managed cloud for production AI agents",
+      "body": "Hi HN, we&#x27;re Ary and Maria, co-founders of Maritime ( https:&#x2F;&#x2F;maritime.sh ). We&#x27;re building an agent-native cloud that handles everything from custom environments to lifecycle management for AI agents. Demo: https:&#x2F;&#x2F;www.youtube.com&#x2F;watch?v=lCWMdBQ96rY There’s been an explosion of sandbox companies coming out of SF, but sandboxes solve maybe 10% of the infrastructure problem for AI agents. The approach that most sandboxing companies take is: You buy Hetzner&#x2F;OVH Cloud bare metal servers, use Firecracker to slice the servers up into VMs, sell those VMs with low margins. It’s a bit of an oversimplification, but the point is it’s a narrow solution to a fairly difficult problem. We talked to a couple hundred companies that are building AI agents. From personal assistants and coding agents to specialized healthcare agents, and the main pattern we saw was that even after choosing a sandbox provider, you still have to build additional infrastructure just to get things working. These were the primary points of friction: 1. Agent lifecycle management. There’s a lot that you have to build in order to properly give your agents VMs: things like sleep&#x2F;",
+      "score": 26,
+      "num_comments": 21,
+      "created_utc": "2026-11-18T17:26:28Z",
+      "url": "https://news.ycombinator.com/item?id=50549188"
+    },
+    {
+      "id": "hn:50548451",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "Inside Deutsche Bank",
+      "body": "They highlight some examples of alleged misbehavior on the &#x2F;about page but they don&#x27;t really sound worthy of the scale of this website to me...? > In Colombia, for example, the bank’s own internal investigation showed that in 2019 it had processed thousands of transactions for companies linked to the adult entertainment business. The money had been sent to women in Colombia through suspicious paths without the bank reporting most transactions to authorities.. So they failed to report some payments that went to porn stars? okay? > Again and again, internal documents suggest that warnings from the bank’s own experts gave way to commercial interests. This applies in particular to the bank’s Russia business. After Russia’s full-scale invasion of Ukraine in February 2022, numerous bank clients almost immediately ended up on sanctions lists — the same clients who had been coveted by the bank for years. So they had clients in Russia before the invasion... again what is the problem here? > The documents show Deutsche Bank assisted numerous clients in tax minimisation, including the Siemens corporation. In that case, the then-head of wealth management at Deutsche Bank noted concer",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-18T16:38:57Z",
+      "url": "https://news.ycombinator.com/item?id=50548451"
+    },
+    {
+      "id": "hn:50548447",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "DNS resolvers are the wrong place to fight piracy",
+      "body": "The supply of housing, the physical structures, will still be there. Land prices, and hence collateral for loans and paper wealth will not be there.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-18T16:38:38Z",
+      "url": "https://news.ycombinator.com/item?id=50548447"
+    },
+    {
+      "id": "hn:50548359",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "'Human' Is Cambridge Dictionary's Word of the Year 2026",
+      "body": "Here are the last few years: 2025: parasocial 2024: manifest 2023: hallucinate 2022: homer 2021: perseverance 2020: quarantine Quarantine, hallucinate and parasocial are particularly good ones! Those words helped people contextualize and navigate their changing world in those years. \"Human\" on the other hand, doesn&#x27;t seem to fit the mold. It&#x27;s like making 2020 be \"health\". What about \"agent\"? What about \"p(doom)\"? What about \"slop\"? At least in the AP write up of Collins&#x27; word of the year they cite a year over year change in usage (\"mogging\" usage increased 210%).",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-18T16:32:14Z",
+      "url": "https://news.ycombinator.com/item?id=50548359"
+    },
+    {
+      "id": "hn:50547399",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "More than 400k Russians killed fighting in Ukraine war, leaked data suggests",
+      "body": "> To be clear, when I am talking about the \"West\" I am only talking about Western politicians, and in the context of our discussions, Western politicians of Western superpowers who actually have the power to make some political difference. I&#x27;m afraid that \"the West\" doesn&#x27;t exist in the way you imagine. I would call only the US a superpower. According to a recent article in the Atlantic, Biden was so afraid of provoking Russia that he even prohibited US generals from visiting Ukraine to learn about advancements in drone warfare, which led to the US being unprepared for Shahed drone strikes launched by Iran. Trump is currently trying to coerce Ukraine into surrendering so that his business clan can acquire Lukoil, a Russian oil company, and enter as intermediaries into the sale of fossil fuels to Europe. Personal enrichment is all they care about. The top 10 supporters of Ukraine (by share of their GDP) are Denmark, Estonia, Lithuania, Norway, Latvia, Sweden, Finland, the Netherlands, Poland, and Canada. Most of them share a border with Russia, so countering Russian expansionism is in their obvious interests. None of them are \"superpowers\". Their combined population is sma",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-18T15:21:21Z",
+      "url": "https://news.ycombinator.com/item?id=50547399"
+    },
+    {
+      "id": "hn:50546936",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "Talos Linux",
+      "body": "I was lucky enough to run Talos Linux for our k8s cluster for various clusters in AWS at my previous job. I was very excited to work on Talos because I&#x27;ve heard such good things and I love the idea of it being so minimal and secure. Unfortunately I don&#x27;t have great things to say. 1. The (paid) support we received was terrible. We constantly got push back and support didn&#x27;t really ever help us with issues. 2. We used KubeSpan, which at the time leaked the private wireguard key to the logs when debug mode was enabled. The Preshared key was also written to the logs...and the preshared key is also the cluster secret. This has since been fixed in [this PR]( https:&#x2F;&#x2F;github.com&#x2F;siderolabs&#x2F;talos&#x2F;commit&#x2F;d0b50aa76 ) 3. We later had an issue with KubeSpan where all our worker nodes dropped one node from it&#x27;s peerlist. We were using Sidero&#x27;s discovery service, so we didn&#x27;t have as much visibility into why&#x2F;if the discovery service failed. By design the kubelet heartbeat doesn&#x27;t go over KubeSpan&#x2F;Wireguard, therefore the worker node reported healthy the entire time, even though no traffic inside the cluster could reach the",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-18T14:45:11Z",
+      "url": "https://news.ycombinator.com/item?id=50546936"
+    },
+    {
+      "id": "hn:50546800",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "Quad9's withdrawal from France: A canary in the coal mine",
+      "body": "A party who advocates \"higher taxes on wealth, capital, and high incomes rather than spending cuts\". This is a bananas approach, I live in France and unless it reforms spending it will go bankrupt. There isn&#x27;t enough wealth to keep this sinking ship afloat.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-18T14:35:13Z",
+      "url": "https://news.ycombinator.com/item?id=50546800"
+    },
+    {
+      "id": "hn:50546612",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "AI is killing All About Berlin",
+      "body": "Yep. I&#x27;m applying the same integrity to health insurance, an industry that desperately needs it. I work with a trustworthy broker to get people better insurance. The commissions are a sizeable chunk of my income. Until recently it was just another page on the website, so I didn&#x27;t need to think hard about it. Now with dwindling traffic I have to choose between growing that side business and building things I consider more useful things. I don&#x27;t love that, but it beats returning to software dev. It also means that my work still revolves around giving honest advice to immigrants.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-18T14:17:55Z",
+      "url": "https://news.ycombinator.com/item?id=50546612"
+    },
+    {
+      "id": "hn:50546561",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "Quad9's withdrawal from France: A canary in the coal mine",
+      "body": "I actually missed covering an equally important issue such as the poor implementation of free market capitalism and poor fiscal policies across the entire west, not just the EU, that lead to the rapid increase of wealth inequality and increase in CoL across the last 10-20 years, but it was already late at night, and the comment was already long enough going on tangents, though it is connected and equally important to my point. My point with the long comment and all the tangents, is that the reason for the current internet crackdown from the social unrest, is a series of compounding issues accumulated over decades of economical and political mismanagement in the EU, that made our economy and welfare system be the world&#x27;s envy for a while but also made it very fragile and vulnerable to even the smallest internal and external disruptions(and we had some big ones since Covid), and it&#x27;s not as simple as a sibling Alephnerd here keeps claiming that \"it&#x27;s all because of Russia\". Russia didn&#x27;t devalue our wages via infinite money printing during Covid. Russia didn&#x27;t ship our manufacturing industry abroad. Russia didn&#x27;t set up our nimby housing policies and ope",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-18T14:13:44Z",
+      "url": "https://news.ycombinator.com/item?id=50546561"
+    },
+    {
+      "id": "hn:50545849",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "AI is killing All About Berlin",
+      "body": "> pay for the work their stealing Pay who? HN doesn&#x27;t pay me for this comment. SO didn&#x27;t pay the people who answered questions there. Reddit AFAIK doesn&#x27;t pay commenters, and so on. People have been having their &#x27;work&#x27; monetized by others for ages and were willing to accept fake internet points for that work. It feels a bit late to suddenly now say it&#x27;s a problem. Personally, I think it would be healthy for society go backwards and stop using social media. I just don&#x27;t see that happening because people love the affirmation of others.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-18T13:05:41Z",
+      "url": "https://news.ycombinator.com/item?id=50545849"
+    },
+    {
+      "id": "hn:50545654",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "AI is killing All About Berlin",
+      "body": "> How do you all feel about the situation? Like crap, but like with everything else in life you can&#x27;t control: go with the flow and make the best of it. If I could re-wind to the pre-AI era and give Geoffrey Hinton something else that&#x27;s interesting to do I would. > Is it just okay that these humongous companies just took all our work without paying us a dime? Most definitely not. But what to do about it? > Is it okay that they are replacing our jobs with tech that would never have existed had they not taken all that work? Most definitely not. > Do you feel good supporting these companies by giving them money every month? I don&#x27;t and I never will. > What do you think will happen if these companies become profitable? Do you think it will have a positive effect on our society? No, I think it will lead to worse than ever seen before wealth concentration and probably the end of the societies we have come to know. > Do you all just not have this feeling? How do you combat it? I don&#x27;t combat it other than by writing (for instance: https:&#x2F;&#x2F;jacquesmattheij.com&#x2F;the-ai-contradiction&#x2F; ), by trying as hard as I can to get local AI systems working for me t",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-18T12:46:03Z",
+      "url": "https://news.ycombinator.com/item?id=50545654"
+    },
+    {
+      "id": "hn:50543644",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "Reports of AI-related child sexual abuse material rise 8,400% in two years",
+      "body": "I don’t know if you will read this, but here’s an excerpt from a newsletter for trust and safety. It’s talking about concerns about the settlements and changes Meta recently said it would make to improve their apps for teens. I bring this up to point out that this is a conversation that does require thought and analysis to get a solution that actually works. ———— Every teen gets the same rules Universal limits assume social media affects every teenager the same way. It doesn&#x27;t. What we do have is a lack of firm scientific consensus: The Surgeon General&#x27;s advisory, published back in 2023, laid out challenges to social media use but also highlighted a whole bunch of benefits of using social media, including self-expression and connection for LGBTQ people and those with disabilities. The health advisory from the American Psychological Association (APA) also lays out that using social media is not inherently beneficial or harmful to young people, and that it may be psychologically beneficial for those in mental health crises or members of marginalized groups. Save the Children&#x27;s 2025 “Click, Scroll, Connect” report found that emerging harms like algorithmic bias, deepfak",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-18T08:48:38Z",
+      "url": "https://news.ycombinator.com/item?id=50543644"
+    },
+    {
+      "id": "hn:50543040",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "New Evidence Shows School Phone Bans Are Gradually Improving Test Scores",
+      "body": "Study shows average US teenager gets >200 app notifications per day: https:&#x2F;&#x2F;www.michiganmedicine.org&#x2F;health-lab&#x2F;study-average-te... These young people are supposed to be preparing for life years down the line. The half-life of usefulness of these notifications is about 15 seconds.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-18T07:42:38Z",
+      "url": "https://news.ycombinator.com/item?id=50543040"
+    },
+    {
+      "id": "hn:50542481",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "Harvard researchers find AI coding agents shifted the bottleneck to code review",
+      "body": "> All I do all day is review ai written code. my own or teammates. I really do not enjoy it. Who cares about your happiness and well-being? You&#x27;re just a worker, just be grateful to your master that he allows you to work for the shareholders and participate in this great vacuum of wealth creation we call capitalism.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-18T06:13:46Z",
+      "url": "https://news.ycombinator.com/item?id=50542481"
+    },
+    {
+      "id": "hn:50541591",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "Quad9's withdrawal from France: A canary in the coal mine",
+      "body": "Democratic governments are at the whim of the voters. They need voters to think and parse information in a sane way but this is not happening. The populations are being riled up by fake issues and misinformation and now people are entering politics with the express purpose of exploiting that. Of course people are going to wish they were able to curate the information landscape no person should be looking at the internet dialogue and thinking its healthy.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-18T03:42:54Z",
+      "url": "https://news.ycombinator.com/item?id=50541591"
+    },
+    {
+      "id": "hn:50540562",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "Quad9's withdrawal from France: A canary in the coal mine",
+      "body": "> EU politicians don&#x27;t have an answer how they can fix it and revert things back to \"the good ol days\" of the European social contract when everyone could easily get a well paying job, afford rent in the city center, and expect to retire at 65 with a livable government pension, which realistically aren&#x27;t ever coming back, but there&#x27;s no way to break this harsh news to the people without them taking you to the guillotines. That&#x27;s understandable. It makes me quite angry. Why shouldn&#x27;t we expect more of \"the good old days\"? Has technology been lost? What happened? We seem to be like a very close and tight-knit family who wins 100 million in the lottery, and then a year later the parents are divorced, and the children are estranged and angry with each other, and half the family died from cocaine overdoses. What happened? Good things were happening, and then another good thing happened in the form of money, and then everything fell apart. Society seems to be doing the same. We had a good thing, and then technology gave us more good things, and somehow adding good things to our good society caused it to fall apart. Who&#x27;s to blame? I feel like somebody is to ",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-18T01:05:35Z",
+      "url": "https://news.ycombinator.com/item?id=50540562"
+    },
+    {
+      "id": "hn:50540172",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "iOS 27.3's redesigned Apple Health app requires newer iPhone model",
+      "body": "",
+      "score": 2,
+      "num_comments": 0,
+      "created_utc": "2026-11-18T00:16:16Z",
+      "url": "https://news.ycombinator.com/item?id=50540172"
+    },
+    {
+      "id": "hn:50539841",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "Quad9's withdrawal from France: A canary in the coal mine",
+      "body": "A reminder who is behind this: The legal warfare is driven by the beIN Sports chairman, Nasser Al-Khelaifi. He is also president of Paris Saint-Germain and chairman of Qatar Sports Investment. He is, obviously, not French. His self-claimed annual income was about $15–25 million, and his personal wealth was about $70–100 million. Qatar, obviously, is not a friend of open Internet. Caroline Guenneteau is General Counsel of beIN Media Group. She is self-stated leading voice in sports law and anti-piracy in sports broadcasting. She was a founder and remains an active board member of APPS, the industry association created in 2018 that brings together broadcasters, leagues and sports bodies to censor Internet. Through APPS and beIN she has advocated dynamic court orders that allow rapid blocking of pirate sites and their mirrors, DNS blocking by internet service providers, and greater responsibility from platforms and search engines. She has noted the difficulty of securing voluntary cooperation from French ISPs and has supported legislative changes, including the 2021 French law that introduced dynamic blocking mechanisms. https:&#x2F;&#x2F;www.beinmediagroup.com&#x2F;the-group&#x2F;car",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-17T23:42:07Z",
+      "url": "https://news.ycombinator.com/item?id=50539841"
+    },
+    {
+      "id": "hn:50538458",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "Frame – 31.5\" color ePaper display",
+      "body": "As a person who has had mental health issues in the past, and who is now happily medicated&#x2F;therapized (?) and doing very well, I am also putting my wallet away and will never take it out again for this guy. It&#x27;s really slimy to accuse others of needing mental health care, especially over the internet. Please stop it.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-17T21:29:34Z",
+      "url": "https://news.ycombinator.com/item?id=50538458"
+    },
+    {
+      "id": "hn:50537834",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "Nvidia stopped disclosing Singapore sales as revenues hit $104B",
+      "body": "Sir Humphrey Appleby: \"No, Minister. Either you sell arms or you don&#x27;t. If you sell them, they will inevitably end up with people who have the cash to buy them.\" James Hacker: \"But not terrorists!\" Sir Humphrey Appleby: \"I suppose we could put some sort of Government Health Warning on the rifle butts: &#x27;This gun can seriously damage your health.&#x27;\"",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-17T20:37:54Z",
+      "url": "https://news.ycombinator.com/item?id=50537834"
+    },
+    {
+      "id": "hn:50533509",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "Windows 11 is collecting data on which coding agents and developer tools you use",
+      "body": "I am going to give your short comment a much longer reply than I probably should, but there&#x27;s a lot to unpack here. The biggest mistake you&#x27;re making is in being too simplistic, as I&#x27;ll explain in a bit. > Wealth is not zero-sum, but it is created by work. Yes, but not all work has the same value. A skilled furniture maker can take lumber and turn it into tables and chairs and dressers that will last, and which people will want to buy for quite a bit of money because the value they will get out of the furniture in the long run will exceed what they spend on it. A novice furniture maker can work all he wants, and nobody will want to buy what he produces. He will, in fact, turn valuable lumber into crappy furniture that he cannot sell, meaning his work actually reduces the total amount of wealth in the world. (Until he gets better, which in most professions only comes with practice, practice, practice). Furthermore, a LOT of work doesn&#x27;t happen in isolation. Each individual worker making the Model T Ford did one small part of the job. But because someone did the work of planning out the factory, each of those individual workers&#x27; work went into making a comple",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-17T16:11:55Z",
+      "url": "https://news.ycombinator.com/item?id=50533509"
+    },
+    {
+      "id": "hn:50533275",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "How the Claude Code team thinks about verification",
+      "body": "> We&#x27;re in a weird space in development, where the initial mechanical work that used to take a week now takes an hour at most, but what remains is a lot of manual verification and developer-testing. I don&#x27;t think the low speed of development was an actual bottleneck. Coding in the real world is actually a mix of mechanical typing and information gathering. The typing part is not that relevant as it&#x27;s actually not much time to type in 500 lines of code (if you touch type) assuming that&#x27;s the median size of PR. It is the gathering of information that is IMO crucial for the health of the software. It&#x27;s like robots in a chemical lab. You can probably build some mechanical apparatus that can mix whatever components you want. But you still need a scientist to design experiments and to check the result. And while you can help speed up some of the process, what&#x27;s valuable is the knowledge that the scientist extract, not the amount of experiments being done. This scale of work is only possible because there&#x27;s no information gathering going on. Instead it&#x27;s just busy work with wishes and prayers hoping to get a good result.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-17T16:01:35Z",
+      "url": "https://news.ycombinator.com/item?id=50533275"
+    },
+    {
+      "id": "hn:50532857",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "Frame – 31.5\" color ePaper display",
+      "body": "> While he seems incredibly immature… Immaturity is the least of the issues. He appears to hold views that are deeply offensive to many. > y&#x27;all in serious help of mental health care as well. For what mental disorder is one’s refusal to financially support an offensive person a diagnostic criterion?",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-17T15:38:56Z",
+      "url": "https://news.ycombinator.com/item?id=50532857"
+    },
+    {
+      "id": "hn:50531236",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "Microsoft blames monster email outage on software defect introduced in July fix",
+      "body": "> This \"rich people will benefit so it&#x27;s automatically bad\" mentality is counterproductive and borne out of jealousy. The fact that you can&#x27;t apply logical reasoning is your own limitation and you shouldn&#x27;t presume it applies broadly to everyone. For example in my country the previous extreme right wing government lowered taxes to high earners. That includes me. I did pay slightly less in taxes, while people who make much more money than me had a much bigger reduction. So I also had an advantage? LOL NO. I did not because they also doubled the cost to go and see a doctor so my slight tax reduction wasn&#x27;t even enough to pay for that. Of course people who can&#x27;t do math think \"uh good less tax! I vote for them again!\", but people who can do some 3rd grade mathematics might realise that they actually paid more. And we aren&#x27;t even including the increased health risk in going around when the less wealthy people will naturally tend to go less to the doctor because they are being priced out and infect everyone.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-17T13:41:58Z",
+      "url": "https://news.ycombinator.com/item?id=50531236"
+    }
+  ]
+}
