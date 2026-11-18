@@ -78,3 +78,60 @@ describe('中文界面零变化', () => {
     expect(src).toMatch(/if \(!isEnglishEnabled\(\)\) return null/)
   })
 })
+
+describe('首页（批 1 第 1 页）', () => {
+  const visible = (src: string) =>
+    src
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .split('\n')
+      .filter((line) => !line.trim().startsWith('//'))
+      .join('\n')
+
+  it('首页、导览、教练卡片的界面文字不再写死中文', () => {
+    for (const f of ['app/home/page.tsx', 'components/AppTour.tsx', 'components/CoachCard.tsx']) {
+      expect(visible(readFileSync(f, 'utf8')), f).not.toMatch(/[一-鿿]/)
+    }
+  })
+
+  it('中文首页文案和搬之前逐字一致（抽查）', () => {
+    expect(zh.home.brand).toBe('爪边')
+    expect(zh.home.startToday).toBe('开始今天')
+    expect(translate('zh', 'home.cards.weekCountOfTarget', { done: 2, target: 3 })).toBe('2 / 3 次')
+    expect(translate('zh', 'home.cards.doneTimes', { n: 1 })).toBe('已完成 1 次')
+    expect(translate('zh', 'home.method.cycle', { name: '官方三分化', n: 2 })).toBe('官方三分化 · 第 2 轮')
+    expect(translate('zh', 'home.nutrition.over', { n: 120 })).toBe('已超出 120')
+    expect(zh.common.coachCard.basic).toBe('基础总结 · AI 反馈暂时没有生成')
+  })
+
+  it('导览的中文和 lib/tour/steps.ts 逐字一致', async () => {
+    const { TOUR_STEPS } = await import('@/lib/tour/steps')
+    const dict = zh.common.tour.steps as Record<string, { title: string; body: string; hrefLabel?: string }>
+    expect(Object.keys(dict).sort()).toEqual(TOUR_STEPS.map((s) => s.id).sort())
+    for (const step of TOUR_STEPS) {
+      expect(dict[step.id].title).toBe(step.title)
+      expect(dict[step.id].body).toBe(step.body)
+      expect(dict[step.id].hrefLabel).toBe(step.hrefLabel)
+    }
+  })
+
+  it('训练日名：中文字典和 SPLIT_LABELS 一致；英文模式用英文名', async () => {
+    const { SPLIT_LABELS, splitLabel } = await import('@/lib/split-labels')
+    for (const [key, name] of Object.entries(SPLIT_LABELS)) {
+      expect((zh.common.splits as Record<string, string>)[key]).toBe(name)
+    }
+    expect(splitLabel('push')).toBe('推')
+    expect(splitLabel('push', '推日')).toBe('推日')
+    expect(splitLabel('push', '推日', 'en')).toBe('Push')
+    expect(splitLabel('unknown', null, 'en')).toBe('Workout')
+    expect(splitLabel('unknown')).toBe('训练')
+  })
+
+  it('营养行名和 daily-log 接口的中文一致', async () => {
+    const { toDashboardNutrition } = await import('@/lib/nutrition/daily-log')
+    const empty = { calories_kcal: null, protein_g: null, carbs_g: null, fat_g: null }
+    const rows = toDashboardNutrition({ consumed: empty, target: empty, remaining: null } as never)
+    for (const row of rows) {
+      expect((zh.common.nutrients as Record<string, string>)[row.key]).toBe(row.label)
+    }
+  })
+})

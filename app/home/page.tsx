@@ -11,6 +11,8 @@ import CoachCard, { type CoachCardState } from '@/components/CoachCard'
 import { getWeekStartKey, today } from '@/lib/utils'
 import { writeTodayTrainingCache } from '@/lib/training-navigation-cache'
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis } from 'recharts'
+import { translate, type MessageKey } from '@/lib/i18n'
+import { useLocale } from '@/lib/i18n/use-locale'
 
 interface Profile {
   goal: string
@@ -62,13 +64,18 @@ function round(value: number, digits: number): number {
 export default function HomePage() {
   const router = useRouter()
   const supabase = createClient()
+  const [locale] = useLocale()
+  const t = useCallback(
+    (key: MessageKey, params?: Record<string, string | number>) => translate(locale, key, params),
+    [locale],
+  )
   const [profile, setProfile] = useState<Profile | null>(null)
   const [profileLoading, setProfileLoading] = useState(true)
   const [methodContext, setMethodContext] = useState<MethodContext | null>(null)
   const [methodAvailability, setMethodAvailability] = useState<MethodAvailability | null>(null)
   const [methodLoading, setMethodLoading] = useState(true)
   const [methodActivating, setMethodActivating] = useState(false)
-  const [methodMessage, setMethodMessage] = useState('官方训练方法仍在规则校验中。')
+  const [methodMessage, setMethodMessage] = useState<string | null>(null)
   const [setupNotice, setSetupNotice] = useState('')
   const [todayWorkouts, setTodayWorkouts] = useState<{ type: string; duration_minutes: number }[]>([])
   const [todayMealCount, setTodayMealCount] = useState(0)
@@ -131,7 +138,7 @@ export default function HomePage() {
       if (!response.ok) {
         setMethodContext(null)
         setMethodAvailability(null)
-        setMethodMessage('暂时无法读取官方训练方法状态。')
+        setMethodMessage(t('home.method.loadFailed'))
         return
       }
       const result = await response.json()
@@ -141,11 +148,11 @@ export default function HomePage() {
     } catch {
       setMethodContext(null)
       setMethodAvailability(null)
-      setMethodMessage('暂时无法读取官方训练方法状态。')
+      setMethodMessage(t('home.method.loadFailed'))
     } finally {
       setMethodLoading(false)
     }
-  }, [])
+  }, [t])
 
   const handleMethodAction = useCallback(async () => {
     if (profileLoading || methodLoading || methodActivating) return
@@ -167,22 +174,22 @@ export default function HomePage() {
       const response = await fetch('/api/method/enroll', { method: 'POST' })
       const result = await response.json()
       if (!response.ok) {
-        const message = result?.error?.message || result?.message || '暂时无法启用训练方法'
+        const message = result?.error?.message || result?.message || t('home.method.enableFailed')
         setMethodMessage(message)
         if (result?.error?.code === 'ONBOARDING_INCOMPLETE') router.push('/onboarding')
         return
       }
       if (typeof window !== 'undefined') {
-        sessionStorage.setItem('pawside_setup_notice', result?.message || '三分化已启用。')
+        sessionStorage.setItem('pawside_setup_notice', result?.message || t('home.method.enabledNotice'))
       }
       await loadMethod()
       router.push('/training/today')
     } catch {
-      setMethodMessage('暂时无法启用训练方法，请稍后重试。')
+      setMethodMessage(t('home.method.enableFailedRetry'))
     } finally {
       setMethodActivating(false)
     }
-  }, [loadMethod, methodActivating, methodAvailability?.reason, methodAvailability?.status, methodLoading, profile?.onboarding_completed, profileLoading, router])
+  }, [loadMethod, methodActivating, methodAvailability?.reason, methodAvailability?.status, methodLoading, profile?.onboarding_completed, profileLoading, router, t])
 
   // Load AI summary — sessionStorage cache so revisiting /home is instant.
   // spec A0-5: Home MUST read ai_status rather than showing the deterministic
@@ -299,7 +306,7 @@ export default function HomePage() {
       })
       if (!response.ok) {
         const payload = await response.json().catch(() => null)
-        throw new Error(payload?.error?.message || '保存失败')
+        throw new Error(payload?.error?.message || t('home.recovery.saveFailed'))
       }
       // Product §21: a recovery answer is part of the day's facts, so the
       // displayed daily summary must not keep showing the pre-answer state.
@@ -358,6 +365,16 @@ export default function HomePage() {
     ? null
     : Math.min(100, Math.round((weeklyDone / weekTarget) * 100))
   const entryLoading = profileLoading || methodLoading
+  // The official method's name is stored in Chinese; English shows the dictionary name for it.
+  const methodName = (name: string | null | undefined) =>
+    !name || (locale === 'en' && name === translate('zh', 'home.method.defaultName'))
+      ? t('home.method.defaultName')
+      : name
+  // The daily-log API sends Chinese row labels; in English, known rows use the dictionary.
+  const nutrientLabel = (row: DashboardNutritionRow) =>
+    locale === 'en' && ['calories', 'protein', 'carbs', 'fat'].includes(row.key)
+      ? t(`common.nutrients.${row.key}` as MessageKey)
+      : row.label
   const methodAvailable = methodAvailability?.status === 'available'
   const methodNeedsSetup = !profile?.onboarding_completed
     || methodAvailability?.reason === 'ONBOARDING_INCOMPLETE'
@@ -371,7 +388,7 @@ export default function HomePage() {
         <div className="flex justify-between items-center">
           <div>
             <p className="text-xs text-gray-400">{today()}</p>
-            <h1 className="text-lg font-bold text-gray-900">爪边</h1>
+            <h1 className="text-lg font-bold text-gray-900">{t('home.brand')}</h1>
           </div>
           <div className="flex gap-2">
             <button disabled={entryLoading} onClick={() => {
@@ -386,15 +403,15 @@ export default function HomePage() {
             }}
               className="text-xs bg-black text-white px-3 py-1.5 rounded-lg">
               {entryLoading
-                ? '读取中…'
+                ? t('home.loading')
                 : methodContext
-                ? '开始今天'
+                ? t('home.startToday')
                 : profile?.onboarding_completed
-                  ? '记录训练'
-                  : '完成基础设置'}
+                  ? t('home.logWorkout')
+                  : t('home.finishSetup')}
             </button>
             <button onClick={() => router.push('/food')}
-              className="text-xs border border-gray-200 px-3 py-1.5 rounded-lg text-gray-700">记录饮食</button>
+              className="text-xs border border-gray-200 px-3 py-1.5 rounded-lg text-gray-700">{t('home.logFood')}</button>
           </div>
         </div>
       </div>
@@ -408,31 +425,31 @@ export default function HomePage() {
         <div className="bg-black text-white rounded-2xl p-5">
           {methodContext ? (
             <>
-              <p className="text-xs text-white/60">{methodContext.method?.name || '官方三分化'} · 第 {methodContext.current_cycle_number} 轮</p>
+              <p className="text-xs text-white/60">{t('home.method.cycle', { name: methodName(methodContext.method?.name), n: methodContext.current_cycle_number })}</p>
               <div className="flex items-end justify-between mt-2">
                 <div>
-                  <p className="text-xl font-semibold">下一次：{splitLabel(methodContext.next_split_key)}</p>
-                  <p className="text-sm text-white/70 mt-1">训练顺序按方法推进，休息不会跳过下一练。</p>
+                  <p className="text-xl font-semibold">{t('home.method.next', { split: splitLabel(methodContext.next_split_key, null, locale) })}</p>
+                  <p className="text-sm text-white/70 mt-1">{t('home.method.orderNote')}</p>
                 </div>
                 <button onClick={() => router.push('/training/today')} className="bg-white text-black rounded-xl px-4 py-2 text-sm font-medium">
-                  开始今天
+                  {t('home.startToday')}
                 </button>
               </div>
             </>
           ) : (
             <>
-              <p className="text-xs text-white/60">训练方法</p>
+              <p className="text-xs text-white/60">{t('home.method.label')}</p>
               <p className="text-lg font-semibold mt-2">
                 {entryLoading
-                  ? '正在读取训练方法'
+                  ? t('home.method.reading')
                   : methodAvailable
-                    ? '官方三分化已准备好'
+                    ? t('home.method.ready')
                     : methodEquipmentBlocked
-                      ? '选一个适合你的训练方法'
-                    : '官方三分化尚未开放'}
+                      ? t('home.method.pickOne')
+                    : t('home.method.notOpen')}
               </p>
               <p className="text-sm text-white/70 mt-1">
-                {entryLoading ? '正在同步你的训练状态…' : methodMessage}
+                {entryLoading ? t('home.method.syncing') : (methodMessage ?? t('home.method.pendingMessage'))}
               </p>
               <div className="mt-4 flex items-center gap-3">
                 <button
@@ -441,22 +458,22 @@ export default function HomePage() {
                   className="bg-white text-black rounded-xl px-4 py-2 text-sm font-medium disabled:opacity-60"
                 >
                   {entryLoading
-                    ? '读取中…'
+                    ? t('home.loading')
                     : methodActivating
-                      ? '正在启用…'
+                      ? t('home.method.enabling')
                       : methodNeedsSetup
-                        ? '完成基础设置'
+                        ? t('home.finishSetup')
                         : methodEquipmentBlocked
-                          ? '选择训练方法'
+                          ? t('home.method.choose')
                         : methodAvailable
-                          ? '启用训练方法'
-                          : '查看训练方法'}
+                          ? t('home.method.enable')
+                          : t('home.method.view')}
                 </button>
                 <button
                   onClick={() => router.push('/training/method')}
                   className="rounded-xl border border-white/20 px-4 py-2 text-sm text-white/80"
                 >
-                  预览方法
+                  {t('home.method.preview')}
                 </button>
               </div>
             </>
@@ -466,24 +483,26 @@ export default function HomePage() {
         {/* Dashboard cards */}
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-white rounded-2xl p-4">
-            <p className="text-xs text-gray-400 mb-1">今日训练进度</p>
+            <p className="text-xs text-gray-400 mb-1">{t('home.cards.todayTraining')}</p>
             <p className={`text-sm font-semibold ${todayWorkouts.length > 0 ? 'text-black' : 'text-gray-400'}`}>
-              {todayWorkouts.length > 0 ? `已完成 ${todayWorkouts.length} 次` : '未完成'}
+              {todayWorkouts.length > 0 ? t('home.cards.doneTimes', { n: todayWorkouts.length }) : t('home.cards.notDone')}
             </p>
             {todayWorkouts.length > 0 && (
-              <p className="text-xs text-gray-400 mt-1">{todayWorkouts.map(w => w.type).join('、')}</p>
+              <p className="text-xs text-gray-400 mt-1">{todayWorkouts.map(w => w.type).join(t('home.cards.listSeparator'))}</p>
             )}
           </div>
           <div className="bg-white rounded-2xl p-4">
-            <p className="text-xs text-gray-400 mb-1">今日饮食进度</p>
+            <p className="text-xs text-gray-400 mb-1">{t('home.cards.todayFood')}</p>
             <p className={`text-sm font-semibold ${todayMealCount > 0 ? 'text-black' : 'text-gray-400'}`}>
-              {todayMealCount > 0 ? `已记录 ${todayMealCount} 餐` : '未记录'}
+              {todayMealCount > 0 ? t('home.cards.mealsLogged', { n: todayMealCount }) : t('home.cards.notLogged')}
             </p>
           </div>
           <div className="bg-white rounded-2xl p-4 col-span-2">
-            <p className="text-xs text-gray-400 mb-1">本周训练</p>
+            <p className="text-xs text-gray-400 mb-1">{t('home.cards.week')}</p>
             <p className="text-sm font-semibold">
-              {weekTarget === null ? `${weeklyDone} 次` : `${weeklyDone} / ${weekTarget} 次`}
+              {weekTarget === null
+                ? t('home.cards.weekCount', { done: weeklyDone })
+                : t('home.cards.weekCountOfTarget', { done: weeklyDone, target: weekTarget })}
             </p>
             {weekPct !== null && (
               <div className="mt-2 h-1.5 bg-gray-100 rounded-full overflow-hidden">
@@ -493,9 +512,9 @@ export default function HomePage() {
             {/* Product §27: no fabricated target — prompt to set one instead. */}
             {weekPct === null
               ? <button onClick={() => router.push('/settings')} className="text-xs text-gray-400 mt-1 underline">
-                设置每周训练目标
+                {t('home.cards.setWeeklyTarget')}
               </button>
-              : <p className="text-xs text-gray-400 mt-1">目标仅供参考，休息日可以按需安排</p>
+              : <p className="text-xs text-gray-400 mt-1">{t('home.cards.weekTargetNote')}</p>
             }
           </div>
         </div>
@@ -503,15 +522,15 @@ export default function HomePage() {
         {/* Today nutrition — Product §26 / §16.2 Daily Dashboard nutrition row */}
         <div className="bg-white rounded-2xl p-4">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold">今日营养</h2>
+            <h2 className="text-sm font-semibold">{t('home.nutrition.title')}</h2>
             <button onClick={() => router.push(`/history/${today()}`)}
-              className="text-xs text-gray-400 underline">展开</button>
+              className="text-xs text-gray-400 underline">{t('home.nutrition.expand')}</button>
           </div>
 
           {nutritionLoading ? (
-            <p className="text-sm text-gray-400">读取中…</p>
+            <p className="text-sm text-gray-400">{t('home.loading')}</p>
           ) : nutritionRows.length === 0 ? (
-            <CatNote mood="eating" size={88} title="今天还没有饮食记录" hint="吃完点上面的「记录饮食」，我来帮你算" />
+            <CatNote mood="eating" size={88} title={t('home.nutrition.emptyTitle')} hint={t('home.nutrition.emptyHint')} />
           ) : (
             <div className="space-y-2">
               {nutritionRows.map((row) => {
@@ -519,8 +538,8 @@ export default function HomePage() {
                 if (row.consumed === null) {
                   return (
                     <div key={row.key} className="flex items-baseline justify-between">
-                      <span className="text-xs text-gray-500">{row.label}</span>
-                      <span className="text-sm text-gray-400">资料不完整</span>
+                      <span className="text-xs text-gray-500">{nutrientLabel(row)}</span>
+                      <span className="text-sm text-gray-400">{t('home.nutrition.incomplete')}</span>
                     </div>
                   )
                 }
@@ -529,25 +548,25 @@ export default function HomePage() {
                   // Product §27: show consumed; never a fabricated target.
                   return (
                     <div key={row.key} className="flex items-baseline justify-between">
-                      <span className="text-xs text-gray-500">{row.label}</span>
+                      <span className="text-xs text-gray-500">{nutrientLabel(row)}</span>
                       <span className="text-sm text-gray-700">
                         {consumed} {row.unit}
-                        <span className="ml-2 text-xs text-gray-400">未设目标</span>
+                        <span className="ml-2 text-xs text-gray-400">{t('home.nutrition.noTarget')}</span>
                       </span>
                     </div>
                   )
                 }
-                // Product §4.2: over-target stays visible as "已超出", not clamped.
+                // Product §4.2: over-target stays visible as an "over by" note, not clamped.
                 const over = (row.remaining ?? 0) < 0
                 return (
                   <div key={row.key} className="flex items-baseline justify-between">
-                    <span className="text-xs text-gray-500">{row.label}</span>
+                    <span className="text-xs text-gray-500">{nutrientLabel(row)}</span>
                     <span className="text-sm text-gray-700">
                       {consumed}
                       <span className="text-gray-400"> / {round(row.target, digits)} {row.unit}</span>
                       {over && (
                         <span className="ml-2 text-xs text-amber-600">
-                          已超出 {round(Math.abs(row.remaining ?? 0), digits)}
+                          {t('home.nutrition.over', { n: round(Math.abs(row.remaining ?? 0), digits) })}
                         </span>
                       )}
                     </span>
@@ -557,7 +576,7 @@ export default function HomePage() {
               {nutritionRows.every((row) => row.target === null) && (
                 <button onClick={() => router.push('/settings')}
                   className="mt-1 text-xs text-black underline">
-                  设置每日热量目标
+                  {t('home.nutrition.setCalorieTarget')}
                 </button>
               )}
             </div>
@@ -567,22 +586,22 @@ export default function HomePage() {
         {/* Recovery Check-in prompt — Product §7: max once per local day */}
         {recoveryPrompt?.should_prompt && !recoveryOpen && (
           <div className="bg-white rounded-2xl p-4">
-            <h2 className="text-sm font-semibold">今天状态怎么样？</h2>
+            <h2 className="text-sm font-semibold">{t('home.recovery.title')}</h2>
             <p className="mt-1 text-xs leading-5 text-gray-400">
-              每天最多问一次，可以跳过，不影响记录训练或饮食。
+              {t('home.recovery.intro')}
             </p>
             <button onClick={() => setRecoveryOpen(true)}
               className="mt-3 w-full rounded-xl bg-black py-2.5 text-sm font-medium text-white">
-              记录今天的状态
+              {t('home.recovery.open')}
             </button>
           </div>
         )}
 
         {recoveryOpen && (
           <div className="bg-white rounded-2xl p-4">
-            <h2 className="text-sm font-semibold">今天状态怎么样？</h2>
+            <h2 className="text-sm font-semibold">{t('home.recovery.title')}</h2>
 
-            <p className="mt-3 text-xs text-gray-500">昨晚睡得好吗？</p>
+            <p className="mt-3 text-xs text-gray-500">{t('home.recovery.sleep')}</p>
             <div className="mt-1.5 flex gap-1.5">
               {[1, 2, 3, 4, 5].map((value) => (
                 <button key={value} type="button" onClick={() => setRecoverySleep(value)}
@@ -597,7 +616,7 @@ export default function HomePage() {
             {/* Product §7: with no training history the recovery question is optional. */}
             {hasEverTrained && (
               <>
-                <p className="mt-3 text-xs text-gray-500">上一次训练后恢复得怎么样？</p>
+                <p className="mt-3 text-xs text-gray-500">{t('home.recovery.postWorkout')}</p>
                 <div className="mt-1.5 flex gap-1.5">
                   {[1, 2, 3, 4, 5].map((value) => (
                     <button key={value} type="button" onClick={() => setRecoveryPostWorkout(value)}
@@ -614,15 +633,15 @@ export default function HomePage() {
             <div className="mt-3 flex gap-2">
               <button onClick={() => submitRecoveryCheckin(false)} disabled={recoverySaving}
                 className="flex-1 rounded-xl bg-black py-2.5 text-sm font-medium text-white disabled:opacity-50">
-                {recoverySaving ? '保存中…' : '完成'}
+                {recoverySaving ? t('home.recovery.saving') : t('home.recovery.done')}
               </button>
               <button onClick={() => submitRecoveryCheckin(true)} disabled={recoverySaving}
                 className="rounded-xl border border-gray-200 px-4 py-2.5 text-sm text-gray-600 disabled:opacity-50">
-                跳过
+                {t('home.recovery.skip')}
               </button>
             </div>
             <p className="mt-2 text-xs text-gray-400">
-              这只是你的主观感受，不会自动改变训练安排。
+              {t('home.recovery.note')}
             </p>
           </div>
         )}
@@ -630,9 +649,9 @@ export default function HomePage() {
         {/* Today AI summary */}
         <div className="bg-white rounded-2xl p-4">
           <div className="flex items-center justify-between mb-2">
-            <h2 className="text-sm font-semibold">今日复盘</h2>
+            <h2 className="text-sm font-semibold">{t('home.review.title')}</h2>
             <button onClick={() => router.push(`/history/${today()}`)}
-              className="text-xs text-gray-400 underline">查看详情</button>
+              className="text-xs text-gray-400 underline">{t('home.review.details')}</button>
           </div>
           <CoachCard
             state={(() => {
@@ -643,8 +662,8 @@ export default function HomePage() {
             headline={aiSummary}
             bullets={aiFirstEvidence ? [aiFirstEvidence] : []}
             actions={aiFirstAction ? [aiFirstAction] : []}
-            loadingText="AI 分析中…"
-            insufficientText="暂无数据，去记录今天的第一条吧～"
+            loadingText={t('home.review.loading')}
+            insufficientText={t('home.review.empty')}
             onRetry={() => loadAiSummary(true)}
             retrying={aiRetrying}
           />
@@ -653,7 +672,7 @@ export default function HomePage() {
         {/* Weight trend */}
         <div className="bg-white rounded-2xl p-4">
           <div className="flex justify-between items-center mb-3">
-            <h2 className="text-sm font-semibold">体重趋势</h2>
+            <h2 className="text-sm font-semibold">{t('home.weight.title')}</h2>
             {currentWeight && <p className="text-sm font-bold">{currentWeight} kg</p>}
           </div>
           {weightData.length >= 2 ? (
@@ -670,9 +689,9 @@ export default function HomePage() {
             </ResponsiveContainer>
           ) : (
             <div className="text-center py-4">
-              <p className="text-sm text-gray-400">暂无数据</p>
+              <p className="text-sm text-gray-400">{t('home.weight.empty')}</p>
               <button onClick={() => router.push('/body-metrics')} className="mt-2 text-xs text-black underline">
-                记录身体数据
+                {t('home.weight.log')}
               </button>
             </div>
           )}
@@ -680,17 +699,17 @@ export default function HomePage() {
 
         {/* Quick actions */}
         <div className="bg-white rounded-2xl p-4">
-          <h2 className="text-sm font-semibold mb-3">快捷入口</h2>
+          <h2 className="text-sm font-semibold mb-3">{t('home.quick.title')}</h2>
           <div className="grid grid-cols-3 gap-2">
             {[
-              { label: '记录自由训练', href: '/workout', icon: '🏋️' },
-              { label: '记录饮食', href: '/food', icon: '🥗' },
-              { label: '记录身体', href: '/body-metrics', icon: '📏' },
-            ].map(({ label, href, icon }) => (
+              { labelKey: 'home.quick.freeWorkout', href: '/workout', icon: '🏋️' },
+              { labelKey: 'home.quick.food', href: '/food', icon: '🥗' },
+              { labelKey: 'home.quick.body', href: '/body-metrics', icon: '📏' },
+            ].map(({ labelKey, href, icon }) => (
               <Link key={href} href={href} prefetch
                 className="flex flex-col items-center rounded-xl border border-gray-100 py-3 text-xs text-gray-600 transition active:scale-[0.98] active:bg-gray-50">
                 <span className="text-xl mb-1">{icon}</span>
-                {label}
+                {t(labelKey as MessageKey)}
               </Link>
             ))}
           </div>

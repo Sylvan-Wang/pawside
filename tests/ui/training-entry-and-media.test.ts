@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises'
 import { describe, expect, it } from 'vitest'
+import { zh } from '@/lib/i18n/messages/zh'
 
 describe('training entry semantics and exercise media contrast', () => {
   it('keeps Method activation separate from free workout recording', async () => {
@@ -8,9 +9,12 @@ describe('training entry semantics and exercise media contrast', () => {
       readFile('app/workout/page.tsx', 'utf8'),
     ])
 
-    expect(home).toContain("{ label: '记录自由训练', href: '/workout'")
-    expect(home).toContain("? '启用训练方法'")
-    expect(home).not.toContain('开始自由训练')
+    // Home copy lives in the i18n dictionary (lib/i18n/messages/zh.ts) since the English UI work.
+    expect(home).toContain("{ labelKey: 'home.quick.freeWorkout', href: '/workout'")
+    expect(zh.home.quick.freeWorkout).toBe('记录自由训练')
+    expect(home).toContain("? t('home.method.enable')")
+    expect(zh.home.method.enable).toBe('启用训练方法')
+    expect(JSON.stringify(zh.home)).not.toContain('开始自由训练')
     expect(home).toContain('<Link key={href} href={href} prefetch')
     expect(workout).toContain('title="记录自由训练"')
   })
