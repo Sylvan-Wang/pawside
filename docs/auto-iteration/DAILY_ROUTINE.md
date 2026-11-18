@@ -30,6 +30,13 @@ xxa 工作日没法上线，周末集中处理。所以：
 3. 当周计划 issue（标签 `weekly-plan`，最近一个打开的）
 4. 涉及 Coach AI 或小爪时，按 `CLAUDE.md` 的指引再读对应文档
 
+## 训练与饮食研究
+
+从 `signals-data` 分支读取 [`research/LOG.md`](https://github.com/Sylvan-Wang/pawside/blob/signals-data/research/LOG.md) 和有新增的当日简报。若当天尚未更新，查看最近一个有研究收录的日期，用 DOI / PMID 核对是否已经处理。工作日随信号分诊，周五规划时纳入相关候选。若无合格新增，跳过。
+
+- **训练方法提案**：同时注明研究人群、证据强度、局限、对 A/B 的直接性、Pawside 待验证假设和衡量指标。正式采用按 evidence registry 和方法发布流程。
+- **食谱与 SEO**：可按现有计划做食谱候选或内容草稿，食谱核验按 `docs/coach/RECIPES_RUNBOOK.md`，SEO 草稿放 `docs/auto-iteration/drafts/`。核对研究是否直接测试食谱，保留原始来源、适用边界和发布审核。
+
 ## 不灌水规则（所有模式都适用）
 
 1. 每一条进展都必须附可查的产物：PR、commit、issue、草稿文件的链接。没有产物的不写。
