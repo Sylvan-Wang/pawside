@@ -2,8 +2,11 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import CatMascot from '@/components/CatMascot'
 import { splitLinks } from '@/lib/coach-chat/links'
-import { dateHeading, newClientId, replaceCard, withDateHeadings } from '@/lib/coach-chat/client'
+import { dateHeading, newClientId, replaceCard } from '@/lib/coach-chat/client'
 import type { CardView, ChatMessageView } from '@/lib/coach-chat/types'
+import { addPhoto } from '@/lib/photos/client'
+import { CATEGORY_LABEL, MAX_PHOTOS_PER_PICK, PICKABLE_CATEGORIES, type PhotoCategory, type PhotoView } from '@/lib/photos/constants'
+import { mergeTimeline } from '@/lib/photos/timeline'
 import { dayCacheKeys, formatLocalDateKey } from '@/lib/utils'
 import ChatCard from './ChatCard'
 
@@ -13,7 +16,13 @@ type UiMessage = ChatMessageView & {
   retry?: { clientMessageId: string; text: string; answer?: { draftId: string; optionIndex: number } }
 }
 
-const INTRO = '嗨，我是小爪。拍照、说一句，就能记饮食和运动；也可以问我吃什么。'
+const INTRO = '嗨，我是小爪。说一句就能记饮食、运动和体重，也可以问我吃什么。照片可以存进你的相册。'
+
+/** A photo sent in this chat. Local ones are still uploading (or failed, kept for a retry with the same id). */
+type ChatPhoto = PhotoView & { local?: 'uploading' | 'failed'; file?: Blob; clientRequestId?: string }
+
+const photoNote = (category: PhotoCategory) =>
+  `已存进「设置 → 我的相册 · ${CATEGORY_LABEL[category]}」。我现在还看不懂照片内容${category === 'meal' ? '，想记这一餐的话，用一句话告诉我吃了什么就好' : ''}。`
 const QUICK_ACTIONS: Array<{ label: string; fill?: string; send?: string }> = [
   { label: '记一餐', fill: '我吃了' },
   { label: '记运动', fill: '我做了' },
@@ -63,6 +72,10 @@ export default function CoachPanel({ onClose }: { onClose: () => void }) {
   const [sending, setSending] = useState(false)
   const [busyCards, setBusyCards] = useState<Set<string>>(new Set())
   const [notice, setNotice] = useState<string | null>(null)
+  const [photos, setPhotos] = useState<ChatPhoto[]>([])
+  const [picked, setPicked] = useState<File[]>([])
+  const [uploading, setUploading] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
   const saved = useRef(false)
   const listRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -97,6 +110,12 @@ export default function CoachPanel({ onClose }: { onClose: () => void }) {
       `/api/coach/conversations/${conversation.data.conversation_id}/messages?time_zone=${encodeURIComponent(timeZone())}`,
     )
     if (!history.ok) { setNotice(history.message); setState('error'); return }
+    // Photos sent in this chat live in the album; a failure here only hides them from the chat.
+    const oldest = history.data.messages[0]?.created_at
+    const album = await api<{ photos: PhotoView[] }>(
+      `/api/photos?conversation_id=${conversation.data.conversation_id}&limit=100${history.data.has_more && oldest ? `&after=${encodeURIComponent(oldest)}` : ''}`,
+    )
+    setPhotos(album.ok ? album.data.photos : [])
     setConversationId(conversation.data.conversation_id)
     setMessages(history.data.messages)
     setHasMore(history.data.has_more)
@@ -126,6 +145,11 @@ export default function CoachPanel({ onClose }: { onClose: () => void }) {
       `/api/coach/conversations/${conversationId}/messages?before=${encodeURIComponent(first.created_at)}&time_zone=${encodeURIComponent(timeZone())}`,
     )
     if (!older.ok) { setNotice(older.message); return }
+    const newOldest = older.data.messages[0]?.created_at
+    const olderPhotos = await api<{ photos: PhotoView[] }>(
+      `/api/photos?conversation_id=${conversationId}&limit=100&before=${encodeURIComponent(first.created_at)}${older.data.has_more && newOldest ? `&after=${encodeURIComponent(newOldest)}` : ''}`,
+    )
+    if (olderPhotos.ok) setPhotos((current) => [...olderPhotos.data.photos, ...current])
     setMessages((current) => [...older.data.messages, ...current])
     setHasMore(older.data.has_more)
   }
@@ -227,9 +251,69 @@ export default function CoachPanel({ onClose }: { onClose: () => void }) {
     if (label) send(label, { draftId: card.draft_id, optionIndex })
   }
 
+  function onPick(event: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(event.target.files ?? [])
+    event.target.value = ''
+    if (files.length === 0) return
+    if (files.length > MAX_PHOTOS_PER_PICK) setNotice(`一次最多 ${MAX_PHOTOS_PER_PICK} 张，先存前 ${MAX_PHOTOS_PER_PICK} 张。`)
+    setPicked(files.slice(0, MAX_PHOTOS_PER_PICK))
+  }
+
+  async function uploadOne(photo: ChatPhoto): Promise<boolean> {
+    if (!conversationId || !photo.file || !photo.clientRequestId) return false
+    try {
+      const stored = await addPhoto(photo.file, {
+        category: photo.category, source: 'chat', conversationId, clientRequestId: photo.clientRequestId,
+      })
+      setPhotos((current) => current.map((p) => (p.id === photo.id ? stored : p)))
+      if (photo.url?.startsWith('blob:')) URL.revokeObjectURL(photo.url)
+      return true
+    } catch (reason) {
+      setPhotos((current) => current.map((p) => (p.id === photo.id ? { ...p, local: 'failed' } : p)))
+      setNotice(reason instanceof Error ? reason.message : '照片没存上，请再试一次')
+      return false
+    }
+  }
+
+  async function storePicked(category: PhotoCategory) {
+    if (!conversationId || picked.length === 0) return
+    const now = new Date().getTime()
+    const pending: ChatPhoto[] = picked.map((file, index) => {
+      const clientRequestId = newClientId()
+      return {
+        id: `local-photo-${clientRequestId}`, category, source: 'chat', conversation_id: conversationId,
+        content_type: 'image/jpeg', width: null, height: null, local_date: today, note: null,
+        created_at: new Date(now + index).toISOString(), url: URL.createObjectURL(file),
+        local: 'uploading', file, clientRequestId,
+      }
+    })
+    setPicked([])
+    setNotice(null)
+    setPhotos((current) => [...current, ...pending])
+    setUploading(true)
+    let stored = 0
+    // One at a time: phones on a weak connection do better than with nine parallel uploads.
+    for (const photo of pending) if (await uploadOne(photo)) stored += 1
+    setUploading(false)
+    if (stored > 0) {
+      setMessages((current) => [...current, {
+        id: `note-photo-${now}`, role: 'assistant', text: photoNote(category), local_date: today,
+        created_at: new Date().toISOString(), cards: [], local: 'note',
+      }])
+    }
+  }
+
+  async function retryPhoto(photo: ChatPhoto) {
+    if (uploading) return
+    setPhotos((current) => current.map((p) => (p.id === photo.id ? { ...p, local: 'uploading' } : p)))
+    setUploading(true)
+    await uploadOne(photo)
+    setUploading(false)
+  }
+
   async function clearConversation() {
     if (!conversationId) return
-    if (!window.confirm('清空这段对话？已经保存的饮食、运动和体重记录不会被删除。')) return
+    if (!window.confirm('清空这段对话？已经保存的饮食、运动和体重记录，以及相册里的照片，都不会被删除。')) return
     const result = await api<{ deleted: boolean }>(`/api/coach/conversations/${conversationId}`, { method: 'DELETE' })
     if (!result.ok) { setNotice(result.message); return }
     await load()
@@ -248,7 +332,18 @@ export default function CoachPanel({ onClose }: { onClose: () => void }) {
     inputRef.current?.focus()
   }
 
-  const rows = withDateHeadings(messages)
+  // Messages and chat photos in time order, with a date heading before each new local day.
+  const rows: Array<
+    | { type: 'date'; date: string }
+    | { type: 'message'; message: UiMessage }
+    | { type: 'photos'; photos: ChatPhoto[] }
+  > = []
+  let lastDate: string | null = null
+  for (const item of mergeTimeline(messages, photos)) {
+    const date = item.kind === 'message' ? item.message.local_date : item.photos[0].local_date
+    if (date !== lastDate) { rows.push({ type: 'date', date }); lastDate = date }
+    rows.push(item.kind === 'message' ? { type: 'message', message: item.message } : { type: 'photos', photos: item.photos })
+  }
   const panelStyle = viewport ? { height: viewport.height, top: viewport.top } : { top: 0, bottom: 0 }
 
   return (
@@ -280,7 +375,7 @@ export default function CoachPanel({ onClose }: { onClose: () => void }) {
             {hasMore && (
               <button type="button" onClick={() => void loadOlder()} className="mx-auto mb-3 block text-xs text-gray-400">看更早的消息</button>
             )}
-            {messages.length === 0 && (
+            {rows.length === 0 && (
               <div className="py-6 text-center">
                 <div className="mx-auto w-fit"><CatMascot mood="wave" size={72} /></div>
                 <p className="mx-auto mt-2 max-w-[18rem] text-sm text-gray-600">{INTRO}</p>
@@ -290,7 +385,10 @@ export default function CoachPanel({ onClose }: { onClose: () => void }) {
               if (row.type === 'date') {
                 return <p key={`d-${row.date}`} className="my-3 text-center text-[11px] text-gray-400">{dateHeading(row.date, today)}</p>
               }
-              const message = row.message as UiMessage
+              if (row.type === 'photos') {
+                return <PhotoBubble key={`p-${row.photos[0].id}`} photos={row.photos} onRetry={(photo) => void retryPhoto(photo)} />
+              }
+              const message = row.message
               const mine = message.role === 'user'
               return (
                 <div key={message.id} className={`mb-3 flex ${mine ? 'justify-end' : 'justify-start'}`}>
@@ -329,6 +427,21 @@ export default function CoachPanel({ onClose }: { onClose: () => void }) {
       {notice && state === 'ready' && <p className="bg-red-50 px-3 py-1.5 text-xs text-red-600" role="status">{notice}</p>}
 
       <footer className="border-t border-gray-100 bg-white px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2">
+        {picked.length > 0 && (
+          <div className="mb-2 rounded-2xl bg-gray-50 p-2.5" role="group" aria-label="选择相册">
+            <p className="text-xs text-gray-700">{picked.length} 张照片，存到哪个相册？</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {PICKABLE_CATEGORIES.map((category) => (
+                <button key={category} type="button" onClick={() => void storePicked(category)}
+                  className="rounded-full bg-black px-3 py-1 text-xs text-white">
+                  {CATEGORY_LABEL[category]}
+                </button>
+              ))}
+              <button type="button" onClick={() => setPicked([])} className="rounded-full border border-gray-200 px-3 py-1 text-xs text-gray-500">取消</button>
+            </div>
+            <p className="mt-1.5 text-[11px] text-gray-400">照片只存进你自己的相册，不会发给 AI，小爪也不会看照片内容。</p>
+          </div>
+        )}
         <div className="mb-2 flex gap-2 overflow-x-auto" aria-label="快捷操作">
           {QUICK_ACTIONS.map((action) => (
             <button
@@ -343,6 +456,16 @@ export default function CoachPanel({ onClose }: { onClose: () => void }) {
           ))}
         </div>
         <div className="flex items-end gap-2">
+          <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" multiple hidden onChange={onPick} />
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            disabled={state !== 'ready' || uploading}
+            aria-label="上传照片"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-gray-200 text-lg disabled:opacity-40"
+          >
+            📷
+          </button>
           <textarea
             ref={inputRef}
             value={text}
@@ -364,6 +487,39 @@ export default function CoachPanel({ onClose }: { onClose: () => void }) {
           </button>
         </div>
       </footer>
+    </div>
+  )
+}
+
+function PhotoBubble({ photos, onRetry }: { photos: Array<PhotoView & { local?: 'uploading' | 'failed' }>; onRetry: (photo: PhotoView) => void }) {
+  const single = photos.length === 1
+  const categories = [...new Set(photos.map((photo) => CATEGORY_LABEL[photo.category]))].join('、')
+  return (
+    <div className="mb-3 flex justify-end">
+      <div className="max-w-[85%]">
+        <div className={single ? 'w-44' : photos.length === 2 || photos.length === 4 ? 'grid w-44 grid-cols-2 gap-1' : 'grid w-60 grid-cols-3 gap-1'}>
+          {photos.map((photo) => (
+            <div key={photo.id} className={`relative overflow-hidden rounded-xl bg-gray-200 ${single ? '' : 'aspect-square'}`}>
+              {photo.url ? (
+                <a href={photo.local ? undefined : photo.url} target="_blank" rel="noopener noreferrer" aria-label="查看大图">
+                  {/* eslint-disable-next-line @next/next/no-img-element -- short-lived signed URLs; next/image would cache them */}
+                  <img src={photo.url} alt={`${CATEGORY_LABEL[photo.category]}照片`}
+                    className={`${single ? 'max-h-60 w-full object-cover' : 'h-full w-full object-cover'} ${photo.local === 'uploading' ? 'opacity-50' : ''}`} />
+                </a>
+              ) : (
+                <div className="flex h-full min-h-20 items-center justify-center text-[11px] text-gray-400">暂时加载不出</div>
+              )}
+              {photo.local === 'failed' && (
+                <button type="button" onClick={() => onRetry(photo)}
+                  className="absolute inset-0 flex items-center justify-center bg-black/50 text-xs text-white">没存上 · 重试</button>
+              )}
+            </div>
+          ))}
+        </div>
+        <p className="mt-1 text-right text-[11px] text-gray-400">
+          {photos.some((photo) => photo.local === 'uploading') ? '正在存进相册…' : `相册 · ${categories}`}
+        </p>
+      </div>
     </div>
   )
 }

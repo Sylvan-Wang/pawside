@@ -1,4 +1,5 @@
 import { apiError } from '@/lib/api/response'
+import { purgeUserPhotos } from '@/lib/photos/store'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
@@ -7,7 +8,8 @@ import { NextResponse } from 'next/server'
  * Permanently deletes the signed-in user's account and all of their data.
  *
  * The auth user is removed with the service-role key; every user table cascades
- * from it (see lib/account/user-data.ts). The caller must type their own email as
+ * from it (see lib/account/user-data.ts). Album files live in Storage, which does
+ * not cascade, so they are removed first; if that fails nothing is deleted. The caller must type their own email as
  * confirmation, so a stray request cannot delete anything.
  */
 export async function POST(request: Request) {
@@ -27,6 +29,13 @@ export async function POST(request: Request) {
   const admin = createAdminClient()
   if (!admin) {
     return apiError('DATABASE_ERROR', '暂时无法删除账号，请发邮件联系我们处理', 503)
+  }
+
+  try {
+    await purgeUserPhotos(admin, user.id)
+  } catch (reason) {
+    console.error('[account] photo purge failed', reason instanceof Error ? reason.message : reason)
+    return apiError('DATABASE_ERROR', '删除相册照片时出错，账号没有被删除，请稍后再试或联系我们', 500)
   }
 
   const { error: deleteError } = await admin.auth.admin.deleteUser(user.id)
