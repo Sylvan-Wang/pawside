@@ -1,6 +1,6 @@
 // 中文字典：现有界面上的原文，原样搬进来。中文界面以它为准，改这里就是改线上中文文案。
 // 分组照 docs/i18n/batch1-strings.md 第 6 节：common（共用组件、lib 文案）、home、today、session、food。
-// 已搬：底部导航、语言设置、首页（含首页上的教练卡片、新手导览、训练日名、营养行名）。
+// 已搬：底部导航、语言设置、首页（含首页上的教练卡片、新手导览、训练日名、营养行名）、今日训练（含动作示意组件；动作英文名在 ../exercise-names.ts）。
 // 其余页面在批 1 后续 PR 里逐页搬。
 
 export const zh = {
@@ -24,6 +24,11 @@ export const zh = {
       basic: '基础总结 · AI 反馈暂时没有生成',
       retry: '重试',
       retrying: '重试中…',
+    },
+    // components/workout/ExerciseMotion.tsx
+    exerciseMotion: {
+      frameAlt: '{name}动作示意，第 {n} 帧',
+      approximate: '近似动作示意',
     },
     // lib/split-labels.ts 的兜底训练日名
     splits: {
@@ -86,6 +91,48 @@ export const zh = {
         },
       },
     },
+  },
+  // app/training/today/page.tsx
+  today: {
+    title: '训练计划',
+    dayNavLabel: '训练日导航',
+    optional: '可选',
+    dayLabel: 'Day {n}',
+    status: {
+      completed: '已完成',
+      inProgress: '进行中',
+      notGenerated: '未生成',
+      notStarted: '未开始',
+    },
+    setTypes: {
+      warmup: '热身',
+      working: '正式',
+      failure: '力竭',
+      rest_pause: '暂停组',
+      backoff: '降重',
+      other: '其他',
+    },
+    loading: '正在读取训练计划…',
+    loadFailed: '暂时无法读取训练计划',
+    loadFailedShort: '加载失败',
+    notEnrolledMessage: '尚未启用训练方法',
+    notEnrolledTitle: '还没有启用训练方法',
+    notEnrolledBody: '{message}。启用后即可查看并执行训练日。',
+    backToEnable: '返回首页启用',
+    recoveryNotice: '当前还有一条{split}训练未完成。你可以继续浏览这个训练日，但开始新训练前需要先处理当前训练。',
+    headerMeta: 'Day {day} · 第 {cycle} 轮',
+    howLong: '今天大概想练多久？',
+    howLongNote: '实际用时会受休息和器械等待影响。',
+    starting: '正在开始…',
+    continueSplit: '继续当前{split}训练',
+    start: '开始这个训练日',
+    startFailed: '暂时无法开始训练',
+    exerciseN: '动作 {n}',
+    noMedia: '此动作尚无已登记素材。',
+    setLine: '第 {n} 组 · {type}',
+    repsTbd: '次数待定',
+    repsRange: '{min}–{max} 次',
+    reps: '{n} 次',
   },
   // app/home/page.tsx
   home: {

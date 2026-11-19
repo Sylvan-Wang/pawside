@@ -1,17 +1,19 @@
 import { formatPace, kindForName } from './cardio'
+import type { Locale } from './i18n'
 
 // Display helpers for time-based and distance sets, and for the exercise lines
 // stored in workout_logs.exercises (both the legacy {sets, reps, weight} shape and
 // the Method shape {sets: [{set, weight_kg, reps, rir, duration_seconds, distance_m}]}).
 
-export function formatDurationSeconds(seconds: number): string {
-  if (seconds < 120) return `${seconds} 秒`
-  const minutes = seconds / 60
-  return `${Math.round(minutes * 10) / 10} 分钟`
+export function formatDurationSeconds(seconds: number, locale: Locale = 'zh'): string {
+  if (seconds < 120) return locale === 'en' ? `${seconds} sec` : `${seconds} 秒`
+  const minutes = Math.round((seconds / 60) * 10) / 10
+  return locale === 'en' ? `${minutes} min` : `${minutes} 分钟`
 }
 
-export function formatDistanceMeters(meters: number): string {
-  return `${Math.round((meters / 1000) * 100) / 100} 公里`
+export function formatDistanceMeters(meters: number, locale: Locale = 'zh'): string {
+  const km = Math.round((meters / 1000) * 100) / 100
+  return locale === 'en' ? `${km} km` : `${km} 公里`
 }
 
 interface TimedTarget {
@@ -21,10 +23,10 @@ interface TimedTarget {
 }
 
 /** "60 秒", "30 分钟 · 5 公里", or null when the planned set is a reps set. */
-export function describeTimedTarget(set: TimedTarget): string | null {
+export function describeTimedTarget(set: TimedTarget, locale: Locale = 'zh'): string | null {
   const parts: string[] = []
-  if (set.target_duration_seconds) parts.push(formatDurationSeconds(set.target_duration_seconds))
-  if (set.target_distance_m) parts.push(formatDistanceMeters(Number(set.target_distance_m)))
+  if (set.target_duration_seconds) parts.push(formatDurationSeconds(set.target_duration_seconds, locale))
+  if (set.target_distance_m) parts.push(formatDistanceMeters(Number(set.target_distance_m), locale))
   return parts.length > 0 ? parts.join(' · ') : null
 }
 

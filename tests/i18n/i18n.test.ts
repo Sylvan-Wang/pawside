@@ -135,3 +135,56 @@ describe('首页（批 1 第 1 页）', () => {
     }
   })
 })
+
+describe('今日训练（批 1 第 2 页）', () => {
+  const visible = (src: string) =>
+    src
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/\{\/\*[\s\S]*?\*\/\}/g, '')
+      .split('\n')
+      .filter((line) => !line.trim().startsWith('//'))
+      .join('\n')
+
+  it('今日训练页和动作示意组件的界面文字不再写死中文', () => {
+    for (const f of ['app/training/today/page.tsx', 'components/workout/ExerciseMotion.tsx']) {
+      expect(visible(readFileSync(f, 'utf8')), f).not.toMatch(/[一-鿿]/)
+    }
+  })
+
+  it('中文文案和搬之前逐字一致（抽查）', () => {
+    expect(zh.today.title).toBe('训练计划')
+    expect(translate('zh', 'today.headerMeta', { day: 2, cycle: 1 })).toBe('Day 2 · 第 1 轮')
+    expect(translate('zh', 'today.setLine', { n: 1, type: '热身' })).toBe('第 1 组 · 热身')
+    expect(translate('zh', 'today.repsRange', { min: 8, max: 12 })).toBe('8–12 次')
+    expect(translate('zh', 'today.continueSplit', { split: '推' })).toBe('继续当前推训练')
+    expect(translate('zh', 'today.notEnrolledBody', { message: '尚未启用训练方法' }))
+      .toBe('尚未启用训练方法。启用后即可查看并执行训练日。')
+    expect(translate('zh', 'common.exerciseMotion.frameAlt', { name: '杠铃卧推', n: 1 })).toBe('杠铃卧推动作示意，第 1 帧')
+  })
+
+  it('目标说明：中文照旧用方法摘要；英文按组次重写，不露中文', async () => {
+    const { friendlyTargetSummary } = await import('@/lib/training-copy')
+    const sets = [{ target_reps_min: 8, target_reps_max: 12 }, { target_reps_min: 8, target_reps_max: 12 }]
+    expect(friendlyTargetSummary('3 组 8–12 次', sets)).toBe('3 组 8–12 次')
+    expect(friendlyTargetSummary(null, sets)).toBe('2 组 × 8–12 次')
+    expect(friendlyTargetSummary('3 组 8–12 次', sets, 'en')).toBe('2 sets × 8–12 reps')
+    expect(friendlyTargetSummary(null, [{ target_duration_seconds: 60 }], 'en')).toBe('60 sec')
+    expect(friendlyTargetSummary(null, [{ target_reps_min: null }], 'en')).toBe('1 set')
+  })
+
+  it('时长、距离：中文不变，英文用 sec / min / km', async () => {
+    const { describeTimedTarget } = await import('@/lib/workout-log-summary')
+    expect(describeTimedTarget({ target_duration_seconds: 1800, target_distance_m: 5000 })).toBe('30 分钟 · 5 公里')
+    expect(describeTimedTarget({ target_duration_seconds: 1800, target_distance_m: 5000 }, 'en')).toBe('30 min · 5 km')
+    expect(describeTimedTarget({ target_duration_seconds: 45 }, 'en')).toBe('45 sec')
+  })
+
+  it('动作英文名：53 个都有，没有中文残留；中文模式原样；查不到用中文原名', async () => {
+    const { EXERCISE_NAMES_EN, exerciseDisplayName } = await import('@/lib/i18n/exercise-names')
+    expect(Object.keys(EXERCISE_NAMES_EN)).toHaveLength(53)
+    for (const name of Object.values(EXERCISE_NAMES_EN)) expect(name).not.toMatch(/[一-鿿]/)
+    expect(exerciseDisplayName('杠铃卧推')).toBe('杠铃卧推')
+    expect(exerciseDisplayName('杠铃卧推', 'en')).toBe('Barbell Bench Press')
+    expect(exerciseDisplayName('没登记的动作', 'en')).toBe('没登记的动作')
+  })
+})

@@ -1,3 +1,4 @@
+import { zh } from '../../lib/i18n/messages/zh'
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { requiredExerciseCount, isSessionMinutes, SESSION_MINUTE_OPTIONS, effectiveRequiredExerciseCount } from '../../lib/training-duration'
@@ -234,10 +235,13 @@ describe('Minimum P1 UI contract', () => {
   })
 
   it('offers the duration choice before starting and while training', () => {
-    expect(todayPage).toContain('今天大概想练多久？')
+    // 界面文字搬进了字典（lib/i18n），中文逐字不变
+    expect(todayPage).toContain("t('today.howLong')")
+    expect(zh.today.howLong).toBe('今天大概想练多久？')
     expect(todayPage).toContain('SESSION_MINUTE_OPTIONS.map')
     expect(todayPage).toContain('preferred_session_minutes')
-    expect(todayPage).toContain('实际用时会受休息和器械等待影响')
+    expect(todayPage).toContain("t('today.howLongNote')")
+    expect(zh.today.howLongNote).toBe('实际用时会受休息和器械等待影响。')
     expect(sessionPage).toContain('aria-label="调整本次训练时长"')
     expect(sessionPage).toContain('changeDuration')
   })

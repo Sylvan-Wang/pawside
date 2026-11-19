@@ -2,6 +2,7 @@
 
 import type { ExerciseMedia } from '@/lib/exercise-media'
 import { useEffect, useState } from 'react'
+import { useT } from '@/lib/i18n/use-locale'
 
 interface ExerciseMotionProps {
   name: string
@@ -20,6 +21,7 @@ export default function ExerciseMotion({
   animate = true,
   loading = 'lazy',
 }: ExerciseMotionProps) {
+  const t = useT()
   const [frameIndex, setFrameIndex] = useState(0)
 
   useEffect(() => {
@@ -49,7 +51,7 @@ export default function ExerciseMotion({
               height={item.height}
               loading={loading}
               decoding="async"
-              alt={name + '动作示意，第 ' + item.index + ' 帧'}
+              alt={t('common.exerciseMotion.frameAlt', { name, n: item.index })}
               className="aspect-square w-full rounded-lg bg-neutral-800 object-contain"
             />
           ))}
@@ -62,7 +64,7 @@ export default function ExerciseMotion({
           height={frame.height}
           loading={loading}
           decoding="async"
-          alt={name + '动作示意，第 ' + frame.index + ' 帧'}
+          alt={t('common.exerciseMotion.frameAlt', { name, n: frame.index })}
           className={compact
             ? 'mx-auto aspect-square w-full max-w-40 object-contain'
             : 'mx-auto aspect-square w-full max-w-56 object-contain'
@@ -79,7 +81,7 @@ export default function ExerciseMotion({
       <figcaption className="mt-2 text-[11px] leading-5 text-neutral-300">
         <span>{media.provider_name}</span>
         {media.mapping_status === 'candidate' && (
-          <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-amber-800">近似动作示意</span>
+          <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-amber-800">{t('common.exerciseMotion.approximate')}</span>
         )}
       </figcaption>
     </figure>
