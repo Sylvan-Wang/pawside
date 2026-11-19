@@ -225,7 +225,7 @@ export default function AlbumPage() {
             )}
           </>
         )}
-        <p className="mt-6 text-center text-[11px] text-gray-400">照片只有你自己看得到，不会发给 AI。删除账号时会一起删除。</p>
+        <p className="mt-6 text-center text-[11px] text-gray-400">照片只有你自己看得到。只有你在小爪里点「识别这一餐」时，那几张饮食照片才会发给 AI 识别。删除账号时会一起删除。</p>
       </div>
 
       {open && (

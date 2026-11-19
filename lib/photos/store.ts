@@ -184,3 +184,18 @@ export async function purgeUserPhotos(admin: SupabaseClient, userId: string): Pr
   }
   throw new PhotoStoreError('storage', 'too many files to remove in one request')
 }
+
+export async function getPhotosByIds(supabase: SupabaseClient, userId: string, ids: string[]): Promise<PhotoRow[]> {
+  if (ids.length === 0) return []
+  const { data, error } = await supabase.from('user_photos').select(COLUMNS).eq('user_id', userId).in('id', ids)
+  if (error) throw new PhotoStoreError('database', error.message)
+  return (data ?? []) as PhotoRow[]
+}
+
+/** The stored file as a `data:` URL, for the one place that sends a photo to a model (识别这一餐). */
+export async function photoDataUrl(supabase: SupabaseClient, row: PhotoRow): Promise<string> {
+  const { data, error } = await supabase.storage.from(PHOTO_BUCKET).download(row.storage_path)
+  if (error || !data) throw new PhotoStoreError('storage', error?.message ?? 'download returned nothing')
+  const bytes = Buffer.from(await data.arrayBuffer())
+  return `data:${row.content_type};base64,${bytes.toString('base64')}`
+}

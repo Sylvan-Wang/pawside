@@ -25,6 +25,11 @@ export interface StructuredOutputOptions {
   model?: string
   /** Overrides OPENAI_TIMEOUT_MS for this call. */
   timeoutMs?: number
+  /**
+   * Images sent with the input, as `data:image/...;base64,` URLs. Only the
+   * chat's "识别这一餐" passes these (meal photos the user asked to recognize).
+   */
+  images?: string[]
 }
 
 export type OpenAIResult<T> =
@@ -204,7 +209,15 @@ export async function callStructuredOutput<T>(
       body: JSON.stringify({
         model,
         instructions,
-        input,
+        input: options.images?.length
+          ? [{
+              role: 'user',
+              content: [
+                { type: 'input_text', text: input },
+                ...options.images.map((url) => ({ type: 'input_image', image_url: url, detail: 'auto' })),
+              ],
+            }]
+          : input,
         max_output_tokens: maxOutputTokens,
         text: {
           format: {

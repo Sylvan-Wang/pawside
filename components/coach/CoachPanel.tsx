@@ -21,8 +21,10 @@ const INTRO = '嗨，我是小爪。说一句就能记饮食、运动和体重�
 /** A photo sent in this chat. Local ones are still uploading (or failed, kept for a retry with the same id). */
 type ChatPhoto = PhotoView & { local?: 'uploading' | 'failed'; file?: Blob; clientRequestId?: string }
 
-const photoNote = (category: PhotoCategory) =>
-  `已存进「设置 → 我的相册 · ${CATEGORY_LABEL[category]}」。我现在还看不懂照片内容${category === 'meal' ? '，想记这一餐的话，用一句话告诉我吃了什么就好' : ''}。`
+const photoNote = (category: PhotoCategory, canRecognize: boolean) =>
+  `已存进「设置 → 我的相册 · ${CATEGORY_LABEL[category]}」。${category === 'meal'
+    ? canRecognize ? '想记这一餐，可以点照片下面的「让小爪识别这一餐」，或者直接告诉我吃了什么。' : '想记这一餐的话，用一句话告诉我吃了什么就好。'
+    : ''}`
 const QUICK_ACTIONS: Array<{ label: string; fill?: string; send?: string }> = [
   { label: '记一餐', fill: '我吃了' },
   { label: '记运动', fill: '我做了' },
@@ -75,6 +77,7 @@ export default function CoachPanel({ onClose }: { onClose: () => void }) {
   const [photos, setPhotos] = useState<ChatPhoto[]>([])
   const [picked, setPicked] = useState<File[]>([])
   const [uploading, setUploading] = useState(false)
+  const [canRecognize, setCanRecognize] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const saved = useRef(false)
   const listRef = useRef<HTMLDivElement>(null)
@@ -116,6 +119,8 @@ export default function CoachPanel({ onClose }: { onClose: () => void }) {
       `/api/photos?conversation_id=${conversation.data.conversation_id}&limit=100${history.data.has_more && oldest ? `&after=${encodeURIComponent(oldest)}` : ''}`,
     )
     setPhotos(album.ok ? album.data.photos : [])
+    const status = await api<{ photo_recognition?: boolean }>('/api/coach/status')
+    setCanRecognize(status.ok && status.data.photo_recognition === true)
     setConversationId(conversation.data.conversation_id)
     setMessages(history.data.messages)
     setHasMore(history.data.has_more)
@@ -297,10 +302,36 @@ export default function CoachPanel({ onClose }: { onClose: () => void }) {
     setUploading(false)
     if (stored > 0) {
       setMessages((current) => [...current, {
-        id: `note-photo-${now}`, role: 'assistant', text: photoNote(category), local_date: today,
+        id: `note-photo-${now}`, role: 'assistant', text: photoNote(category, canRecognize), local_date: today,
         created_at: new Date().toISOString(), cards: [], local: 'note',
       }])
     }
+  }
+
+  /** 「识别这一餐」: the photos go to the model; the answer is a card to confirm, like a typed meal. */
+  async function recognize(group: PhotoView[]) {
+    if (!conversationId || sending) return
+    const ids = group.filter((photo) => photo.category === 'meal').slice(0, 3).map((photo) => photo.id)
+    if (ids.length === 0) return
+    const clientMessageId = newClientId()
+    const localId = `local-${clientMessageId}`
+    setMessages((current) => [...current, {
+      id: localId, role: 'user', text: `📷 识别这一餐（${ids.length} 张照片）`, local_date: today,
+      created_at: new Date().toISOString(), cards: [], local: 'sending',
+    }])
+    setSending(true)
+    setNotice(null)
+    const result = await api<{ user_message: ChatMessageView; assistant_message: ChatMessageView }>('/api/coach/photo-meal', {
+      method: 'POST',
+      body: JSON.stringify({ conversation_id: conversationId, client_message_id: clientMessageId, photo_ids: ids, time_zone: timeZone() }),
+    })
+    setSending(false)
+    if (result.ok) {
+      setMessages((current) => [...current.filter((m) => m.id !== localId), result.data.user_message, result.data.assistant_message])
+      return
+    }
+    setMessages((current) => current.filter((m) => m.id !== localId))
+    setNotice(result.status === 0 ? '网络好像断了，再点一次「识别这一餐」试试。' : result.message)
   }
 
   async function retryPhoto(photo: ChatPhoto) {
@@ -386,7 +417,14 @@ export default function CoachPanel({ onClose }: { onClose: () => void }) {
                 return <p key={`d-${row.date}`} className="my-3 text-center text-[11px] text-gray-400">{dateHeading(row.date, today)}</p>
               }
               if (row.type === 'photos') {
-                return <PhotoBubble key={`p-${row.photos[0].id}`} photos={row.photos} onRetry={(photo) => void retryPhoto(photo)} />
+                return (
+                  <PhotoBubble
+                    key={`p-${row.photos[0].id}`}
+                    photos={row.photos}
+                    onRetry={(photo) => void retryPhoto(photo)}
+                    onRecognize={canRecognize && !sending ? (group) => void recognize(group) : undefined}
+                  />
+                )
               }
               const message = row.message
               const mine = message.role === 'user'
@@ -439,7 +477,9 @@ export default function CoachPanel({ onClose }: { onClose: () => void }) {
               ))}
               <button type="button" onClick={() => setPicked([])} className="rounded-full border border-gray-200 px-3 py-1 text-xs text-gray-500">取消</button>
             </div>
-            <p className="mt-1.5 text-[11px] text-gray-400">照片只存进你自己的相册，不会发给 AI，小爪也不会看照片内容。</p>
+            <p className="mt-1.5 text-[11px] text-gray-400">
+              {canRecognize ? '照片存进你自己的相册。只有你点「识别这一餐」时，那几张饮食照片才会发给 AI。' : '照片只存进你自己的相册，不会发给 AI。'}
+            </p>
           </div>
         )}
         <div className="mb-2 flex gap-2 overflow-x-auto" aria-label="快捷操作">
@@ -491,8 +531,13 @@ export default function CoachPanel({ onClose }: { onClose: () => void }) {
   )
 }
 
-function PhotoBubble({ photos, onRetry }: { photos: Array<PhotoView & { local?: 'uploading' | 'failed' }>; onRetry: (photo: PhotoView) => void }) {
+function PhotoBubble({ photos, onRetry, onRecognize }: {
+  photos: Array<PhotoView & { local?: 'uploading' | 'failed' }>
+  onRetry: (photo: PhotoView) => void
+  onRecognize?: (photos: PhotoView[]) => void
+}) {
   const single = photos.length === 1
+  const meals = photos.filter((photo) => photo.category === 'meal' && !photo.local)
   const categories = [...new Set(photos.map((photo) => CATEGORY_LABEL[photo.category]))].join('、')
   return (
     <div className="mb-3 flex justify-end">
@@ -519,6 +564,15 @@ function PhotoBubble({ photos, onRetry }: { photos: Array<PhotoView & { local?: 
         <p className="mt-1 text-right text-[11px] text-gray-400">
           {photos.some((photo) => photo.local === 'uploading') ? '正在存进相册…' : `相册 · ${categories}`}
         </p>
+        {onRecognize && meals.length > 0 && (
+          <div className="mt-1 text-right">
+            <button type="button" onClick={() => onRecognize(meals)}
+              className="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs text-gray-700">
+              让小爪识别这一餐{meals.length > 3 ? '（前 3 张）' : ''}
+            </button>
+            <p className="mt-0.5 text-[10px] text-gray-400">点了才会把这几张发给 AI 识别</p>
+          </div>
+        )}
       </div>
     </div>
   )

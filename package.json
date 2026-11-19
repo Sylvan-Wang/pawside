@@ -13,6 +13,7 @@
     "method:validate": "node --no-warnings --experimental-strip-types scripts/method-import/cli.mts",
     "backend:preflight": "node scripts/validate-backend-package.mjs",
     "coach:eval": "node --no-warnings --env-file-if-exists=.env.local --env-file-if-exists=.env.proxy.local --use-env-proxy node_modules/vitest/vitest.mjs run --config vitest.eval.config.mts",
+    "photo:check": "node --no-warnings --env-file-if-exists=.env.local --env-file-if-exists=.env.proxy.local --use-env-proxy --experimental-strip-types scripts/photo-check.mts",
     "ai:smoke": "node --no-warnings --env-file-if-exists=.env.local --env-file-if-exists=.env.proxy.local --use-env-proxy --experimental-strip-types scripts/verify-openai-provider.mts",
     "media:validate": "node scripts/validate-exercise-media.mjs",
     "seed:test-accounts": "node --no-warnings --env-file-if-exists=.env.local --experimental-strip-types scripts/seed-test-accounts.mts"
