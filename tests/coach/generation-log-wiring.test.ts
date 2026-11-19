@@ -10,22 +10,27 @@ vi.mock('../../lib/ai-client.ts', () => ({
     const next = responses.shift()
     if (next === 'PROVIDER_FAIL') return { ok: false, reason: 'upstream_error', model: 'test-model' }
     if (next === 'TRUNCATED') return { ok: false, reason: 'invalid_response', model: 'test-model', detail: 'incomplete:max_output_tokens' }
-    return { ok: true, data: next, model: 'test-model' }
+    return { ok: true, data: next, model: 'test-model', usage: { inputTokens: 900, outputTokens: 640 } }
   }),
 }))
 
 const logCalls: Array<{ status: string; failReason: string | null; attempt: number }> = []
 const detailCalls: Array<string | null> = []
+const tokenCalls: Array<[number | null, number | null]> = []
 let logShouldThrow = false
 
 vi.mock('../../lib/ai/generation-log.ts', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../../lib/ai/generation-log.ts')>()
   return {
     ...actual,
-    logGeneration: vi.fn(async (record: { status: string; failReason?: string | null; failDetail?: string | null; attempt?: number }) => {
+    logGeneration: vi.fn(async (record: {
+      status: string; failReason?: string | null; failDetail?: string | null; attempt?: number
+      tokensIn?: number | null; tokensOut?: number | null
+    }) => {
       if (logShouldThrow) throw new Error('supabase is down')
       logCalls.push({ status: record.status, failReason: record.failReason ?? null, attempt: record.attempt ?? 1 })
       detailCalls.push(record.failDetail ?? null)
+      tokenCalls.push([record.tokensIn ?? null, record.tokensOut ?? null])
       return 'gen-id'
     }),
   }
@@ -57,6 +62,7 @@ describe('spec A0-3 — composeWithEvidence writes ai_generations per attempt', 
     modelCalls.length = 0
     logCalls.length = 0
     detailCalls.length = 0
+    tokenCalls.length = 0
     responses = []
     logShouldThrow = false
   })
@@ -66,6 +72,12 @@ describe('spec A0-3 — composeWithEvidence writes ai_generations per attempt', 
     const result = await composeWithEvidence(baseInput)
     expect(result.ok).toBe(true)
     expect(logCalls).toEqual([{ status: 'ok', failReason: null, attempt: 1 }])
+  })
+
+  it('records token usage on an ok row, so we can see how close a surface runs to its cap', async () => {
+    responses = [output('卧推三组都按计划完成')]
+    await composeWithEvidence(baseInput)
+    expect(tokenCalls).toEqual([[900, 640]])
   })
 
   it('logs a failed row then an ok row across the guard retry', async () => {
@@ -118,5 +130,14 @@ describe('spec A0-3 — composeWithEvidence writes ai_generations per attempt', 
     responses = [output('卧推三组都按计划完成')]
     const result = await composeWithEvidence(baseInput)
     expect(result.ok).toBe(true)
+  })
+})
+
+describe('P0 2026-11-16 — composer output caps leave room for reasoning tokens', () => {
+  it('every composer surface allows at least as many output tokens as the 小爪 planner (1200, no truncation in production)', async () => {
+    const { AI_SCHEMAS } = await import('../../lib/evidence/ai-schemas.ts')
+    for (const bundle of Object.values(AI_SCHEMAS)) {
+      expect(bundle.maxOutputTokens).toBeGreaterThanOrEqual(1200)
+    }
   })
 })
