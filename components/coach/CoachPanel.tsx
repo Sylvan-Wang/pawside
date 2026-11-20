@@ -63,6 +63,8 @@ export default function CoachPanel({ onClose }: { onClose: () => void }) {
   const [sending, setSending] = useState(false)
   const [busyCards, setBusyCards] = useState<Set<string>>(new Set())
   const [notice, setNotice] = useState<string | null>(null)
+  // "You could also ask" chips under the newest reply. Not stored: they disappear on reload or the next send.
+  const [followUps, setFollowUps] = useState<{ messageId: string; items: string[] } | null>(null)
   const saved = useRef(false)
   const listRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -134,7 +136,7 @@ export default function CoachPanel({ onClose }: { onClose: () => void }) {
     if (!conversationId) return
     setSending(true)
     setNotice(null)
-    const result = await api<{ user_message: ChatMessageView; assistant_message: ChatMessageView; updated_cards?: CardView[] }>('/api/coach/chat', {
+    const result = await api<{ user_message: ChatMessageView; assistant_message: ChatMessageView; updated_cards?: CardView[]; follow_ups?: string[] }>('/api/coach/chat', {
       method: 'POST',
       body: JSON.stringify({
         conversation_id: conversationId,
@@ -156,6 +158,8 @@ export default function CoachPanel({ onClose }: { onClose: () => void }) {
           result.data.assistant_message,
         ]
       })
+      const items = result.data.follow_ups ?? []
+      setFollowUps(items.length > 0 ? { messageId: result.data.assistant_message.id, items } : null)
       return
     }
     // The message stays in the list with a retry that re-sends the SAME id, so a retry never doubles it.
@@ -178,6 +182,7 @@ export default function CoachPanel({ onClose }: { onClose: () => void }) {
       retry: { clientMessageId, text: trimmed, answer },
     }
     setMessages((current) => [...current, local])
+    setFollowUps(null)
     setText('')
     void deliver(clientMessageId, trimmed, answer)
   }
@@ -315,6 +320,20 @@ export default function CoachPanel({ onClose }: { onClose: () => void }) {
                         onAnswer={answer}
                       />
                     ))}
+                    {followUps?.messageId === message.id && !sending && (
+                      <div className="mt-2 flex flex-wrap gap-1.5" aria-label="接着问">
+                        {followUps.items.map((item) => (
+                          <button
+                            key={item}
+                            type="button"
+                            onClick={() => send(item)}
+                            className="rounded-full border border-gray-200 bg-white px-3 py-1 text-left text-xs text-gray-700 active:bg-gray-50"
+                          >
+                            {item}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               )
