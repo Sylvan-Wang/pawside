@@ -1,0 +1,3567 @@
+{
+  "run_date": "2026-11-21",
+  "generated_at": "2026-11-20T19:47:12.172823+00:00",
+  "source_health": [
+    {
+      "source": "reddit",
+      "target": "r/Fitness",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/beginnerfitness",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/GYM",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/workout",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/xxfitness",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/bodyweightfitness",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/loseit",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/fitmeals",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/EatCheapAndHealthy",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/MealPrepSunday",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/nutrition",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/ChatGPT",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/artificial",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/personaltraining",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/apps",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/homegym",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/college",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/GradSchool",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "app_store",
+      "target": "Fitbod",
+      "method": "rss",
+      "status": "ok",
+      "items": 50
+    },
+    {
+      "source": "app_store",
+      "target": "Hevy",
+      "method": "rss",
+      "status": "ok",
+      "items": 50
+    },
+    {
+      "source": "app_store",
+      "target": "MyFitnessPal",
+      "method": "rss",
+      "status": "ok",
+      "items": 50
+    },
+    {
+      "source": "app_store",
+      "target": "MacroFactor",
+      "method": "rss",
+      "status": "ok",
+      "items": 50
+    },
+    {
+      "source": "app_store",
+      "target": "Strong",
+      "method": "rss",
+      "status": "ok",
+      "items": 50
+    },
+    {
+      "source": "news",
+      "target": "Product Hunt",
+      "method": "rss",
+      "status": "ok",
+      "items": 0
+    },
+    {
+      "source": "news",
+      "target": "Google News 健身App",
+      "method": "rss",
+      "status": "ok",
+      "items": 4
+    },
+    {
+      "source": "news",
+      "target": "Google News 健身App 中文",
+      "method": "rss",
+      "status": "ok",
+      "items": 0
+    },
+    {
+      "source": "news",
+      "target": "TechCrunch",
+      "method": "rss",
+      "status": "ok",
+      "items": 0
+    },
+    {
+      "source": "news",
+      "target": "The Verge",
+      "method": "rss",
+      "status": "ok",
+      "items": 0
+    },
+    {
+      "source": "hacker_news",
+      "target": "fitness app",
+      "method": "algolia",
+      "status": "ok",
+      "items": 11
+    },
+    {
+      "source": "hacker_news",
+      "target": "workout app",
+      "method": "algolia",
+      "status": "ok",
+      "items": 16
+    },
+    {
+      "source": "hacker_news",
+      "target": "AI personal trainer",
+      "method": "algolia",
+      "status": "ok",
+      "items": 7
+    },
+    {
+      "source": "hacker_news",
+      "target": "calorie tracking",
+      "method": "algolia",
+      "status": "ok",
+      "items": 3
+    },
+    {
+      "source": "hacker_news",
+      "target": "habit app",
+      "method": "algolia",
+      "status": "ok",
+      "items": 6
+    },
+    {
+      "source": "hacker_news",
+      "target": "health app",
+      "method": "algolia",
+      "status": "ok",
+      "items": 30
+    }
+  ],
+  "cleaning": {
+    "raw": 227,
+    "duplicate": 3,
+    "deleted": 0,
+    "bot": 0,
+    "too_short": 17,
+    "low_signal": 0,
+    "kept": 207
+  },
+  "items": [
+    {
+      "id": "appstore:Fitbod:14808170510",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "Picture",
+      "body": "Why not show a picture of the muscle that’s being worked in each exercise",
+      "score": 1,
+      "num_comments": null,
+      "created_utc": "2026-11-19T02:44:17-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14806786520",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "Still getting charged for canceling membership",
+      "body": "I canceled this over a year ago and still am being charged I’ve contacted customer support and have been told I’m not currently under a subscription but yet they continue to take money out.",
+      "score": 3,
+      "num_comments": null,
+      "created_utc": "2026-11-18T16:44:07-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14803354102",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "Thumbs up",
+      "body": "I use this app for tracking and as a PT it’s excellent",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-17T19:30:33-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14803123628",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "Whyyy this is the best workout app",
+      "body": "1 it let's you do it over again a get a good result and tracks your process and i saw a really big approve meny in every thing!!!!!!!!! \n\n2 It keeps it all track up and shows what exercise through your body and they really help if you are trying to lose fat in your body and when you see  super models bodys I know you want that or something like that",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-17T17:59:01-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14802796726",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "The best",
+      "body": "I tried another app temporarily but fitbod is what worked for me and I shouldn't have left.",
+      "score": 1,
+      "num_comments": null,
+      "created_utc": "2026-11-17T15:52:15-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14802050140",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "Almost great",
+      "body": "Need to be able to delete reps that you don’t plan on doing.",
+      "score": 3,
+      "num_comments": null,
+      "created_utc": "2026-11-17T08:13:57-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14801937512",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "10 year user",
+      "body": "I have been using Fitbod for over 10 years and it has never disappointed me and i have never felt better about recommending a fitness app to anyone",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-17T07:39:45-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14801687023",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "5 stars",
+      "body": "Every year they improve the app. Very easy to use. Both my wife and I love it.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-17T06:24:55-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14801675192",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "Takes insecurities out of it",
+      "body": "Love Fitbod but would love to see an option when coming back from surgery or weight bearing limitations.",
+      "score": 4,
+      "num_comments": null,
+      "created_utc": "2026-11-17T06:21:24-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14794033778",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "Good",
+      "body": "There are a lot of workouts still missing from the catalog it should be updated",
+      "score": 4,
+      "num_comments": null,
+      "created_utc": "2026-11-15T07:24:35-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14791595680",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "Mid app for mid results",
+      "body": "If you’re really looking for gains and inspiration look for a different app. This seems suited to those folks who start working out in January. IYKYK, right? Uninspiring exercise videos. And an AI coach that pulls back just when you need to be pushed. Other minor annoyances include no timer between exercises. Meh.",
+      "score": 2,
+      "num_comments": null,
+      "created_utc": "2026-11-14T16:45:29-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14791218699",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "Good app but…",
+      "body": "Really need the ability to provide specific machine limitations, weight increments and the ability to report physical limitations due to injury. This app needs to get a lot smarter.",
+      "score": 4,
+      "num_comments": null,
+      "created_utc": "2026-11-14T14:23:02-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14790823640",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "Best workout app ever!",
+      "body": "Absolutely love this app. I went from 180 lbs to 140 lbs. This app helped me overcome my fear of the gym. It planned out my workouts and even showed me how to do them with a short video if I didn’t know. The only thing I wish it had was a workout plan for women who are post partum.",
+      "score": 4,
+      "num_comments": null,
+      "created_utc": "2026-11-14T12:02:02-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14790666298",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "Great workout app",
+      "body": "Good app to keep track of your weight and reps.  Keeps you challenged. Only thing I don’t like is that it only splits workout’s into two groups. Upper body and legs.",
+      "score": 4,
+      "num_comments": null,
+      "created_utc": "2026-11-14T11:10:18-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14790276096",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "So help full",
+      "body": "I love that I just open the app and start my workout. No need to think what I need to work today or what I did last time.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-14T09:12:54-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14789926708",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "Inconsistent Apple Watch Support",
+      "body": "Really like Fitbod. Have been using for many years now. \n\nThe Apple Watch support has been disastrously inconsistent. For some reason, every other update breaks the watch functionality, which is how I primarily interact with the app.\n\nPlease guys, put some extra focus on this. It used to work really great, but I’m considering going elsewhere for this issue alone.",
+      "score": 2,
+      "num_comments": null,
+      "created_utc": "2026-11-14T07:35:10-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14789600717",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "Excellent workout app",
+      "body": "By far the easiest and best fitness app out there. I’ve achieved massive results all thanks to Fitbod.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-14T06:05:57-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14789534475",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "Consistency",
+      "body": "This helps keep me consistent. Day to day life is busy and when I show up at the gym this app makes the work flow smooth. If I don’t like a specific workout ,I can replace it with something I want to do or a piece of equipment that’s available. Great for me !!!",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-14T05:47:30-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14787226621",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "Glitches",
+      "body": "This app regularly cancels workouts already recorded and also cancels out of workout log screens and closes when trying to log some workouts.",
+      "score": 3,
+      "num_comments": null,
+      "created_utc": "2026-11-13T15:29:54-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14787157131",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "Changed my life (and one feature suggestion)",
+      "body": "I was chronically underweight and as part of my fitness journey, this app helped me gain over 20 pounds of mostly muscle. I really am grateful that it exists. \n\nI have one feature suggestion, and that is to show a running tally of the weight lifted during a workout, so I can see how much weight I’ve lifted before ending a workout.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-13T15:03:46-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14786616264",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "Terrible app",
+      "body": "I have been trying this app for about a week. It has immediately put me in harder stuff, and every single time every single it keeps on giving me stuff that I cannot do because I have a bigger chest. This app is clearly not made for plus size people or people who have bigger size breast. This has constantly been a problem with the app.",
+      "score": 1,
+      "num_comments": null,
+      "created_utc": "2026-11-13T11:46:58-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14784182984",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "No registra todos los ejercicios",
+      "body": "Hay ejercicios que no registra, por ejemplo cada que selecciono “Sube Escaleras” corre el cronometro pero al terminar se reinicia y no guarda el progreso",
+      "score": 3,
+      "num_comments": null,
+      "created_utc": "2026-11-12T21:50:37-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14783465911",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "Love this app!",
+      "body": "I absolutely love this app! I love the variety of workouts. I love the AI aspect of it. I love how you can see your past performance and can challenge yourself to try to beat it every time. I think the $80 something dollars that I paid for the year is well worth the price.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-12T16:55:25-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14781700933",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "Tells me what to do",
+      "body": "I enjoy this app because it takes the thinking out for me—I show up and know exactly what I need to do. I also like that it’s very customizable.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-12T06:49:57-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14779094749",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "Just a workout tracker",
+      "body": "It tracks your workouts but most of the extra functions are not accurate at all. I’d switch to another app but I’ve being using this one for years",
+      "score": 3,
+      "num_comments": null,
+      "created_utc": "2026-11-11T14:04:57-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14773537094",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "Weak knees",
+      "body": "The app\nDoes not take into accounts of weak\nKnees so squats are difficult",
+      "score": 4,
+      "num_comments": null,
+      "created_utc": "2026-11-10T05:47:24-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14773135054",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "Good workout for beginners",
+      "body": "The app is ok with tracking reps/weights. It don’t like that it always asks how many more reps I can do after each set. I also don’t like the that it includes equipment that I do not have",
+      "score": 3,
+      "num_comments": null,
+      "created_utc": "2026-11-10T03:41:44-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Hevy:14808123641",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Great app",
+      "body": "Honestly I probably wouldn’t be where I am today without the help from this app.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-19T02:25:31-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14808006575",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "150 workouts",
+      "body": "Just hit 150 workouts on this app. It’s really great",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-19T01:36:18-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14807901606",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Change the notification sound",
+      "body": "it’s a create app! free and very accessible. however, the sound notification doesn’t go away even if my ringer is turned off, and it sounds too much like the grindr notification sound… please fix or change it",
+      "score": 4,
+      "num_comments": null,
+      "created_utc": "2026-11-19T00:49:32-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14807242087",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Best Gym Tracker Available",
+      "body": "Being able to use the app with ZERO ads on the free edition and store 5 individual workouts is enough alone to use this permanently along with getting constant notifications mid lift of new PRs is a great motivator to continue to push yourself past your limits, well done",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-18T19:43:13-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14807173215",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Excellent app",
+      "body": "I used to track all my workouts using the notes app… not very efficient, since I started using this app it’s been easier to track my progress. Highly recommended.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-18T19:14:35-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14807133248",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Incredible app, would recommend to anyone who works out",
+      "body": "The sheer versatility of this app has made it so easy to track my training and take hours off my weeks that I can spend doing things that matter. Thank you Hevy! 🫶",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-18T18:58:22-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14807020318",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Great but has a bug",
+      "body": "Since a week now my apple watch is simply not syncing… and no fix is given",
+      "score": 4,
+      "num_comments": null,
+      "created_utc": "2026-11-18T18:14:15-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14806947167",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Made lifting way easier",
+      "body": "I’m not even exaggerating when I say this app has been a game changer. Having ADHD, I used to constantly forget my routines, exercise names, what weight I used last time, and all that extra stuff. Hevy literally takes all that off my plate. Everything is organized, easy to follow, and I can actually see how much stronger I’m getting. I’ve logged 50 workouts in just three months, and this app has genuinely helped me stay consistent. Wish I started using it sooner. Easily 5 stars.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-18T17:46:08-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14806824288",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Hevy makes it easy!",
+      "body": "So easy to create and track workouts including defined rest periods, tracking your weight per exercise, and syncing between your phone, watch and health app.  This app is the best I’ve used, highly recommend!",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-18T16:58:45-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14806703199",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "The only app I’ll ever use",
+      "body": "I’ve tried them all, fitbod, strong, I even used RP strength for a bit. But there is no app that’s as efficient, fun, and convenient than Hevy, and with one payment for lifetime coverage? There is no competition!",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-18T16:11:53-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14806681362",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Easy to use and provides good tracking ability",
+      "body": "Extremely easy to setup and track and works with watch too.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-18T16:03:35-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14806668404",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Insanely useful",
+      "body": "Hevy has allowed me to track my weights, reps, workouts, and everything in between. Before downloading the app I would just wing it at the gym, but now I’m able to make real progress and see the results. 100% recommend 👍",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-18T15:58:38-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14806592549",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Back @ it",
+      "body": "This app has helped make tracking my progress so much easier!! I love the simplicity and ability to add exercises when I need to!! I love seeing and sharing with my workout buddy!! This app helps us keep each other accountable and to do better!! LOVE this app!!",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-18T15:28:21-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14806580812",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Everything I Need",
+      "body": "i really love this app! i use it as my workout itinerary each day. it saves your workouts, tracks your time/rest between sets, and weight history. seeing the achievements makes me feel accomplished!",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-18T15:23:42-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14806571712",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Best tracker on the market",
+      "body": "I've tried a ton, but for simplistic tracking of workouts, it can't be beat. Ease of use is great, UI has a ton of thought behind it. 5 stars.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-18T15:20:04-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14806427305",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Drop the note book, go digital",
+      "body": "Simplify your routines, save the time wasted between sets looking for YouTube’s, truly be able to track your progress. Plus if you have a smart watch to pair with the app, the sky’s the limit. You could not choose a better interface for gains!",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-18T14:23:43-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14806290848",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "AMAZING & FREE!!",
+      "body": "Love this app with everything in me. It is user friendly and helps me keep track of all my workouts. On top of that it shows how to physically do the workouts that you don’t know how to do. As a NCAA wrestler this app is a life saver and keeps me motivated to keep working out and getting stronger as I watch my weight lifting progress evolve. Thank you HEVY!!",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-18T13:31:10-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14806218639",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Excellent app",
+      "body": "Started using this app when the trainer feature debuted and have really enjoyed it so far. The developers have really astounded me with their engagement with the user base and their speed to drop new feature features. That functionality of the app itself is very smooth with no hiccups. The social component has been very engaging, nice to see everybody pushing hard and working out and be able to compare and grab exercises from other people. It’s been a excellent product so far.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-18T13:04:01-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14806093375",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Workout Tracker",
+      "body": "Handy app for tracking your progress. Recommend 100%",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-18T12:17:18-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14806045021",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Great tracker!",
+      "body": "Very comprehensive app, with useful between set timers (I wish they would add a rep timer too so you can hear a desired cadence).  Great logs, with fun records& prs noted.  Helps gamify the experience easily!",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-18T11:59:47-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14805771263",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Best app ever!!",
+      "body": "Having your own community to share your workouts with is clutch. App has everything.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-18T10:23:54-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14805363695",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Easiest and User Friendly Tracking App",
+      "body": "I was really against tracking my lifts for a long time thinking all apps were trying to get me to start a subscription. HEVY is simple, with a sleek user interface that has helped me track my progressive overload over the last 12 weeks. Hands down my favorite fitness app out there :)",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-18T08:13:16-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14805138099",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "One of the best workout trackers on the market.",
+      "body": "Especially with the integrations it offers, huge plus! Solid workout library to choose from too. Only complaint is no duo support on current build, but they have traditionally kept up with Apple designs so I expect it soon.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-18T07:05:05-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14805095252",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "best app",
+      "body": "great to track without having to be embarresed if u dont like to write on a paper or notebook because ur afraid of what other people think. it happens. it tells u ur last workouts reps so u dont have to go looking for what u were at last time. overall great app no ads super easy and convient",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-18T06:52:13-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14807302195",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "Streak",
+      "body": "Please bring back log in streak count on the main page like it used to be for the last 10 years. \nThanks.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-18T20:09:38-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14807294800",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "Retired",
+      "body": "Excellent coach and tracker. Helped me stay on course and showed exactly where I needed to improve either on nutrition or water intake love it.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-18T20:06:18-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14806653052",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "**USED** to be my go-to app…",
+      "body": "Now all of a sudden it wants me to log in with an email address. Hard pass.",
+      "score": 1,
+      "num_comments": null,
+      "created_utc": "2026-11-18T15:52:26-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14806494318",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "Coach Tab On My Diary Screen…",
+      "body": "Today the Coach tab appeared on my diary screen.  I had to search to find how to get to my Community and Other options screen.  Now I cannot view my friends’ diaries in the app.  I am not a Premium subscriber…when will the Coach tab be removed…more unfriendly changes…",
+      "score": 1,
+      "num_comments": null,
+      "created_utc": "2026-11-18T14:49:56-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14806094186",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "Advertisement makes iPad app unusable",
+      "body": "While viewing the diary, a huge advertisement popo up is shifting the screen on iPad so that you can’t see the meals. Horrible. Must be fixed ASAP",
+      "score": 1,
+      "num_comments": null,
+      "created_utc": "2026-11-18T12:17:35-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14806078737",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "Tracking calories",
+      "body": "It really keeps me on track, if I start gaining I go right back to logging everything down.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-18T12:11:57-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14805843631",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "old interface way better",
+      "body": "me and multiple people have agreed new interface is so annoying. the fact you cant edit foods you’ve made anymore, and you cant delete meals as a whole and have to do it individually is super annoying. they literally need to fire whoever keeps approving the new updates because it gets worse and worse. please fix this and ill deffo change my rating",
+      "score": 2,
+      "num_comments": null,
+      "created_utc": "2026-11-18T10:48:34-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14805792868",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "Still a gap",
+      "body": "The latest two updates have improved on this issue however there's still a gap when logging food on iPhone 16. It used to be a keyboard sized gap in previous updates but now it's about half that size.",
+      "score": 3,
+      "num_comments": null,
+      "created_utc": "2026-11-18T10:31:14-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14805574701",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "Scan from camera was better",
+      "body": "Thanks for bringing back Scan meal directly! It works great!",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-18T09:19:36-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14805080422",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "Capture everything you eat",
+      "body": "It’s not easy all the time, but if you record everything it will allow you to calculate your carbs and the amount of basal insulin. We need to manage our diabetes until it can be cured by one of the “magic bullets” that keep popping up everywhere.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-18T06:47:44-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14805044028",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "Absolute Garbarge",
+      "body": "*** UPDATED—received an offer to contact developers about my concern, so I used the link—sent me to general Q and A with no place to offer my suggestions. Thanks for nothing.                                        A wonderful application has been destroyed by a greedy company who just keeps degrading it with each “update”.  You are just like every other huge corporate conglomerate—who cares about the consumer when I get make even more money. Do you REALLY think anyone pays attention to those ads you bombard us with—thanks for nothing.",
+      "score": 1,
+      "num_comments": null,
+      "created_utc": "2026-11-18T06:36:52-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14805022607",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "Over all pretty good- app image is way too feminine",
+      "body": "Testing against the Cal AI, this app is more robust for sure. I just wish the app logo could be changed by the user. I am not a ballet dancer and don’t care for that overly feminine logo. The ability to select different images on an app is not a difficult setting. (Not the Profile Picture. Please consider offering this as a setting.",
+      "score": 4,
+      "num_comments": null,
+      "created_utc": "2026-11-18T06:30:30-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14804848801",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "Best calorie counter out there",
+      "body": "I am a yo-yo dieter. This app is the only way I have ever been able to lose weight. I’ve used it for years!",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-18T05:39:04-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14804838969",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "Good app",
+      "body": "Great way to track eating, but the barcode scan feature should still be included with the free version",
+      "score": 3,
+      "num_comments": null,
+      "created_utc": "2026-11-18T05:36:07-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14804177234",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "Was Great Until it Wasn’t",
+      "body": "I was using the app successfully but then there was an update. It changed the view which is not bad, but I was no longer able to use the friend function which allowed me to copy meals that my wife cooked for us.  Touching the 3 dots no longer does anything.  Even worse I put in a help request and no response in well over a week. Things happen but there is no excuse for poor customer service.",
+      "score": 2,
+      "num_comments": null,
+      "created_utc": "2026-11-18T01:47:04-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14803378683",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "Needs help",
+      "body": "This app would be better if when one put in recipes the macros could be transferred into the diet/nutrients section of Apple Health.  \n\nIn addition, being a researcher and new to multiple dementias, including Alzheimer’s APOE04 CVD risk 3/4 and receiving special Leqembi infusions every other Thursday plus making my diet total antioxidant and creating a new segment of dementia exercises moving Pilates to bed, Himersporner resistance bands in bed or on days up adding them to up day routines.     \n\nSo there is an entire section of diet for diseases such as cancer, dementias etc that are total Antioxidant- wonderful when Italian or Mediterranean style flavors - and the opportunity to allow consumers to donate photos of recipes that work are important.  Especially since, although not touted on the news the pandemic globally now is baby boomer dementias and cancers. Look up how many long term care facilities are over flowing. \n\nWe need diets total organic, antioxidant and if kidney issues no to low oxalate.   \n\n\nHow do we contribute to help others?",
+      "score": 2,
+      "num_comments": null,
+      "created_utc": "2026-11-17T19:40:50-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14803324166",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "Fantastic",
+      "body": "I have been using this app for many years I love it! Is always bringing a better version that makes it easier to log your food and understand your food intake.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-17T19:18:11-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14803041826",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "Down 40 lbs",
+      "body": "Awesome app. I’m down 40 pounds in 8 months. Also, exercise a lot which is great as it adds to my daily total of calories. This app is also a great teacher in helping know how lots of calories are in things I don’t need to eat. Use it honestly, add some moderate to vigorous exercise every day or as much as you can and the results will absolutely come!  Wife is down almost 25 too!",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-17T17:27:20-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14802847507",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "Ads are ruining the user experience",
+      "body": "I’ve been using this app for almost 10 years, and what I will say is that it has become simply a gateway for them to push more advertisements every time I try to use the app lately, I am having more and more difficulties. This is due to the layout being affected because of large ads that they have created to grab our attention and distract us. I can’t even use the app on my iPad because of this issue. I’d hate to have to delete it, but I’ve been using the calorie counter for so long, I would be OK without it.",
+      "score": 1,
+      "num_comments": null,
+      "created_utc": "2026-11-17T16:12:05-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14802757740",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "Logging just doesn’t work",
+      "body": "Previous versions food logging worked like a charm. Not anymore. Anything more than two items in a meal it seems to fail to log. Unless this is yet another new “Feature” to encourage the subscription. I’m about to delete it.",
+      "score": 1,
+      "num_comments": null,
+      "created_utc": "2026-11-17T15:36:36-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14802334707",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "What the…",
+      "body": "Am I doing this right?  It’s difficult to navigate. But I used the voice log ft to record my breakfast.",
+      "score": 3,
+      "num_comments": null,
+      "created_utc": "2026-11-17T12:52:35-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14802029617",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "AI garbage",
+      "body": "Stop littering the app with analyze this; have your diary talk to you that… it’s garbage and lazy and muddies the entire thing. It’s hard to see what you’re actually trying to do with those little AI implementations. \n\nAlso let the swipe left BRING YOU BACK TO DIARY instead of yesterday.",
+      "score": 1,
+      "num_comments": null,
+      "created_utc": "2026-11-17T08:07:39-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14801671327",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "Used to love it",
+      "body": "I recently started using app again. They now want you to have a premium membership like change your caloric intake goals, macros, etc.",
+      "score": 3,
+      "num_comments": null,
+      "created_utc": "2026-11-17T06:20:15-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14801611419",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "AI Coach is Terrible",
+      "body": "The AI Coach and incessant diary “analysis” have made the app bulky and terrible. Please add a way to remove the AI coach. It is pointless!",
+      "score": 1,
+      "num_comments": null,
+      "created_utc": "2026-11-17T06:02:32-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14800629115",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "Love it!",
+      "body": "The best I’ve used so far. I’d give it 5 stars but I’ve been running into issues with ads messing up my screen resolution and i cant be able to view or edit my food log properly. I don’t know where to reach out to fix this issue but hopefully it’s seen here haha. Until then I’ll keep it at 4 outta 5.",
+      "score": 4,
+      "num_comments": null,
+      "created_utc": "2026-11-16T23:58:06-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14800026679",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "Navigating",
+      "body": "After updating the app it is a bit more tricky to create recipes and edit them.  So make sure you type your recipe in correctly or you’ll have to redo the whole thing.  Just a bit frustrating at the end of the day.",
+      "score": 3,
+      "num_comments": null,
+      "created_utc": "2026-11-16T19:17:12-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MacroFactor:14791120335",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "Maybe The Best",
+      "body": "I used many calorie-tracking apps. This one is the most intuitive to me, personally. I also appreciate that there’s no push to lose weight, nor shame in going over the goal. It’s just data.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-14T13:46:27-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14774415951",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "Game Changer",
+      "body": "I’ve been using this app for the past 1.5 years and can’t imagine going without it. It keeps things simple, but really feels like I’m in control of my weight now, and can decide what I want to do. Over this time I’ve lost about 60 lbs and am using it with my training for bulking/cutting cycles now. Highly recommend!",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-10T10:13:20-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14772108511",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "not bad",
+      "body": "i searched up FREE calorie tracker apps and this was the first thing that popped up, the app tells me it’s take about a year and it’s $143 for 12 months. But the app seems to know what it’s doing after all.",
+      "score": 3,
+      "num_comments": null,
+      "created_utc": "2026-11-09T19:59:49-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14770199875",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "Not angry, just honest feedback",
+      "body": "I have a hard time using the app. It’s not intuitive at all - and everyone who has tried the app along side with me has said the same. Nobody likes it. I am only on this app because of Jeff Nippard. \n\nIf you make the app 1000% easier to use, then you will have better retainage.",
+      "score": 1,
+      "num_comments": null,
+      "created_utc": "2026-11-09T08:24:15-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14769510290",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "Best macro tracker app",
+      "body": "Love the app! Makes it super easy to track my macros!",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-09T04:53:53-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14767007208",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "The last food logger I’ll ever use",
+      "body": "It’s fast, accurate, has a workout companion. What else could you want?",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-08T11:59:32-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14758954420",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "Bugs need fixing",
+      "body": "The price is not justified considering the bugs in the app. My biggest peeve is that you can't manually change the macro or calorie values after a quick add entry. You have to delete it and put all the info all over again. Small but significant for me.",
+      "score": 2,
+      "num_comments": null,
+      "created_utc": "2026-11-06T12:49:39-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14755154784",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "No iPhone Duo support",
+      "body": "Releases app updates after the release of the IPhone Duo that do not support it",
+      "score": 1,
+      "num_comments": null,
+      "created_utc": "2026-11-05T13:20:43-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14748088630",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "No shame with logging",
+      "body": "I have struggled with restrictive eating in the past and have had a very negative experience with most logging apps because any overage is bright red and highlighted.  I love that MacroFactor gives you the ability to hide that.  It is a completely objective interface from the dashboard to the food log and weight trends.   It feels wonderful to have a healthy relationship with tracking my food.  What a great tool for my health.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-03T18:22:39-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14742999706",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "Tracking is easy and nice coaching is a waste of money",
+      "body": "The coaching feature is a waste of money it gives the same plan every week and I’m following it and it making 0 progress towards my goals.",
+      "score": 2,
+      "num_comments": null,
+      "created_utc": "2026-11-02T11:52:46-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14742918261",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "So useful and worth the cost",
+      "body": "I actually kind of get annoyed by how hard influencers push ad’s for this app but I truly love it. I’ve been using it for about a year and a half and my favorite feature by far is the calorie expenditure tracking. From what I noticed it’s super accurate and helps the program dial in your macros. Super based tracking app. 5/5.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-02T11:25:10-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14740546384",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "Great App",
+      "body": "Great App. Would love a feature where it would be easier to find menu items from restaurants but other than that its a good app",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-01T21:33:58-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14739557185",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "Excellent app",
+      "body": "It works!!! I’ve been body building for years and finally decided to pair it with healthier eating and I signed up with the intention to do a cut, and successfully completed it faster than the time it projected!! Fantastic app",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-01T14:52:16-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14731252315",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "Overpriced subscription, terrible database",
+      "body": "Paying for a subscription and can’t even scan a mainstream protein shake label, 106g of protein logged when the shake said 30g 😐",
+      "score": 1,
+      "num_comments": null,
+      "created_utc": "2026-10-30T14:57:22-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14729548464",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "Stick with MyFitnessPal",
+      "body": "This app mostly works. But there are so many inaccurate nutrition facts. I have to constantly edit/customize nutrition facts on common foods because they are wildly off. The search feature is also frustrating. Sometimes the search cannot find foods, but scanning a barcode will magically find it. Awful.",
+      "score": 1,
+      "num_comments": null,
+      "created_utc": "2026-10-30T06:06:24-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14729253270",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "Disappointed in direction",
+      "body": "The core feature is easy enough. Track food against a caloric plan. \n\nDisappointed that the team has decided not to allow MCP connections. Switching to another app that still does easy tracking but doesn’t wall my data inside their garden to try to force me to use their ecosystem. The health coach grok bot I have is better than this because it has access to way more data about me than this app alone has. \n\nBad direction.",
+      "score": 2,
+      "num_comments": null,
+      "created_utc": "2026-10-30T04:38:26-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14727888386",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "Great But…",
+      "body": "The app works great overall, but very often struggles to allow you to upload photographs to  analyze them and create recipes from them, very often images just fail to upload for no apparent reason and it quite often struggles to import links even from major website. These issues happen about 50% or more of the time and it’s quite annoying. PLEASE WORK ON THIS, por favor Jeff.",
+      "score": 4,
+      "num_comments": null,
+      "created_utc": "2026-10-29T18:55:50-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14725925472",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "goated app",
+      "body": "helpful and no patronizing “nice job you’re losing weight!” messages or anything like that. Great interface too",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-10-29T07:39:20-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14724535654",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "Excellent app but needs iPhone Duo support urgently",
+      "body": "The best calorie tracking app, and the only one I’ll ever use. Been on it since 2022, and it’s helped me in so many ways unimaginable.\n\nBut now, I may be forced to cancel my subscription. It looks terrible on my iPhone Duo. For an app I use numerous times a day, the experience is atrocious. Fingers crossed they’ll update the app soon",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-10-28T23:25:33-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14724035063",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "Decent so far",
+      "body": "I’ve been using the app for two months now. I’m only 5ft and the programs were attempting to put me at a deficit that was under 1200 calories per day. Thankfully I was able to set it up to prevent that in the future. It seems that the algorithm has accurately adjusted based on my caloric intake and weigh ins. I do have concerns about the foods in the database. Always double check your scanned or searched items. One time my frozen berries listed less than half of what the bag label said. I started paying attention after than and noticed that a lot of the nutritional information is missing or wrong. Overall it’s a nice interface and I really appreciate the absence of marketing ads!",
+      "score": 4,
+      "num_comments": null,
+      "created_utc": "2026-10-28T19:30:54-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14721778864",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "Very good for calorie and nutrient tracking",
+      "body": "I wish there seemed to be more development going on for the high yearly price though.",
+      "score": 4,
+      "num_comments": null,
+      "created_utc": "2026-10-28T06:47:11-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14714055108",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "Disappointing Experience — Not Worth the Subscription Price",
+      "body": "I’ve been using MacroFactor since March, and unfortunately, my experience has deteriorated to the point where I can no longer justify paying for it. I purchased an annual subscription expecting a reliable, well-designed nutrition-tracking app. Instead, I’ve spent far too much time correcting inaccurate information, manually entering foods, and questioning whether the numbers I’m being given can be trusted.\n\nOne of the biggest problems is barcode scanning and nutritional accuracy. For example, scanning a Premier Protein shake that contains 160 calories can return an entry showing 536 calories. That isn’t a minor discrepancy. It’s wildly inaccurate and defeats the entire purpose of scanning a product for convenient, reliable tracking. This isn’t an isolated concern, either. Too many entries are missing, and other entries contain nutritional information that is so far off that I have to correct it myself.\n\nI understand that not every product will be in a database. I’ve never expected that. Manually adding an occasional missing item is reasonable. But when recognizable products return completely incorrect calorie counts, the burden shifts to the customer to verify and fix the app’s wor",
+      "score": 1,
+      "num_comments": null,
+      "created_utc": "2026-10-26T08:24:52-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14712821126",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "Unsafe Calorie Goals & Inaccurate Expenditure",
+      "body": "The weight trend is far too slow to react to aggressive cuts and substantial bulks and will cause your expenditure to be wildly inaccurate. Strongly recommend a manual diet program rather than MacroFactor’s.\n\nI tried to do a bulk and an aggressive cut using MacroFactor’s program and it failed. My bulk goal was 1.1lb per week, I followed the program strictly and I gained 2.6lb per week. The weight trend was so slow to react so it kept telling me to eat more calories than I should have for the bulk. Same with a cut I did later on which led to dangerous recommendations. I was cutting ~2lb per week and MacroFactor kept telling me to eat less down to 1500cal for a 15%bf 190lb male. I ultimately had to stop following the recommendation towards the end and followed a coach for my calorie count at 1700 and I ended up losing 2.4lb per week (higher than 2 because of how little I ate on MF diet). This weight trend needs to have other algorithm options that adjust more rapidly - forcing everyone one the app to follow very mellow cuts and bulks can be unsafe.\n\nAdditional issues:\n- No web-based log exports, only by phone which is inconvenient\n- Few updates compared to other health and fitness ap",
+      "score": 2,
+      "num_comments": null,
+      "created_utc": "2026-10-26T01:43:22-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14711766171",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "Amazing app",
+      "body": "I’ve used this app for the past year and I’ve lost over 80 pounds it makes it quite easy",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-10-25T17:49:18-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14699980945",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "Needs work and recommendations",
+      "body": "The app is great but needs to be worked on . Especially with the food program it should recommend you what foods to eat by category not by percentage",
+      "score": 3,
+      "num_comments": null,
+      "created_utc": "2026-10-22T22:41:50-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14698153875",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "Diamond in the rough",
+      "body": "After using hundreds of apps over decades, I can’t tell you how impressed I am with MacroFactor. The quality of information, the attention to detail, the usability…chefs’ kiss. There are very few times when you come across an app that you’ve really enjoyed using, and this is one of them.  Don’t even get me started on their workout app.  Truely impressive work here.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-10-22T10:54:06-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14693793153",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "Annoying Subscription Reminders",
+      "body": "The app is great at calculating macros for you and works well in general. The most annoying thing is that almost 3!out of 5 times I open it to log throughout the day, it’ll prompt me to subscribe even though I’m already subscribed. So, I have to make a selection all over again and then it lets me in after it confirms I’m already subscribed in the way I selected. This makes me wonder if they’re hoping you’ll change your mind and subscribe to an annual or other payment option when prompted or hope you forget. Doesn’t make sense and is just a nuisance. I’ve never had this happen on any other app.",
+      "score": 3,
+      "num_comments": null,
+      "created_utc": "2026-10-21T09:00:41-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14682433718",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "Would 100% recommend",
+      "body": "Very convenient app to use to track daily intake.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-10-18T10:27:24-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:Strong:14805959151",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "NEW UPDATE BROKE NOTES",
+      "body": "LATEST UPDATE FROZE MY WORKOUT NOTES THEY WILL NOT UPDATE",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-18T11:28:49-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14803708230",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "Bait and switch",
+      "body": "With updates, features started going away. For example, you can’t see your recent exercise history on the watch anymore. Times have changed, if you don’t like the app, you can make your own. And that’s what I intend to do. The developer of this app needs to wisen up and treat people fairly again.",
+      "score": 1,
+      "num_comments": null,
+      "created_utc": "2026-11-17T22:12:35-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14802568930",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "My personal gym tracker",
+      "body": "I tried a few other apps. This on is free and easy to set up my workouts. It tracks my progress and as I add more I thanks me and keeps me on track. Try is and see if it fits you.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-17T14:21:42-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14800224010",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "New watch app is great!",
+      "body": "I’ve been using this app for close to 10 years. Best app for weight lifting. Has every feature I could ever want.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-16T20:43:39-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14795859833",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "Just what I need",
+      "body": "Have been using it for 2 years with some breaks. Great app\nJust what a lifter needs. You can also export you entire workout data! What an app!",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-15T17:25:56-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14792430248",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "Great app, doesn’t connect to strava",
+      "body": "Long time user of strong. Love the app and it works great on Apple Watch. Just wish you could upload workouts to strava",
+      "score": 4,
+      "num_comments": null,
+      "created_utc": "2026-11-14T22:03:57-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14781632780",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "Not optimized",
+      "body": "Devs need to get busy making an iPad version and a version for the new iPhone Duo. Just putting the iPhone version on an iPad is crazy. It’s a good app to use, just need better app development. If the devs can’t or refuse to update it to the iPad and Duo, let us know",
+      "score": 2,
+      "num_comments": null,
+      "created_utc": "2026-11-12T06:29:41-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14773678787",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "So far so good",
+      "body": "Apple Watch app is great, but BOY… is that “update template” button close to the finish workout button and there’s no going back. It’s a pretty destructive action that can be frustrating when tapped. Lease fix that…\n\npinned comments are pinned to the exercise, not the workout… ame with set/rep info. Which can be annoying. \n\n—————\n\nBasics are down... the kicker is how easy it is to track RPE. \n\nI’d love to see an easy way to run a timer in app for rest and for timed sets (and RPE for those too). \n\nAlso, minor annoyance... but I can’t re-order my workout folders. \n\nWould be nice to be able to add an entire program (including the date order) to a folder too.\n\nEdit: this app has been great so far... there are quite a few quirks to creating new exercises but there’s a pretty basic feature missing... the capability to group exercises into super sets.",
+      "score": 4,
+      "num_comments": null,
+      "created_utc": "2026-11-10T06:29:00-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14771759886",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "Awesome App",
+      "body": "I’ve been using it for years and I really like it. It’s simple and helps a ton with my programming. Kinda wish it would sync with my Garmin though. They setup the process for it to sync with Apple Watch and it works fine but ever since I switched over I wish I could use it to sync with my Garmin workouts to.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-09T17:41:16-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14771642956",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "Great workout app",
+      "body": "Easy to setup and use.  Has tremendous flexibility with many built in routines or you can create your own.  Has very useful examples of each exercise and how to perform them properly. Just a well built app designed for all skill levels.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-09T16:57:23-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14767870506",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "Please update for iPhone duo!",
+      "body": "I love how consistent, simple, and straightforward this app is but PLEASE update it for the iPhone duo. It truly looks terrible on the new device and I am considering switching workout tracking apps.",
+      "score": 3,
+      "num_comments": null,
+      "created_utc": "2026-11-08T17:17:28-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14767106796",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "Near perfection",
+      "body": "Two features would make this app perfect: 1. A way to track total volume per muscle group per week/month as a widget on the home tab. 2. Some sort of social feature similar to Strava or hevy.",
+      "score": 4,
+      "num_comments": null,
+      "created_utc": "2026-11-08T12:32:27-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14747489075",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "Limited exercises on here",
+      "body": "Majority of popular exercises are excluded from this app. Very glitchy. Sets disappear from history. Have to continually update saved sets because it keeps deleting them. Great app if you want 15 exercises to choose from",
+      "score": 2,
+      "num_comments": null,
+      "created_utc": "2026-11-03T14:35:03-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14743894723",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "Would be 5 star but…",
+      "body": "I wanna love this app but my biggest pet peeve is that when I do a new workout using a template but I’ve added a note (usually tips to self for better form) to some exercise during the workout it doesn’t always give me the option to update the template at the end of my workout. So then later I have to go into to directly edit the template and manually copy paste my notes which is soooooooo tedious and irritating. Please fix!",
+      "score": 4,
+      "num_comments": null,
+      "created_utc": "2026-11-02T17:24:13-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14729445878",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "Good, but basic",
+      "body": "The app is simple and gets the job done. But there are other apps that offer tracking methods that are more supportive of your goals. Wish the app had a way to build rep ranges into templates.",
+      "score": 3,
+      "num_comments": null,
+      "created_utc": "2026-10-30T05:36:43-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14722735429",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "Great!",
+      "body": "I’ve been using this app for many many years and it only gets better! Great job, I will continue to use it. Makes workouts and tracking workouts easier.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-10-28T11:33:02-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14707729406",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "Need an MCP",
+      "body": "Great app overall. It can be even better with an MCP so that I can let my agent read my workout records and help me plan.",
+      "score": 4,
+      "num_comments": null,
+      "created_utc": "2026-10-24T18:49:10-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14705336275",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "Great, versatile app",
+      "body": "Tracks all my exercises and progress. Works well!",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-10-24T06:01:44-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14705253552",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "Great",
+      "body": "Only complaint is that it doesn’t let me log certain exercises the way I want to. For example, for farmers carries, it will either track it by weight or time but not both. Otherwise it’s a great app.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-10-24T05:38:17-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14702420459",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "Garbage app",
+      "body": "Unable to change password. Tried multiple times. New password fails each time.  Can’t log in any longer.  Would not recommend.  Minus five thousand out of ten.",
+      "score": 1,
+      "num_comments": null,
+      "created_utc": "2026-10-23T12:17:14-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14691614663",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "Great for tracking progress",
+      "body": "Been using this app for years. It’s amazing to see what you do over time. Great app..",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-10-20T19:28:42-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14687480205",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "Can’t believe it took me this long to write this review",
+      "body": "This app is in my honest opinion, the only workout tracker app you need. It’s so simple to use, it doesn’t dance around stuff, it’s basic, and it’s free!!!! \nOnly 4 routines allowed at a time? Pshhh, easy fix, just store 2 workout in one, that makes 8 workout, I don’t know about you, there’s only 7 days a week, ain’t no way a normal person needs more than 8 workout routines for a week. \nThe interface is so easy to use. \nDon’t have a exercise you want? CREATE IT YOURSELF.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-10-19T17:52:37-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14685613154",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "Great App!! Just one suggestion.",
+      "body": "I really love this app and have been using it for quite a while. It’s just missing one super important feature: duration exercises with added weight. Things like weighted plank, weighted dead hang are just impossible to encode in the app, which can be super frustrating. Please consider adding this feature!",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-10-19T07:06:34-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14640396650",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "App Makes the Gym Notebook Extinct",
+      "body": "App is awesome for tracking workouts, and has features I haven't even tapped into yet. This app replaces the notebook, and will save time in the gym. Gym notebook and music all in one.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-10-07T19:26:57-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14628024819",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "The rare free app that hasn’t gotten worse over time",
+      "body": "This app did exactly what I’m personally looking for as someone that exercises casually but also wants to improve in the long term. \n\nIn my experience, most free apps gradually get worse and more aggressively demand cash over time. This app has followed the opposite trajectory. Good show by the devs.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-10-04T12:51:23-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14613344308",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "Huge Potential, Huge Shortcomings",
+      "body": "I’m trying to be consistent at gym, and a large part of this process is keeping track of my journey. I’ve found it to be incredibly helpful to have a plan laid out, and this app has certainly made it intuitive to do so. \n\nMy biggest gripe is just that as well. Often, the apple watch sync removes sets, and even entirely fails to track my workouts after completion; I can’t see them in history. It’s incredibly frustrating. It’s encouraging to see the numbers and history rack up automatically, but having to manually plug them in again is irritating.\n\nI’m also annoyed at the paywall, which removes the most basic features such as graphs.\n\nOne more thing, I’d hope to see a way to add notes to custom workout exercises. In other words, I can add custom instructions.\n\nAll in all, it could be perfect, but it’s just not there.",
+      "score": 3,
+      "num_comments": null,
+      "created_utc": "2026-09-30T20:05:47-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14612889519",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "Best Exercise app!",
+      "body": "I have tried and use many many workout apps. This by far is the best one I have used yet. So good I paid the $29 for the yearly with hesitation after using the free one for a free days.\nHighly recommended!!",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-09-30T17:13:19-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14601012132",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "Suggestion",
+      "body": "The app is good for what it offers! One suggestion I’d like to see implemented is the ability to minimize exercises after completing all sets during an active workout (with an option of auto-minimizing when all sets are checked off). I’d gladly change my review to 5 stars if something like that could be added.",
+      "score": 4,
+      "num_comments": null,
+      "created_utc": "2026-09-27T13:58:42-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14592101752",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "The best",
+      "body": "I’ve been working out for over 25 years and this app is by far the best fitness app I’ve ever used because of its customization. I do Olympic lifts. I do traditional bodybuilding type workouts as well as CrossFit and I’m able to keep track of every exercise every rap and so forth it is absolutely without a doubt the best fitness app I’ve ever seen and I’ve used quite a few few. This is the only one I use now.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-09-25T08:23:46-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "news:d80c708644f2",
+      "source": "news",
+      "where": "Google News 健身App",
+      "via": "rss",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "fitness",
+      "title": "How to increase your health with the fitness app in GTA 6 - Polygon.com",
+      "body": "How to increase your health with the fitness app in GTA 6 Polygon.com",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-19T11:01:18+00:00",
+      "url": "https://news.google.com/rss/articles/CBMidkFVX3lxTE9XRV9pV21oRmtSdWZsTG1aNUJ0VUdzdVdwX3NKYXhDZW5xNHFJVmtfOGFPanlFWi1QNDdCRUplb2ZnbnlHZ0QwOENUaWcwMWFrdDdHanBHZl9kcHdwb1pFME9yRXNLRElLRlhiRk5SOGFTaTh1RWc?oc=5"
+    },
+    {
+      "id": "news:940ed7c4051e",
+      "source": "news",
+      "where": "Google News 健身App",
+      "via": "rss",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "fitness",
+      "title": "Fitness and Wellness Explained - GTA 6 Guide - IGN",
+      "body": "Fitness and Wellness Explained - GTA 6 Guide IGN",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-19T16:15:38+00:00",
+      "url": "https://news.google.com/rss/articles/CBMib0FVX3lxTE9mY0dnaXVCRFlGNE9ENzNKbTRacDFWdDN0eFY0WWJHdnIxbmZTeVpHTk1JaHZtWUl5NVV5WW1rc1hyaTRPT2t6SDlnMzhtcW5DWmc0bV9fWmlvZXQ0bUI0V3g0NDA1UXJVZmFIMmU4NA?oc=5"
+    },
+    {
+      "id": "news:bb97581261e9",
+      "source": "news",
+      "where": "Google News 健身App",
+      "via": "rss",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "workout",
+      "title": "GTA 6: Workout and training, how to raise strength, cardio and focus - space4games",
+      "body": "GTA 6: Workout and training, how to raise strength, cardio and focus space4games",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-20T18:44:11+00:00",
+      "url": "https://news.google.com/rss/articles/CBMikAFBVV95cUxPenAwVXhtNlJBZXpLUXVzNV9FVE9sR2o4NS00aVM2RTh6VGJfR1lnN0RYc1hNOEFYMTF4Uk5kUnJkbi1PS19leXFxQmxSVnF3bnZoVEMzUG85bktxWXp6Y3FTczdBUHRwZlYzS2U2SlJackQwS0M0WE1WYnhBcGNEZUxvMk10dWUxbEc1VUV2dUc?oc=5"
+    },
+    {
+      "id": "news:72e514f7fa6f",
+      "source": "news",
+      "where": "Google News 健身App",
+      "via": "rss",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "fitness",
+      "title": "Fitness app user re-engagement and retargeting - ContentGrip",
+      "body": "Fitness app user re-engagement and retargeting ContentGrip",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-19T04:04:40+00:00",
+      "url": "https://news.google.com/rss/articles/CBMiakFVX3lxTE1WeG9lVE5Zd2I5SWY5ZU1EVl9SYm12TmJFWVVPQWJ4cUtXbldzT2JNSzdweUdteFVKYTZIaUNOY05xNjVtWGU1dTh2M0w3SEpDSDdpTGdRMm1ULUl4cUNVbExSU3R6amVCUmc?oc=5"
+    },
+    {
+      "id": "hn:50578729",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "fitness app",
+      "title": "Levent Alpöge claims proof of the Generalized Riemann Hypothesis [pdf]",
+      "body": "Yeah, I think it&#x27;s not so much \"math is symbolic manipulation so computers and by extension LLMs are going to be good at it\". LLMs are not by construction so good at it because ML models are far more statistical approximators than formal logic systems. I think the main thing that math has going for it is sufficient formalisation through tools like Lean that it&#x27;s very verifiable, and the latests hotness in improving models is RLVR which seems to really work very well when the verification is strong and relevant to the task (probably also why they&#x27;re getting very good at writing code and especially finding exploits). (I would also say that computers are not good at math in the sense that LLMs are proving to be good at it: reliable symbolic manipulation is important for correctness but it&#x27;s no use for actual progress in mathematics without some very good informal thinking&#x2F;creativity as well)",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-20T17:40:09Z",
+      "url": "https://news.ycombinator.com/item?id=50578729"
+    },
+    {
+      "id": "hn:50577979",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "fitness app",
+      "title": "Levent Alpöge claims proof of the Generalized Riemann Hypothesis [pdf]",
+      "body": "> In newspapers, professors are always associated with their universities, not the commercial relationships they have. The title is probably what it is because Levent Alpöge is not a professor at Harvard (or anywhere as far as I know) nor did he do this work on their behalf (or any academic institution&#x27;s). He&#x27;s employed by Anthropic and used their technology. Obscuring that in the name of some semblance of journalistic fairness would actually be a disservice. I think the title is vague, but associating him with a university is irrelevant to that.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-20T17:03:09Z",
+      "url": "https://news.ycombinator.com/item?id=50577979"
+    },
+    {
+      "id": "hn:50576770",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "fitness app",
+      "title": "Carnival Cruises emits ten times more sulphur oxide than all of Europe's cars (2019)",
+      "body": "It’s hilarious that Apple can get suppliers to bend the knee on environmental action but people think the United States Government has no recourse to force ships to an environmental standard. “All passenger ships that sell berths for US citizens must comply with X or have their ships impounded&#x2F;fines&#x2F;taxes&#x2F;etc.” Get the EU on board as well and the problem is solved. They don’t have to patch every regulatory hole just make it more expensive than complying.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-20T16:02:34Z",
+      "url": "https://news.ycombinator.com/item?id=50576770"
+    },
+    {
+      "id": "hn:50572780",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "fitness app",
+      "title": "Google is pushing OEMs against GrapheneOS and bootloader unlocking",
+      "body": "You can run Linux on Android phones that have an SoC that supports non-protected VMs (like e.g. Pixel). Since Android 17 even Wayland apps are supported. Android also has a desktop mode nowadays, so you can plug in a monitor and have a desktop. Sure, it is not perfect yet, but it&#x27;s a much easier target than bringing up desktop Linux to the level of finesse (both UX and e.g. power management) of AOSP.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-20T10:36:26Z",
+      "url": "https://news.ycombinator.com/item?id=50572780"
+    },
+    {
+      "id": "hn:50569795",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "fitness app",
+      "title": "AI agents ask better questions than KPMG accountants in audit trial",
+      "body": "> I would argue that not every crime on paper has the same effect in real life hence punishing \"by the book\" would lead to tyrannical and demotivating world. I disagree, and I think uneven application of laws is a fairness and equity&#x2F;equality issue. If police and prosecutors have too much discretion (which they do), then you end up with the exact problems we have today: racial profiling, race-motivated policing, police&#x2F;prosecutors giving rich and well-connected people better treatment, etc. > Take something like driving over the speed limit - if it&#x27;s for show off, then it should be punished. If it&#x27;s a surgeon rushing on the call to heart surgery - then I want him to driver as fast as he safely can. No, the surgeon should be driving at the speed limit. The entire reason we have speed-related crashes&#x2F;deaths is because people are terrible at judging how fast they can safely drive[0]. Imagine a scenario where that surgeon is speeding and gets into a crash: now not only is the surgeon likely not going to make it in time for the surgery (so: dead patient), but now others have been injured or perhaps killed too. (If someone is needed so quickly somewhere, they sho",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-20T03:29:02Z",
+      "url": "https://news.ycombinator.com/item?id=50569795"
+    },
+    {
+      "id": "hn:50569642",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "fitness app",
+      "title": "Russia reportedly planned mass-casualty attack in Poland to be blamed on Ukraine",
+      "body": "Strange attempt to throw shit at others when Russia has had, since the 1980s, by far the worst neo-Nazi infestation in Eastern Europe, particularly among soccer hooligans[1] and hardcore nationalist ( Память [2], Русское национальное единство [3], etc). Azov in Ukraine is a children&#x27;s choir compared to the huge ecosystem of neo-Nazis in Russia. My favorite example is the 2007 neo-Nazi rally in Moscow[4]: MOSCOW, Jan 28 (Reuters) - Russian ultra-nationalists on Sunday chanted \"Glory to Russia!\" and waved banners reading \"Jewish fascism! There is nothing scarier!\" in a sanctioned rally condemned by human rights campaigners as racist. About 200 activists and skinheads in black leather jackets and heavy boots gave Nazi-style salutes as organisers yelled nationalist slogans from a makeshift stage at one of Moscow&#x27;s central squares. \"Comrades! We are here to protect the people of Russia. This is our last frontier,\" Dmitry Rogozin, a nationalist politician, told a cheering crowd as dozens of riot police looked on. Similar protests were held in St Petersburg and other cities. Here&#x27;s a clip of Rogozin throwing a Nazi salute with his skinhead comrades at the rally, after procl",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-20T03:03:34Z",
+      "url": "https://news.ycombinator.com/item?id=50569642"
+    },
+    {
+      "id": "hn:50567410",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "fitness app",
+      "title": "How the European Commission rolled out Matrix to more than 40k staff",
+      "body": "EU is just useless. Look at them moving to a platform controlled by a foreign nation while suppressing locally-developed solutions. They do this again and again. The EU approach is; adopt foreign tech, suppress EU tech, keep dishing out huge fines to the foreign companies so that the government gets as much money as they can, then distribute money to EU &#x27;tech&#x27; companies (their buddies in suits who know nothing about tech) in exchange for twiddling their thumbs. It&#x27;s absolutely rotten.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-19T22:29:26Z",
+      "url": "https://news.ycombinator.com/item?id=50567410"
+    },
+    {
+      "id": "hn:50560111",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "fitness app",
+      "title": "Black high school students sue after AI mistakes Doritos bag for gun",
+      "body": "Image training data can only ever hold surface details, and will thus always results in discrimination. Factors that will impact the decision process, among others, are gender, age, race, physical fitness, clothing, hair color and style, accessories, gate, and more. Algorithms based on image training data is guarantied to make unfair and biased decisions. Change gender, age, and many of the other aspects in the correct direction and the AI in this case would likely not have flagged the bag as a gun. There is no way to fix AI so they make fair and unbiased decision in that regard, and so the tool is unfit for that purpose.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-19T13:51:48Z",
+      "url": "https://news.ycombinator.com/item?id=50560111"
+    },
+    {
+      "id": "hn:50559544",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "fitness app",
+      "title": "Down the rabbit hole with Britain's sovereign citizens",
+      "body": "\"Matrix Freedom, offered its “members” a simple and attractive prospect: freedom from debt. For fees of up to £8,000, it would sell them a set of instructions that would supposedly allow them to reclaim mortgage payments, write off tax bills and cancel fines. Customers were taught how to file legal claims in arcane language that referenced ancient law.\" \"In its best month, detailed in a Zoom meeting leaked online, Matrix apparently took in £500,000.\" There&#x27;s one born every minute...",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-19T13:01:22Z",
+      "url": "https://news.ycombinator.com/item?id=50559544"
+    },
+    {
+      "id": "hn:50555274",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "fitness app",
+      "title": "Fable: Written, painted and directed by Claude Fable 5.2",
+      "body": "> Aesthetics is about ratios -- relations between things and aspects of things only if you stopped reading in Aristotle. > and, applied to humans, genetic fitness. wtf? > We believed that this was an appreciation for musicianship, as opposed to aesthetics. there are other aspects to the aesthetic appreciation of a live show than purely the music (even if you simply consider that a live show has a visual element to it that can also have aesthetic attributes). ultimately, trying to isolate aesthetic qualities both from each other and from the human experience doesn&#x27;t seem like a fruitful pursuit. > And the day AI can generate genuinely good music is very near at hand, I think... nah > If anybody believes that \"universal high income\" is \"the most likely outcome,\" they really haven&#x27;t been paying attention. Totally clueless. we agree here",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-19T02:22:35Z",
+      "url": "https://news.ycombinator.com/item?id=50555274"
+    },
+    {
+      "id": "hn:50555132",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "fitness app",
+      "title": "Fable: Written, painted and directed by Claude Fable 5.2",
+      "body": "Aesthetics is about ratios -- relations between things and aspects of things -- and, applied to humans, genetic fitness. It&#x27;s the sort of thing an AI can easily hack. That they&#x27;re still not great at it speaks to a lack of focus; it&#x27;s just not their priority. Back in the day, there was this discussion about music. Some people prefer going to live concerts, where it&#x27;s easy to get \"a sense of the presence of the creator.\" We believed that this was an appreciation for musicianship, as opposed to aesthetics. Others prefer listening to music at home. I&#x27;d maintain that this is a purely aesthetic appreciation. And the day AI can generate genuinely good music is very near at hand, I think... Thing is, though... Man... That \"Whitepill\" song is really something. The aesthetics don&#x27;t trouble me. The song, which is mediocre at best, is unimportant. What troubles me is that it&#x27;s more brazen than Soviet propaganda from the 1970s in its message and delivery. If anybody believes that \"universal high income\" is \"the most likely outcome,\" they really haven&#x27;t been paying attention. Totally clueless.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-19T01:57:26Z",
+      "url": "https://news.ycombinator.com/item?id=50555132"
+    },
+    {
+      "id": "hn:50580131",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "workout app",
+      "title": "Why there are still no non-WebKit browsers on iOS",
+      "body": "Yes I really like how you allow me sharing the app with one person without sharing my whole computer. And since it’s native, you can probably do PiP and even widgets. And PWAs don’t support FaceID either and yours does. For my personal OS, the main app is one where I can control terminals on my Mac on a web page and I built that into the personal app. The other is a calendar that’s not connected to Google or Apple calendar. It has an MCP so Claude can schedule tasks for me, workout session, LinkedIn posts, etc. It has a nice timeline so I can see my day. Another big app is curator where I started finding and collecting nice things I find on the internet and good websites. Overall it’s a great playground to get ideas off the ground before turning them into fully fleshed products. I also made a lot of mini apps in personal OS for websites I don’t like or push ads so I use their unofficial API. It also has a built in web browser in the web app itself so I can look at the website changes and dictate to the AI at once. Overall it’s helping me build an open-source Shopify for every vertical.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-20T19:06:29Z",
+      "url": "https://news.ycombinator.com/item?id=50580131"
+    },
+    {
+      "id": "hn:50577809",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "workout app",
+      "title": "I'll never buy Framework hardware again",
+      "body": "Not OP but Apple hardware is very reliable, they have been doing hardware for decades, they control everything in their supply chain and design devices all the way from the silicon to the software. They also tend to use quality parts for all components, even the ones that don&#x27;t draw attention in the reviews and that other manufacturer might cheap out on. On top of that customer support is very good usually. You just call them or go to a store and they will offer a solution, but it could get very expensive if you are out of warranty, that&#x27;s really the biggest downside. As a work machine for a business its something will just work out of the box and continue to work for years with very little maintenance, makes a lot of sense as a business decision.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-20T16:55:24Z",
+      "url": "https://news.ycombinator.com/item?id=50577809"
+    },
+    {
+      "id": "hn:50576890",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "workout app",
+      "title": "Show HN: Tinnitus frequency finder and audio notch tool",
+      "body": "0. Don&#x27;t panic: seriously. Grabbing on to \"oh my god I&#x27;ve got tinnitus\" can be the cause of much of the ongoing problem. Start from a position of \"that&#x27;s interesting\". Curiosity, not terror. 1. See a doctor to rule out physical causes. May just be earwax. They may recommend an MRI to check for acoustic neuroma (benign tumour) or other causes. 2. Tinnitus Retraining Therapy started by Jastreboff and Hazell is well-regarded. Some of it relates to point zero above: education and CBT to reduce the mental impact. There are also more sound-focused aspects. Best results come from working with an expert and availability is limited. The principles can be read about, usefully, but you need to go further than just learning. 3. Neuroplasticity can be a useful tool for some. A popular book for that is Rock Steady: Healing Vertigo or Tinnitus with Neuroplasticity. 4. General principle: Live. I don&#x27;t mean distract yourself or find work-arounds. I mean live. Do the stuff you ordinarily would. If you notice your tinnitus, note it and then move on. Like mindfulness and returning to the breath - you don&#x27;t beat yourself up, just notice and return to the breath. Focusing on sol",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-20T16:08:01Z",
+      "url": "https://news.ycombinator.com/item?id=50576890"
+    },
+    {
+      "id": "hn:50575931",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "workout app",
+      "title": "\"I can tell you wrote this yourself\"",
+      "body": "I liked this. I agree with the sentiment, and I&#x27;m generally not in favour of the excessive use of non local AI. I agree there&#x27;s a legitimate negative impact for people who depend on AI to get anything done (particularly frontier models and providers). I also particularly liked the positive wrap up at the end to prevent doomspiralling. I encourage the author to try not to take everything to the extreme though. \"Exploring the use of AI\" I think is a good thing for any educator to encourage. It is different to relying on AI. I think there&#x27;s probably a sensible midground, where people use AI, without abusing it. > At first this shocked me. Our reports are limited to 10 pages - so the appendices are getting a big workout around here - how hard is it to right 10 pages yourself? See AI as a tool that can help with the smaller tasks. I&#x27;m opening myself up to the prescriptive law of retaliation here, but if the assignment was written like blog post, then _writing_ 10 correct pages takes a little more thought&#x2F;time&#x2F;effort&#x2F;tooling than it took to \"right 10 pages yourself\" ;)",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-20T15:20:34Z",
+      "url": "https://news.ycombinator.com/item?id=50575931"
+    },
+    {
+      "id": "hn:50574530",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "workout app",
+      "title": "Vint Cerf on why TCP/IP was never patented",
+      "body": "From your first source: > President Dwight D. Eisenhower expressed his belief that every child should receive the polio vaccine, without indicating how that would happen. Eisenhower charged Health, Education and Welfare Secretary Ovetta Culp Hobby to work out the details in coordination with Surgeon General Leonard Scheele. > Congressional Democrats advocated for a plan that would make the polio vaccine free to everyone, which Hobby rejected as a “back door to socialized medicine.” Yes, there are a lot of other details in the history of the polio vaccine, but I fail to see for this isn&#x27;t exactly what I described. The person in Eisenhower&#x27;s cabinet who he put in charge of figuring this out used those words in the context I described. The fact that it was preceded by \"back door to\" is only as \"complicated and nuanced\" as the understanding that a back door still leads to the same house as the front door.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-20T13:42:51Z",
+      "url": "https://news.ycombinator.com/item?id=50574530"
+    },
+    {
+      "id": "hn:50574257",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "workout app",
+      "title": "Germany and Austria Call for European Control of TikTok",
+      "body": "> What about the manipulative nature of state controlled media that only allows one biased highly sanitize narrative on air, with no room fair debates or alternative PoVs that challenge the status quo and embarrass the regime in power? Again, nobody is arguing for state control. Do reread my above post. > So Germany needs to enforce more censorship and crackdowns on freedom of speech on the internet to prevent it becoming fascist? Those things might be neccessary, yes. Of course, there needs to be democratic debate, legtimization and an opportunity to challenge such bans through the courts. But fascism isn&#x27;t shorthand for \"things I don&#x27;t like\". It is a specific set of beliefs and policies that have led to some of the worst atrocities in human history. Dr. Karl Popper, who saw the devastation first hand and witnessed how it came to be, formulated the Paradox of Tolerance explaining why you cannot extend tolerance to those that would wield it to destroy it. Or if Karl Popper isn&#x27;t your thing, let me quote another famous contemporary: > When our enemies say: well, we gave you the freedom of opinion back then- yeah, you gave it to us, that&#x27;s in no way evidence that ",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-20T13:19:14Z",
+      "url": "https://news.ycombinator.com/item?id=50574257"
+    },
+    {
+      "id": "hn:50573141",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "workout app",
+      "title": "\"I can tell you wrote this yourself\"",
+      "body": "> At first this shocked me. Our reports are limited to 10 pages - so the appendices are getting a big workout around here - how hard is it to right 10 pages yourself? That was unintentionally funny.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-20T11:19:28Z",
+      "url": "https://news.ycombinator.com/item?id=50573141"
+    },
+    {
+      "id": "hn:50572958",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "workout app",
+      "title": "\"I can tell you wrote this yourself\"",
+      "body": "> At first this shocked me. Our reports are limited to 10 pages - so the appendices are getting a big workout around here - how hard is it to right 10 pages yourself? Unfortunate typo",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-20T10:57:02Z",
+      "url": "https://news.ycombinator.com/item?id=50572958"
+    },
+    {
+      "id": "hn:50571237",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "workout app",
+      "title": "Jujutsu Primer",
+      "body": "Recently JJ supports colocated workspace&#x2F;worktrees so you get a .git directory in the workspace so git is happy. Also workmux has initial support for JJ colocated workspaces and sesh (tmux session handler) also has experimental support. Whilst there are still some sharp edges, none of them are around data integrity, and I&#x27;m using it every day. YMMV.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-20T07:18:06Z",
+      "url": "https://news.ycombinator.com/item?id=50571237"
+    },
+    {
+      "id": "hn:50569301",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "workout app",
+      "title": "Anthropic’s Nasdaq debut",
+      "body": "I strongly disagree with your optimism about the extent to which our profession will continue to exist --much less offer the best effort&#x2F;reward ratio for the top ~10% performers of any major profession by far -- but I do love and appreciate you for quoting Mr. Turing. I have an another, far more relevant quote to offer in response though, from an under-appreciated essay: Let us now assume, for the sake of argument, that these machines are a genuine possibility, and look at the consequences of constructing them. To do so would of course meet with great opposition, unless we have advanced greatly in religious toleration from the days of Galileo. There would be great opposition from the intellectuals who were afraid of being put out of a job. It is probable though that the intellectuals would be mistaken about this. There would be plenty to do in trying, say, to keep one&#x27;s intelligence up to the standard set by the machines, for it seems probable that once the machine thinking method had started, it would not take long to outstrip our feeble powers. There would be no question of the machines dying, and they would be able to converse with each other to sharpen their wits. At ",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-20T02:10:11Z",
+      "url": "https://news.ycombinator.com/item?id=50569301"
+    },
+    {
+      "id": "hn:50568657",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "workout app",
+      "title": "Anthropic’s Nasdaq debut",
+      "body": "I agree with you that this is probably our fundamental difference. Because I don&#x27;t really think it&#x27;s unfair that somebody with a printing press could copy your stuff and distribute it and make way more money than you could. You never could have done that in the first place. Meanwhile they just made a bunch of customers happy. You lost nothing, the world got better. I&#x27;ve been studying business in general and startups for probably 20 years now. And if I&#x27;ve learned anything, it&#x27;s that the popular conception of what it takes to create something and succeed in the capitalistic marketplace is basically just to create it. The popular conception is that the creators are the kings&#x2F;queens. But reality is far different. You not only have to make something, but you have to make the right thing that the market actually needs and wants. And it can&#x27;t just be the right thing, but it also has to be pretty close to the best thing. And it can&#x27;t just be the right thing and the best thing, but it also has to be fairly unique and differentiable. And making something that&#x27;s differentiated, unique and high quality usually isn&#x27;t good enough either. You also",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-20T00:39:39Z",
+      "url": "https://news.ycombinator.com/item?id=50568657"
+    },
+    {
+      "id": "hn:50564802",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "workout app",
+      "title": "Anthropic’s Nasdaq debut",
+      "body": "> And the results are poor because the LLM does not have a face and is not reading your facial expressions or hearing the tone of your voice. We communicate with more than just the words we speak. I don&#x27;t disagree. But I think people will still use it. We&#x27;ve seen how people Googled stuff to get help in this area, and it&#x27;s 100x easier with LLMs. >> Physical trainers? > ... lol I disagree here. I think LLMs are decent at getting someone dumb to working out, like me, from zero to establishing a decent workout plan, and making adjustments as you go, if you give it enough context on your health, and how things are working for you. Again, I&#x27;m not saying LLMs are better at it, but I think it&#x27;s arguable that people will figure out that they can use an LLM to get started pretty easily, where they used to go to physical trainers. > \"Officer you can&#x27;t arrest me and impound my car, I did what the LLM told me to do. It&#x27;s not my fault that a wheel fell off and my exhaust is an eerie green color!\" I was already doing a lot of my own home&#x2F;vehicle work via YouTube. Now I almost never taking my vehicle into the shop (for what I think are relatively small repai",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-19T19:14:46Z",
+      "url": "https://news.ycombinator.com/item?id=50564802"
+    },
+    {
+      "id": "hn:50564410",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "workout app",
+      "title": "Anthropic’s Nasdaq debut",
+      "body": "> Therapists? People are using LLMs for “free” help. And the results are poor because the LLM does not have a face and is not reading your facial expressions or hearing the tone of your voice. We communicate with more than just the words we speak. > Physical trainers? Just upload a video of your workout ...lol > Appliance&#x2F;vehicle repair? Just DIY it with an LLM. \"Officer you can&#x27;t arrest me and impound my car, I did what the LLM told me to do. It&#x27;s not my fault that a wheel fell off and my exhaust is an eerie green color!\" > Teachers? Just teach yourself with an LLM. See above about therapy, there is more to teaching than spitting out words. > I could go on. You could, but at what point will you get to the few lines of work that are genuinely going to disappear because of this technology? Taxi drivers are the most obvious, and least discussed, example -- self driving cars will eliminate that entire profession over the next few decades.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-19T18:50:35Z",
+      "url": "https://news.ycombinator.com/item?id=50564410"
+    },
+    {
+      "id": "hn:50563939",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "workout app",
+      "title": "Anthropic’s Nasdaq debut",
+      "body": "It’s not even just everything that can be transformed into bits. Nearly everything will (eventually) be impacted. Therapists? People are using LLMs for “free” help. Physical trainers? Just upload a video of your workout to an LLM for tuning advice and other exercises you can focus on. Appliance&#x2F;vehicle repair? Just DIY it with an LLM. Teachers? Just teach yourself with an LLM. I could go on. To be clear, I’m not saying LLMs are better at this. But just saying LLMs are impacting nearly every field. EDIT: just to clarify some of the responses talking about full replacement -- that&#x27;s not my point here. I&#x27;m talking about impacting, not replacing. Software engineering likely won&#x27;t get fully replaced (anytime soon), either -- but it&#x27;s definitely being impacted.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-19T18:23:00Z",
+      "url": "https://news.ycombinator.com/item?id=50563939"
+    },
+    {
+      "id": "hn:50560195",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "workout app",
+      "title": "Garage Door Spam",
+      "body": "Philips (Signify) Hue is also horrible. You open the app, want to switch on a lamp, bam \"Buy these new lamps for only 250 eur\". Or \"You need an account\", which I don&#x27;t need btw, everything I paid for works thank you. When I first started I just saw my rooms listed, now the top 2 tiles are \"You need an account for \"protection\"\" and then another one \"Hue Secure: Help secure your house!\". You can&#x27;t remove these, you have to scroll down (more) to reach the intended goal for opening the app. w.t.f. Do you know how much I have paid them already? I am of the persuasion that a smart home should never require whipping out your phone, but I have not been able to brush away all occurrences yet. But the Hue app always motivates me to either do things via Home Assistant (including just coupling the bulb directly using ZigBee) or get a switch ASAP. Yes Signify (former Philips), you got an ad in my face, congrats, but you also got me super annoyed and I&#x27;ll be on the lookout for alternatives.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-19T13:59:33Z",
+      "url": "https://news.ycombinator.com/item?id=50560195"
+    },
+    {
+      "id": "hn:50559245",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "workout app",
+      "title": "Anthropic prices initial public offering",
+      "body": "> They have a huge moat, unfortunately. The last models are steps above any other company out there. But \"they\" here is Anthropic and OAI together, and you probably need to add Google onto that list too, now that they appear to have got themselves back on track. If it was just Anthropic, sure, this would be valid. But with 2-3 companies, we&#x27;ve got constant price competition bringing token costs down (as we are currently seeing) and no guarantee that Anthropic will ever come out with a clear advantage. If it&#x27;s a three-way split, then that list price seems hard to justify. And this is all assuming that the Chinese models don&#x27;t work out how to get back to near-parity, which is also a massive gamble.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-19T12:29:52Z",
+      "url": "https://news.ycombinator.com/item?id=50559245"
+    },
+    {
+      "id": "hn:50579494",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "AI personal trainer",
+      "title": "Language Models Can Rewrite Their Own Weights",
+      "body": "> Any increase in fidelity must come from somewhere... Presumably, it&#x27;s just that we had the training process wrong and it was actually more efficient than we gave it credit for. It&#x27;s just that our interpretation of the output was incorrect. Asking the model to train itself simply has it self-reflect (via attention on the sequence length as it reasons) to unlock that which was already trained. This could be an answer to some objections to training where people claimed that AI models need more data than a person to achieve the same result.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-20T18:28:14Z",
+      "url": "https://news.ycombinator.com/item?id=50579494"
+    },
+    {
+      "id": "hn:50577115",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "AI personal trainer",
+      "title": "Show HN: LarpLess, open-source study tracker detecting distractions locally",
+      "body": "I am ashamed to admit that I am one of those students who go to the library and get very little done (a.k.a. larping). It&#x27;s very easy to get distracted if you have any electronic devices with you, but as a CS major, I can&#x27;t just switch to pen and paper. That&#x27;s why I started building this app called LarpLess with the help of a few friends. LarpLess is a macOS&#x2F;Windows app that checks your screen and camera with local AI to determine what you are studying or if you are distracted. Gives you a focus percentage at the end, with a breakdown of what you did during your session (Math, Physics, etc.) Privacy is a big concern for an app like this, so it is open-source (AGPL 3.0) and uses locally run open-source models. It doesn&#x27;t connect to the internet unless you want to check for updates or enable the friends feature (Disabled by default. You can make an account, add friends and see their shared study sessions&#x2F;share your study sessions). For the camera, it uses an object detection model, YOLO11n, to detect if there is a person and&#x2F;or a phone at 1fps. For the screen, there are 2 options: the one we did first is reading window titles + a VLM on Ollama (defa",
+      "score": 3,
+      "num_comments": 2,
+      "created_utc": "2026-11-20T16:21:50Z",
+      "url": "https://news.ycombinator.com/item?id=50577115"
+    },
+    {
+      "id": "hn:50574012",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "AI personal trainer",
+      "title": "Frostbite: A new CPU architecture discovered, designed and verified by AI",
+      "body": "Hence I wrote: \"Structured data of actual usage would be needed for AI to ingest, in a way that it can derive intent from every action and identify friction.\" The challenge is more about providing actual, objective data to learn this. The LLM will not be able to decide what is \"good UX\" and \"bad UX\", it will have to ingest this information in vast detail from judgement provided by humans, which is also varying alot. Case in point: Coming from that field, I personally don&#x27;t have a good user experience using iOS, a majority of end-users will strongly disagree. An LLM would need to be trained to handle both cases to judge the same human interface, so it would need alot of data to understand both views...",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-20T12:53:18Z",
+      "url": "https://news.ycombinator.com/item?id=50574012"
+    },
+    {
+      "id": "hn:50572405",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "AI personal trainer",
+      "title": "AI came for the coders. Understanding why tells us who's next",
+      "body": "I have very little faith in my recent GP visits, to the point that I&#x27;d trust a random intelligent person with AI to diagnose me better. I&#x27;ve felt for a long time that doctors are vastly overtrained for what most of them are doing 99.99% of the time, and some more lightly trained people with AI assistance and escalation to a proper doctor would be perfectly fine. And much cheaper and more numerous. Meanwhile specialist doctors should be more specialised and not waste their time in generalist training for 5+ years. This is all partly informed by UK medical training being ridiculously long, not enough places, now insanely expensive, while working conditions once qualified are dogshit and meanwhile there aren&#x27;t nearly enough doctors to fulfil NHS requirements. The lack of training places could be easily fixed by a competent government you&#x27;d have thought, but still seems a waste of time to spend 8 years to qualify as a GP.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-20T09:49:36Z",
+      "url": "https://news.ycombinator.com/item?id=50572405"
+    },
+    {
+      "id": "hn:50568046",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "AI personal trainer",
+      "title": "Should governments slow frontier AI? Jacob Coxon and Robin Hanson debate [video]",
+      "body": "As a relatively unknown ex principal AI researcher (with a focus in computational creativity, machine learning, and more), yes they should. Further, we need socialism&#x2F;Communism and we need it yesterday. Exercise your right to freedom of choice in political engagement in this country, and find a socialist or communist party active near you and sign up. If you&#x27;re not ready for that, join the DSA (which isn&#x27;t actually socialist by the more traditional definitions, but, is close enough to learn how organize and engage with your community) and find the people who lean communist the furthest in your chapter and make friends. Avoid anarchists calling for anarchism before socialism: anarchism within capitalism segments communities and focus and makes any movement less capable of accumulating the necessary power to make effective change to the system. Anarchism makes more sense in late-stage (likely automated) socialism&#x2F;communism, as the effective needs for shared resources (such as infrastructure, utilities, defense, etc) are solved by both social norms, systemic factors, and, again, likely future automation, given the state of things. Socialism&#x2F;Communism (the diff",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-19T23:26:35Z",
+      "url": "https://news.ycombinator.com/item?id=50568046"
+    },
+    {
+      "id": "hn:50567156",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "AI personal trainer",
+      "title": "Anthropic’s Nasdaq debut",
+      "body": "Yeah I don&#x27;t think the gravy train is gone for software engineers; it&#x27;s just starting. I feel very negatively about the rise of AI for many reasons, but personal economic prospects is not one of those reasons.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-19T22:09:20Z",
+      "url": "https://news.ycombinator.com/item?id=50567156"
+    },
+    {
+      "id": "hn:50560358",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "AI personal trainer",
+      "title": "The AI Superintelligence Debate Has Serious Flaws",
+      "body": "I think this article gets it wrong, which is unfortunate: > Vernor Vinge pointed out, rapidity in cognition is not the same as intelligence. Speeding up the mind of a dog, he argued, wouldn’t enable the animal to play chess. True, he writes about this in his essay \"On the Coming Technological Singularity.\" His point is that there&#x27;s some hypothetical possibility that computers will get fast but not smart--i.e. a dog thinking a million times faster than a human is still a dog. But seeing as computers have solved Jacobi Conecture, quasi-Riemann, and Navier Stokes--and we&#x27;re in the early stages of LLMs--I think this hypothesis is bunk. The machines are smart. Foolish in some ways, but still smart. > Their construction prevents such an outcome: Instead of prompting an LLM to generate an open-ended strategy for pursuing a general goal, these AIs consider much more limited spaces of possible actions Well this is what Yudkowsky has advocated for--models that are trained on limited subspaces, e.g. protein folding sequences and nothing else. So I don&#x27;t think this is a counterpoint. On a personal note: Has \"alignment\" even been defined in a consistent way? How can AI even be al",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-19T14:11:42Z",
+      "url": "https://news.ycombinator.com/item?id=50560358"
+    },
+    {
+      "id": "hn:50578886",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "calorie tracking",
+      "title": "Levent Alpöge claims proof of the Generalized Riemann Hypothesis [pdf]",
+      "body": "I&#x27;m scared of the future. But there are things that make me a bit hopeful. Small-scale nuclear fission reactors. Sound smart, sound safe, sound like a good way to make a lot of energy, without wrecking the Earth. Fusion reactors. If we get good at them sometime in the next fifty years, that&#x27;d be great. Yay, solar, wind, hydro, geo power. And on electric vehicles, I guess... Fingers crossed on better batteries, to have a compounding effect on solar, wind, hydro, geothermal power&#x27;s usefulness... Desalination takes a lot of power. And I worry about the availability of potable water. That&#x27;s why my hope for lowering energy costs makes me somewhat hopeful that we can survive the +1.5 C horror that we&#x27;ve unleashed on ourselves. There&#x27;s a ton of problems associated with +1.5 C, but the water scarcity part is the one that scares me the worst. Maybe robots can help us grow crops with less pesticides? Maybe they can help us avoid the monocultures that make us vulnerable to diseases...? Maybe we can grow a hundred crops all together, in a more sustainable way, with robots tending them? Yay for fake meat, if it gets people to consume calories from places that are m",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-20T17:49:30Z",
+      "url": "https://news.ycombinator.com/item?id=50578886"
+    },
+    {
+      "id": "hn:50574609",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "calorie tracking",
+      "title": "If you can't explain something in simple terms, you don't understand it (2017)",
+      "body": "You do not need to \"speculate\" on how TDEE (total calorie burn of the day) changes in response to a deficit; we&#x27;ve documented it here: https:&#x2F;&#x2F;i.ibb.co&#x2F;HThyPcSX&#x2F;f0b1704b2cf3.png https:&#x2F;&#x2F;i.ibb.co&#x2F;vCFYB87j&#x2F;7ee73cd7ce4d.png method of maintenance tracking: https:&#x2F;&#x2F;macrocodex.app&#x2F;knowledge&#x2F;rethink&#x2F;adaptive-tdee&#x2F;#macr...",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-20T13:48:44Z",
+      "url": "https://news.ycombinator.com/item?id=50574609"
+    },
+    {
+      "id": "hn:50574506",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "calorie tracking",
+      "title": "If you can't explain something in simple terms, you don't understand it (2017)",
+      "body": "It&#x27;s neither simple nor correct explanation. The more correct one would be pointing out that humans aren&#x27;t dumb matter-to-energy converters. For many people, the body will happily down-clock quite hard in response to a calorie deficit; for others, it&#x27;ll create irresistible psychological urges to fight the limit. I&#x27;d probably go towards scenarios: imagine the body is a block of flats, and the municipal government decides for some reason to cut the city heating allocation for the block by half during a harsh winter. Things that will happen include some combination of desired outcomes (people improving insulation, replacing radiators with newer ones, closing windows more) and undesired outcomes (people losing jobs and staying home and not paying bills, people starting fires indoors, tapping infrastructure to direct more heating to themselves, sabotaging neighbors, outright threatening or murdering neighbors to take their fuels, going out to the streets and rioting or attacking neighboring buildings or city council, etc.). There&#x27;s probably a simpler explanation to give, but I currently don&#x27;t know an example of \"self-regulating system\" that most normies wou",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-20T13:41:00Z",
+      "url": "https://news.ycombinator.com/item?id=50574506"
+    },
+    {
+      "id": "hn:50578554",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "habit app",
+      "title": "I can’t believe it’s 1!",
+      "body": "The original post is playing with your head. Let&#x27;s do grown up math. We define L_0, limit to zero in the Real domain. This is as close as you can get to 0. We define L_1, limit to(wards) 1 as that which leaves a difference of L0 to 1. I.e. L_1 := 1 - L_0 . This L_1 is what is &#x27;pictorially&#x27; (even in the mind&#x27;s eye) imagined as representable by an infinite sequence of 9s in 0.999.... But it has a precise \"value\": L_1. It is informative here to recognize that we can not do the same for L_0, since that is 0.000.... and that &#x27;inability to visualize&#x27; right there should be meta information for you that &#x27;this is a formalism that is being pushed to its limits&#x27;. But we also have a precise definition for value of L_0 as noted. And we have defined L_1 in terms of (a &#x27;graspable&#x27; 1) and an hypothetical L_0. Now (N x L_1) -- which requires the &#x27;shifty&#x27; shifting the digits bit in the mathematic schtick here to \"visualize\" -- also has a &#x27;precise&#x27; value: N x L_1 = N x (1 - L_0) = N - NxL_0 . So we now do the magic trick of substracting x (which is L_1) from Nx, that is N x L_1. Amazing: Nx - x where x is L_1 gives us 9 - 9 x L_0, ",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-20T17:30:51Z",
+      "url": "https://news.ycombinator.com/item?id=50578554"
+    },
+    {
+      "id": "hn:50572326",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "habit app",
+      "title": "Pancreatic cancer halted by virus injection in three patients",
+      "body": "Not currently. Pancreatic is ‘special’ in that there’s space around the organ so a tumor can grow without causing local symptoms. (In contrast, for a change in bowel habit; a brain tumor might cause seizures). Then you have screening, which is hard to do at scale, due to cost, risks of the screening techniques (eg radiation exposure, or invasiveness of the test itself), limited available testing facilities, and the problems caused by irrelevant or false positive findings generated when an imperfect test is applied at population scale. A simple blood test would be great, and there are people working on things that might ultimately result in this, but we’re not there yet, afaik.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-20T09:39:01Z",
+      "url": "https://news.ycombinator.com/item?id=50572326"
+    },
+    {
+      "id": "hn:50569445",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "habit app",
+      "title": "Anthropic’s Nasdaq debut",
+      "body": "My experience is exactly the opposite. 30 years writing software for my job, been using claude&#x2F;grok for most of this year. If you don&#x27;t specify the model you are talking about, you have written a sentence with near-zero information content. If that&#x27;s your habit, well... that&#x27;s likely part of the problem. I promise you, Fable and Neon are better than you are at pretty much whatever. Sonnet 4.X and MechaHitler, well, maybe not.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-20T02:31:57Z",
+      "url": "https://news.ycombinator.com/item?id=50569445"
+    },
+    {
+      "id": "hn:50562084",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "habit app",
+      "title": "Pete Warden on local AI, open models, voice interfaces, the future of hardware",
+      "body": "Even dumber local models that are heavily quantized to fit on consumer GPUs can be lovely as a dimwitted household assistant. A lot of people look to offload things they already do to LLMs, which can be great with frontier models, but you&#x27;ve got the highest standards and preferences for tasks you already do, so it&#x27;s the most likely to fall into a \"should have just done that myself\" outcome. I&#x27;ve found great success in instead lowering my threshold of things I&#x27;d take time to do -- I wouldn&#x27;t spend time on it, but I&#x27;d spend 60s prompting an LLM to take a crack. I&#x27;m fortunate to have the hardware to run Qwen 3.8 Flash Next at q8, but most of the tasks I have it do would be totally doable for a mid-quant Qwen 3.8 27b. Some recent tasks I&#x27;ve thrown it: * Go through my blood test data (from EHR XML dumps from prior years) and give me some over-time charts for consistently-sampled measurements * Go through my Good Articles bookmarks, epubify them, and drop one down onto my ereader each morning for my commute, then archive the offline version into cold storage * Go through my music library, identify my most-listened low-bitrate tracks, and source or ",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-19T16:19:24Z",
+      "url": "https://news.ycombinator.com/item?id=50562084"
+    },
+    {
+      "id": "hn:50560915",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "habit app",
+      "title": "Ask HN: When was the last time you thought \"that's bad API design\"?",
+      "body": "I used to be irrationally impressed when I saw good API design and docs. Now I can&#x27;t remember the last time I sat down and spent meaningful time reading docs for a platform. I&#x27;ve just gotten in the habit of pointing Claude at them or using a service like Context7 for the past year or so. As a consumer, I&#x27;ve realized that I&#x27;m not even sure which services I use that have good or badly designed APIs. If you maintain an API, have you changed how you write docs now that the main reader is probably an LLM?",
+      "score": 5,
+      "num_comments": 2,
+      "created_utc": "2026-11-19T14:53:34Z",
+      "url": "https://news.ycombinator.com/item?id=50560915"
+    },
+    {
+      "id": "hn:50559999",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "habit app",
+      "title": "How the European Commission rolled out Matrix to more than 40k staff",
+      "body": "There are three technologies I can name which are making me more concerned with privacy and data collection: 1. AI-powered \"personalized pricing\" for obvious reasons. 2. Advertising. Effective advertising captures my attention (a scarce resource) and \"creates demand\" in my brain for products I otherwise wouldn&#x27;t need. No TV ad has ever led to me purchasing something, but Instagram ads and YouTube affiliate marketing fuel my B.A.S. (bike acquisition syndrome). 3. Predatory apps like sports gambling and MMORPGs. Like advertising, these are designed to create addiction and using personalized data makes it all the more effective. While I am also a commoner with avg habits, I would like to protect myself against sophisticated attackers like Instagram Ads, RuneScape, DraftKings, and predatory pricing at the grocery store. Giving up my privacy and data gives the attacker an advantage (they know how to manipulate me). None of this has anything to do with government surveillance. We all hope for philosopher kings who wield Palantier with grace and dignity, but history has more examples of despots using technology to oppress us commoners :(",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-19T13:42:38Z",
+      "url": "https://news.ycombinator.com/item?id=50559999"
+    },
+    {
+      "id": "hn:50580475",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "I'm Peter Roberts, immigration attorney who does work for YC and startups. AMA",
+      "body": "How does having an unconventional career path impact EB-1 or NIW applications? PhD in molecular biology, then health informatics to product management is mine. I&#x27;m uncertain if that can add up to a competent application. Thanks for doing this. Appreciate the chance to ask the question.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-20T19:27:03Z",
+      "url": "https://news.ycombinator.com/item?id=50580475"
+    },
+    {
+      "id": "hn:50579862",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "No Bailout for the AI Bubble, Anthropic IPO Protesters Say",
+      "body": "You&#x27;re the one invoking an idea of \"golden tickets\", as if access to healthcare should be some rare privilege rather than a reasonable expectation in a functioning society. And I am well aware I&#x27;m talking about how things should be rather than how they are . > Every ai or human denial is money saved out of my pocket instead of waste on unnecessary care. I want more of them! If you believe this universally, you can simply just cancel your health insurance and you will have solved the entire problem as you see it! But presumably you will only hold this position until you yourself end up needing substantial care. Also from my experience it&#x27;s not even outright denial is the problem, but rather the soft denial that a patient&#x2F;family (already having to deal with the actual medical issues!) then needs to spend an extreme amount of time and effort to reverse. Never mind the overhead of the staff at providers whose whole job is to navigate this system and write justifications for the insurance companies - a core of rot the system is drowning in. > Get rid of policy specific pricing and make it all up front. Yes, I elaborated on some other things to show you we actually pr",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-20T18:52:35Z",
+      "url": "https://news.ycombinator.com/item?id=50579862"
+    },
+    {
+      "id": "hn:50578671",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "Levent Alpöge claims proof of the Generalized Riemann Hypothesis [pdf]",
+      "body": "Personally, I&#x27;m deeply discomforted by the idea that the few mathematicians who have aligned themselves with these companies are able to race ahead of the rest of the mathematical community like this. It is unrealistic to expect Anthropic to immediately share their monetary wealth with the rest of the world (though this is their stated intention in the long-run via UBI), but math is just math. Does Levent really need to take the crown jewel of open math problems for himself before the models are even publicly available? Did OpenAI really need to launch a swarm of 10,000 agents and scoop Tristan Buckmaster, a university professor who had worked on the Navier-Stokes existence problem for most of his career? This is a time of deep uncertainty and anxiety for working and aspiring mathematicians. OpenAI and Anthropic gain little by announcing results like this ahead of model release. So if they can&#x27;t restrain themselves on such economically useless things as pure mathematics, it does not bode well for the rest of us.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-20T17:37:06Z",
+      "url": "https://news.ycombinator.com/item?id=50578671"
+    },
+    {
+      "id": "hn:50577691",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "Levent Alpöge claims proof of the Generalized Riemann Hypothesis [pdf]",
+      "body": "Heard. Then: Exponential progress has been the repeated truth, mirroring predictions. The result of exponential progress into 2027 is a complete de-mapping of what we know to be human, whatever that may look like exactly at this point is hard to say. We need your help, and everyone&#x27;s help, to put a pause on this such that we are able to ground and find a healthy way forward together for as many human beings as possible. Please join us.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-20T16:49:30Z",
+      "url": "https://news.ycombinator.com/item?id=50577691"
+    },
+    {
+      "id": "hn:50577163",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "Anthropic’s Nasdaq debut",
+      "body": "All YIMBYism will do is offer more upmarket housing. Housing is an inelastic market and simplistic supply&#x2F;demand concepts don&#x27;t apply well. There are structural causes to affordability - money flows to the upper class through rent and mortgages; this share of the housing market continues to grow. Meanwhile huge swathes of our economy are captured monopoly&#x2F;oligopoly markets which keep raising prices, funneling the profits from rising prices into a small number of hands. Tech is a case in point with its oligopolistic switching costs and enshittification. These trends are continuing to worsen, thus inequality is continuing to worsen. The ultrawealthy who find themselves with more money than ever need to find a place to stash that wealth in assets; this bids up the price of all assets, including housing. YIMBYIsm is a strategy to offer voters something that claims to address the cost of living crisis while making no substantial improvements. It&#x27;s par for the course for both parties, because they&#x27;re both owned by billionaires and corporations. It&#x27;s part of the whole \"abundance\" branded astroturf geared at distracting people from anything that would threaten",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-20T16:24:32Z",
+      "url": "https://news.ycombinator.com/item?id=50577163"
+    },
+    {
+      "id": "hn:50576814",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "Show HN: Tinnitus frequency finder and audio notch tool",
+      "body": "I also have the kind that is multiple frequencies that sound like people are tuning CB radios constantly. I&#x27;ve had it for 6 years and tried many things that didn&#x27;t work. The thing that actually made it less stressful was what many have said in the main thread. Once you stop fighting, it becomes normal and then it&#x27;s not as bothersome. The bothersome part is when it starts tugging at your ability to do other things, or enjoy other things. Like when you&#x27;re at a movie theater and can&#x27;t enjoy the movie because you notice that you can still hear the sound even though the movie is so loud. Or where you&#x27;re trying to enjoy some peace and quiet and then the noise pulls you out of the relaxation and makes you question whether you&#x27;re sane or healthy. The sound hasn&#x27;t changed for me but the bothersome part is gone about 80% of the time now. It sounds stupid but daily (yes, every day) mindfulness meditation practice, for me specifically Andy Puddicombe&#x27;s original managing anxiety series on Headspace (the app is completely terrible at the moment, the original was clean and so much better) taught me that the fight, with any kind of anxiety or pain, is w",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-20T16:04:29Z",
+      "url": "https://news.ycombinator.com/item?id=50576814"
+    },
+    {
+      "id": "hn:50576708",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "Why do tech leaders sound so illogical and off-putting?",
+      "body": "I think about this tweet all the time, all the way back from 2019: \"Being a billionaire must be insane. You can buy new teeth, new skin. All your chairs cost 20,000 dollars and weigh 2,000 pounds. Your life is just a series of your own preferences. In terms of cognitive impairment it&#x27;s probably like being kicked in the head by a horse every day\" - @Merman_Melville ( https:&#x2F;&#x2F;x.com&#x2F;Merman_Melville&#x2F;status&#x2F;1088527693757349888 ) I think its more or less an accurate read! These people are tanking tremendous psychic damage from simply having a level of wealth unfathomable to 99.9999% of humanity. At least monarchies as an institution had inbuilt senses of noblesse oblige - it wasn&#x27;t always applied, but the institution of the monarchy DID try to instill it. Billionaires have so such institutional safeguards",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-20T15:58:53Z",
+      "url": "https://news.ycombinator.com/item?id=50576708"
+    },
+    {
+      "id": "hn:50576590",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "Global stock markets slump as Anthropic's record IPO fails to stem AI sell-off",
+      "body": "…because &#x27;old people&#x27; clearly all have generational wealth on the order of your typical AI tech billionaire and can hire servants and caretakers at white-collar salaries. That market is absolutely not going to be booming. It&#x27;s a societal problem that large numbers of old people are exploited, broke, and brainwashed by generations of social media. That&#x27;s not a booming market, that&#x27;s a captive army of peons valuable only as long as human votes matter. They could as easily be disposed of, and so could you.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-20T15:53:27Z",
+      "url": "https://news.ycombinator.com/item?id=50576590"
+    },
+    {
+      "id": "hn:50576552",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "Show HN: Nunya – A \"digital privacy screen\" that makes text illegible from afar",
+      "body": "Hello! I&#x27;m Marc. I&#x27;ve built \"Nunya\", which is a sort of \"digital privacy screen\". It redraws text to make it readable when looking at your monitor or phone from a normal distance, while making it hard to read by someone who might be looking over your shoulder. It&#x27;s based on “hybrid images” like the famous Einstein&#x2F;Monroe image (from the paper at https:&#x2F;&#x2F;dl.acm.org&#x2F;doi&#x2F;10.1145&#x2F;1141911.1141919 ) and I thought it&#x27;d make a great way to mask text on your phone that you don&#x27;t want someone nearby reading. I particularly spent time on the transition - I wanted the text to be incredibly legible when close, but incredibly illegible when being far, and tried to optimise for a minimal transition between the two. Demos can be seen at my site for it here: https:&#x2F;&#x2F;usenunya.com I first released this over ten years ago as \"PrivacyMessage\" (my app names have definitely improved) when Apple first allowed iMessage apps. This was my first app geared towards the general market as I&#x27;ve spent the last 13 years developing iOS apps for a fairly niche market. I&#x27;m happy to have brought it back as “Nunya”, and have currently made it ava",
+      "score": 1,
+      "num_comments": 0,
+      "created_utc": "2026-11-20T15:51:12Z",
+      "url": "https://news.ycombinator.com/item?id=50576552"
+    },
+    {
+      "id": "hn:50575593",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "Global stock markets slump as Anthropic's record IPO fails to stem AI sell-off",
+      "body": "It will probably mean the AI companies will get part of that wealth from service companies in the US and pull it away from countries & companies exporting those services. Those service industries serve already \"real\" industries like: agriculture, construction, factories, governments, health, etc. For some countries with a service oriented industry it could be troubling. It will probably also lead to more software development for a while, but some wealth shift to AI companies will happen.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-20T14:59:51Z",
+      "url": "https://news.ycombinator.com/item?id=50575593"
+    },
+    {
+      "id": "hn:50575592",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "The Market Is Down",
+      "body": "Yawn. I grew up in a poor country and climbed my way to this. I couldn&#x27;t speak proper English until my 30s. I have a mild visual disability. I remained an indentured servant of my H1B employer for years while American coworkers got better opportunities for having freedom of employment and better English skills. If I won the lottery ticket, I was well towards the back of the lottery ticket line. If you are reasonably healthy, born anywhere in the developed world and went to college, you have a better ticket than mine.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-20T14:59:49Z",
+      "url": "https://news.ycombinator.com/item?id=50575592"
+    },
+    {
+      "id": "hn:50573906",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "Why do tech leaders sound so illogical and off-putting?",
+      "body": "Power. Learn the lessons of Scarface. Past a certain point, money becomes essentially meaningless in it&#x27;s trade for power. Elon spent how much on the Texas midterms? An amount that could make a massive difference to the lives of a large number of people. And it made almost no difference to his total wealth. We&#x27;re past following the money, we need to follow the power. If Jensen can be removed from his position of power (which was arguably the highest position of all the tech bros), then they all can. And that&#x27;s something they don&#x27;t want to face. Reinstall Jensen, because without him it might all fall apart. Same as if they remove Sam or Dario or Elon or Larry or Zuck or Bezos. They need to be protected from any and all consequences of their actions! For the sake of all mankind! Fragile little egos.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-20T12:43:06Z",
+      "url": "https://news.ycombinator.com/item?id=50573906"
+    },
+    {
+      "id": "hn:50573104",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "Anthropic’s Nasdaq debut",
+      "body": "The wealth tax is actively used as a distraction from YIMBYism, which absolutely addresses the cost of living crisis by causing there to exist more housing units for people to live in. One of the several reasons I opposed the billionaire wealth tax is because I knew it would do absolutely nothing to improve my own ability to afford a house in the bay area. Only building more houses can do that.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-20T11:15:12Z",
+      "url": "https://news.ycombinator.com/item?id=50573104"
+    },
+    {
+      "id": "hn:50572920",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "\"I can tell you wrote this yourself\"",
+      "body": "We don&#x27;t need aliens, we produce substance that millions of people in every country at this point are \"happily\" consuming long term. It&#x27;s even covered by health insurance.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-20T10:53:22Z",
+      "url": "https://news.ycombinator.com/item?id=50572920"
+    },
+    {
+      "id": "hn:50572715",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "What Comes After AGI?",
+      "body": "I&#x27;m thinking that if we come to the point where most people will be made unemployed (something like half to two-thirds of western workers are professional workers) due to some super AGI, the first consequences will be civil unrest if the welfare system can&#x27;t absorb these quick enough. Anyone with any wealth will become the targets of high taxation to prop up the system - the sheer number of unemployed will make politicians pushing for socialism very popular. And for the wealthy wishing to avoid this, there&#x27;s no first world countries to escape to, as all countries with a strong professional economy will experience the same. I also believe private ownership will be targeted. I could see AI companies being expropriated. Basically, instead of some dystopian techno feudalist society - I think we&#x27;re headed for some sort of new brand of communism or socialism. The proponents of this will not mainly be the average salaried man, but the upper-middle class that didn&#x27;t get a foot inside the ruling AI-class, and lost their businesses &#x2F; wealth to AI. But it all will depend on how severe the unemployment will be, and how fast it happens. If people can&#x27;t have an",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-20T10:27:02Z",
+      "url": "https://news.ycombinator.com/item?id=50572715"
+    },
+    {
+      "id": "hn:50572049",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "\"I can tell you wrote this yourself\"",
+      "body": "The thing is that people who like AI have been successfully \"othered\" so thoroughly that no one cares that the internet has become an unwelcoming and often downright hostile place to hang out for us. Every day there is some new essay about how the thing we like is actually super bad and we shouldn&#x27;t like it. There&#x27;s some new argument about how people who use AI are actually massive dumbasses who can&#x27;t think for themselves anymore, or how people who use AI to make art aren&#x27;t actually being creative and are only contributing the global warming and water shortages. No one cares about what that does to our mental health, because we&#x27;re \"others\". We&#x27;re evil, we&#x27;re shilling for corporations, we&#x27;re trying to destroy art and culture. \"Hey, I wrote this useful app and thought I&#x27;d share it.\" \"No you didn&#x27;t write it, AI wrote it, you did nothing.\" \"Okay, sorry, well I built it with the help of AI.\" \"No you didn&#x27;t build it, AI built it, you did nothing.\" \"Well, I came up with the idea and I worked with AI to bring it into the world, is that better?\" \"Cool story, bro, how much water did you waste on the AI you used for that? Don&#x27;t you c",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-20T09:06:02Z",
+      "url": "https://news.ycombinator.com/item?id=50572049"
+    },
+    {
+      "id": "hn:50571638",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "Anthropic’s Nasdaq debut",
+      "body": ">have a bunch of apple trees in my back yard. I hire a a few guys to go harvest them and then sell them to a bakery which eventually turns them into apple pies, who in the world is getting exploited? No matter how cute you try to make it sound, when one person owns the land and the other person works it in exchange for pay it&#x27;s the person working it who is exploited. Some people like to hand wave the question of who owns land and why they own it away but control of that wealth is always rooted in historic violence.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-20T08:13:42Z",
+      "url": "https://news.ycombinator.com/item?id=50571638"
+    },
+    {
+      "id": "hn:50570985",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "Should governments slow frontier AI? Jacob Coxon and Robin Hanson debate [video]",
+      "body": "I feel like knowing they&#x27;re willing to talk about things they have no understanding of, makes me lose trust that what they say within their expertise is fully trustworthy. I know people generally like to gravitate towards people who appear to have a wealth of knowledge, but I wish the same was awarded to people who admit where their gaps of knowledge are.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-20T06:43:13Z",
+      "url": "https://news.ycombinator.com/item?id=50570985"
+    },
+    {
+      "id": "hn:50570500",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "No Bailout for the AI Bubble, Anthropic IPO Protesters Say",
+      "body": "They signed up to offer health insurance, a product that most everyone is forced to buy, while having very few choices about who they can buy it from. So no, I am not receptive to the idea that when it comes time to provide healthcare, that companies should be able to use fine print to weasel out of actually doing that! As a matter of public policy, the entire point of insurance is to provide coverage for small probability high cost events - expecting a purchaser to weigh which particular small probability events might end important to them runs directly contrary to that. In general, the overarching dynamic of our system is the worst of both worlds - central planning for the provision of healthcare capacity, but then free market for extracting wealth based on the resulting shortages. I&#x27;m not saying pushing the way I&#x27;m pushing is a solution, rather merely pointing out the hypocrisy of the extractors to wax poetic about free markets when they&#x27;re taking money, but then appeal to collective limits to avoid having to spend it. If you want to talk about actual reform, sure. The easy response to what I&#x27;m saying is for health insurance companies to require 10% copays (o",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-20T05:25:21Z",
+      "url": "https://news.ycombinator.com/item?id=50570500"
+    },
+    {
+      "id": "hn:50568819",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "Anthropic’s Nasdaq debut",
+      "body": "YIMBYIsm is actively used as a distraction from a wealth tax. A person can have both views, sure; but this is how the SV billionaires have chosen to use YIMBYism - as a distraction. We can see that by observing what they fund and back. YIMBYIsm can&#x27;t address the cost of living crisis. They know it&#x27;s no threat to them. Yet the wealth tax is, which is why they oppose it.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-20T01:00:07Z",
+      "url": "https://news.ycombinator.com/item?id=50568819"
+    },
+    {
+      "id": "hn:50568470",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "Should governments slow frontier AI? Jacob Coxon and Robin Hanson debate [video]",
+      "body": "Inequality is not primarily about wealth , but power . To quote Roger Zelazny, \"Money buys things. Power makes things happen. If you ever have a choice, take the power.\" So no, it&#x27;s not about envy. Musk being a quadrillionaire is a problem because he can use that money to exert influence over my life that I don&#x27;t want him or anyone else to have. And when I say \"anyone else\", I really mean it. Replace Musk with whomever you consider the most benevolent person to have ever lived and I still wouldn&#x27;t want them to have that power. Then again, a truly benevolent person wouldn&#x27;t want that power, either. Now, you can try to argue about how the distinction I made changes the whole argument and how the real problem is corruption and how it should be perfectly fine for quadrillionaires to exist in a society where they cannot abuse their wealth and so forth and so on. We don&#x27;t live in that society. We live in this society, where extremely wealthy people are allowed to use that wealth to hold power they shouldn&#x27;t. Pretending that the wealth inequality is okay will not lead to that society. It will only make this society worse.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-20T00:17:36Z",
+      "url": "https://news.ycombinator.com/item?id=50568470"
+    },
+    {
+      "id": "hn:50568384",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "Anthropic’s Nasdaq debut",
+      "body": "No there&#x27;s actually a contingent of catastrophizing depressive types in San Francisco who exaggerate bureaucratic changes to the administrative state approved by the most liberal voters country as the return of Stalin and Hitler. Those people would be sincerely better off getting treatment for their mental health issues, and not enough people call them out on it.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-20T00:05:40Z",
+      "url": "https://news.ycombinator.com/item?id=50568384"
+    },
+    {
+      "id": "hn:50567173",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "Pancreatic cancer halted by virus injection in three patients",
+      "body": "Your message is so relatable - sorry to hear it. My father died of pancreatic cancer too. It was in 2006 and he was 56. Almost the same story - he always seemed so strong and healthy but started complaining of stomach pain. Doctors misdiagnosed him several times with indigestion, stomach ulcers, and even depression at one point. Eventually though, after going back enough times, they eventually diagnosed him with pancreatic cancer in May of 2006 - he died the following November. It&#x27;s 20 years ago this month and I still miss him like it was yesterday. If there&#x27;s one thing I hope comes from all the AI discoveries that are predicted to happen is that there&#x27;s finally a cure for all types of cancer.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-19T22:10:31Z",
+      "url": "https://news.ycombinator.com/item?id=50567173"
+    },
+    {
+      "id": "hn:50565914",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "Anthropic’s Nasdaq debut",
+      "body": "Token spend is not increasing much at the moment: https:&#x2F;&#x2F;www.apollo.com&#x2F;wealth&#x2F;insights-news&#x2F;insights&#x2F;daily-s... Heavy Anthropic users have a strong incentive to demand DeepSeek cost&#x2F;task. Its a ~10x difference. There are other ways that will be discovered to improve cost&#x2F;task. Those decreases in cost don&#x27;t necessarily lead to dramatically lower bills: it can be soaked up by more heavily using AI in existing processes (code reviews, veifications, etc). And we will see a lot more software being developed over the next few years. Anthropic stock seems like a bet as to whether they can both maintain their leadership role in software against intense competition and further develop other industries outside of software.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-19T20:29:27Z",
+      "url": "https://news.ycombinator.com/item?id=50565914"
+    },
+    {
+      "id": "hn:50565832",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "No Bailout for the AI Bubble, Anthropic IPO Protesters Say",
+      "body": "Capitalism- it’s not about health, it’s about novel ways to reject insurance claims.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-19T20:23:49Z",
+      "url": "https://news.ycombinator.com/item?id=50565832"
+    },
+    {
+      "id": "hn:50565746",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "health app",
+      "title": "Anthropic’s Nasdaq debut",
+      "body": "Capitalism is a softmax function. It pushes with enormous, exponentially compounding strength towards concentrating wealth and power. Buybacks are not necessary. The same exponential compounding happens just as easily with dividends or even just growth and a trusting valuation. It&#x27;s the compounding r>g that is the problem.",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-19T20:18:31Z",
+      "url": "https://news.ycombinator.com/item?id=50565746"
+    }
+  ]
+}
