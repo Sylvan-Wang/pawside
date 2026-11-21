@@ -23,6 +23,8 @@
  * banner, never instead of it.
  */
 
+import { useT } from '@/lib/i18n/use-locale'
+
 export type CoachCardState = 'loading' | 'ai' | 'basic' | 'insufficient'
 
 export interface CoachCardProps {
@@ -50,26 +52,27 @@ export default function CoachCard({
   bullets = [],
   actions = [],
   dataQualityTip,
-  loadingText = '教练反馈生成中…',
-  insufficientText = '还没有记录，记一点什么，教练才能给出反馈。',
-  basicLabel = '基础总结 · AI 反馈暂时没有生成',
+  loadingText,
+  insufficientText,
+  basicLabel,
   onRetry,
   retrying = false,
   children,
 }: CoachCardProps) {
+  const t = useT()
   if (state === 'loading') {
-    return <p className="text-sm text-gray-400">{loadingText}</p>
+    return <p className="text-sm text-gray-400">{loadingText ?? t('common.coachCard.loading')}</p>
   }
 
   if (state === 'insufficient') {
-    return <p className="text-sm text-gray-400">{insufficientText}</p>
+    return <p className="text-sm text-gray-400">{insufficientText ?? t('common.coachCard.insufficient')}</p>
   }
 
   return (
     <div>
       {state === 'basic' && (
         <div className="mb-2 flex items-center justify-between">
-          <p className="text-[11px] text-gray-400">{basicLabel}</p>
+          <p className="text-[11px] text-gray-400">{basicLabel ?? t('common.coachCard.basic')}</p>
           {onRetry && (
             <button
               type="button"
@@ -77,7 +80,7 @@ export default function CoachCard({
               disabled={retrying}
               className="text-[11px] text-gray-500 underline disabled:opacity-50"
             >
-              {retrying ? '重试中…' : '重试'}
+              {retrying ? t('common.coachCard.retrying') : t('common.coachCard.retry')}
             </button>
           )}
         </div>
