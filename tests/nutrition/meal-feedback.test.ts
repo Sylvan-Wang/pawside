@@ -96,6 +96,22 @@ describe('computeMealFeedbackStatus — exact user target comparison', () => {
     }
   })
 
+  it('treats a complete day within ±10% of the target as on target, both ways', () => {
+    for (const kcal of [1620, 1700, 1900, 1980]) {
+      const statuses = computeMealFeedbackStatus(facts({
+        consumed: { calories_kcal: kcal, protein_g: 112, carbs_g: 225.5, fat_g: 50 },
+      }))
+      expect(statuses[0].status).toBe('within_reference')
+      expect(statuses[0].explanation).toContain('相差不到一成')
+    }
+    expect(computeMealFeedbackStatus(facts({
+      consumed: { calories_kcal: 1990, protein_g: 112, carbs_g: 225.5, fat_g: 50 },
+    }))[0].status).toBe('above_reference')
+    expect(computeMealFeedbackStatus(facts({
+      consumed: { calories_kcal: 1610, protein_g: 112, carbs_g: 225.5, fat_g: 50 },
+    }))[0].status).toBe('below_reference')
+  })
+
   it('does not call an in-progress day below target', () => {
     const statuses = computeMealFeedbackStatus(facts({
       consumed: { calories_kcal: 1440, protein_g: 112, carbs_g: 225.5, fat_g: 50 },

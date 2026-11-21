@@ -1,5 +1,6 @@
 import type { InterpretedStatus, JudgementDomain } from '../nutrition/interpretation'
 import type { DailyNutritionFacts } from './persistence'
+import { isWithinTolerance } from './portions'
 
 /**
  * Pawside — Meal Feedback status layer (Product §10.1 layer 2).
@@ -91,6 +92,20 @@ export function computeMealFeedbackStatus(
       explanation: '截至目前已记录摄入尚未达到你的目标；当天仍未结束，也可能还有未记录饮食，因此不作全天不足判断。',
       evidence_ref_ids: [],
       authority: 'Product Patch §5.2 / AC-P04',
+    })
+    return statuses
+  }
+
+  // ±10% 算到位（lib/nutrition/portions.ts）：记录本来就是估的，差一成以内
+  // 不报「高于 / 低于目标」，免得用户为几十千卡多想一步。
+  if (isWithinTolerance(consumed, target)) {
+    statuses.push({
+      metric_key: 'nutrition.calories',
+      status: 'within_reference',
+      domain: 'user_target',
+      explanation: '今日已记录摄入和你设置的热量目标相差不到一成，算到位。',
+      evidence_ref_ids: [],
+      authority: 'Product Patch §4.2 / ±10% tolerance',
     })
     return statuses
   }
