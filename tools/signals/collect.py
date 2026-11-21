@@ -263,15 +263,47 @@ def collect_news(cfg: dict, health: Health, cutoff: float) -> list[dict]:
 
 
 # ─── Hacker News（Algolia 公开搜索，稳定、不限流） ─────────────────────────────
+# 2026-11-17 起只抓主帖（story），并要求搜索词的每个词都出现在标题里。
+# 之前连评论一起抓，命中的多是招聘帖、政治讨论里顺口提到 "app" 的评论（见 #53 第 1 节 6a）。
+
+def hn_title_matches(title: str, query: str) -> bool:
+    """搜索词的每个词都要在标题里出现（不区分大小写，按词边界，允许复数 s）。"""
+    low = title.lower()
+    return all(re.search(rf"\b{re.escape(w)}s?\b", low) for w in query.lower().split())
+
+
+def hn_story_item(h: dict, query: str) -> dict | None:
+    """把一条 Algolia 结果转成信号条目；不是主帖或标题不相关就返回 None。"""
+    tags = h.get("_tags") or []
+    if tags and "story" not in tags:
+        return None
+    title = h.get("title") or ""
+    if not hn_title_matches(title, query):
+        return None
+    oid = h.get("objectID", "")
+    body = strip_html(h.get("story_text") or "")
+    if not body:
+        # 只有标题的链接帖：补上外链和讨论热度，免得被清洗当成「太短」丢掉
+        body = f"{h.get('url') or '（无外链）'} · {h.get('points') or 0} 分 · {h.get('num_comments') or 0} 条评论"
+    return {
+        "id": f"hn:{oid}", "source": "hacker_news", "where": "Hacker News", "via": "algolia",
+        "tracks": ["industry_news"], "matched": query, "title": title, "body": body,
+        "score": h.get("points"), "num_comments": h.get("num_comments"),
+        "created_utc": h.get("created_at"),
+        "url": f"https://news.ycombinator.com/item?id={oid}",
+    }
+
 
 def collect_hn(cfg: dict, health: Health, cutoff: float) -> list[dict]:
     import requests
     out = []
+    hn_cutoff = time.time() - cfg.get("hn_lookback_hours", cfg.get("lookback_hours", 48)) * 3600
     for q in cfg.get("hn_queries", []):
         try:
             r = requests.get("https://hn.algolia.com/api/v1/search_by_date",
-                             params={"query": q, "tags": "(story,comment)",
-                                     "numericFilters": f"created_at_i>{int(cutoff)}", "hitsPerPage": 30},
+                             params={"query": q, "tags": "story",
+                                     "restrictSearchableAttributes": "title", "typoTolerance": "false",
+                                     "numericFilters": f"created_at_i>{int(hn_cutoff)}", "hitsPerPage": 30},
                              headers={"User-Agent": UA}, timeout=15)
             hits = r.json().get("hits", []) if r.status_code == 200 else None
         except Exception:
@@ -279,18 +311,9 @@ def collect_hn(cfg: dict, health: Health, cutoff: float) -> list[dict]:
         if hits is None:
             health.add("hacker_news", q, "algolia", "failed", 0)
             continue
-        health.add("hacker_news", q, "algolia", "ok", len(hits))
-        for h in hits:
-            title = h.get("title") or h.get("story_title") or ""
-            body = strip_html(h.get("comment_text") or h.get("story_text") or "")
-            oid = h.get("objectID", "")
-            out.append({
-                "id": f"hn:{oid}", "source": "hacker_news", "where": "Hacker News", "via": "algolia",
-                "tracks": ["industry_news"], "matched": q, "title": title, "body": body,
-                "score": h.get("points"), "num_comments": h.get("num_comments"),
-                "created_utc": h.get("created_at"),
-                "url": f"https://news.ycombinator.com/item?id={oid}",
-            })
+        kept = [it for it in (hn_story_item(h, q) for h in hits) if it]
+        health.add("hacker_news", q, "algolia", "ok", len(kept))
+        out += kept
         time.sleep(0.5)
     return out
 
@@ -413,6 +436,18 @@ def main(argv: list[str] | None = None) -> int:
     if args.sample:
         assert stats["kept"] == 1 and stats["duplicate"] == 1 and stats["low_signal"] + stats["too_short"] == 1, stats
         assert "[user]" in items[0]["body"] and "u/someone" not in items[0]["body"]
+        # Hacker News：只留主帖，标题要含搜索词
+        story = {"_tags": ["story"], "objectID": "1", "title": "Show HN: My open-source workout app",
+                 "url": "https://example.com", "points": 12, "num_comments": 5}
+        comment = {"_tags": ["comment"], "objectID": "2", "story_title": "Who is hiring?",
+                   "comment_text": "we build a health app"}
+        offtopic = {"_tags": ["story"], "objectID": "3", "title": "What's next for Nvidia?"}
+        assert hn_story_item(story, "workout app") is not None
+        assert hn_story_item(story, "workout app")["body"].startswith("https://example.com")
+        assert hn_story_item(comment, "health app") is None
+        assert hn_story_item(offtopic, "fitness app") is None
+        assert hn_title_matches("Fitness apps are broken", "fitness app")
+        assert not hn_title_matches("Apple Fitness+ review", "fitness app")
         print("[signals] sample self-test passed")
     return 0
 

@@ -48,7 +48,9 @@ news_feeds:
   - {name: TechCrunch, url: "https://techcrunch.com/feed/"}
   - {name: The Verge, url: "https://www.theverge.com/rss/index.xml"}
 # Hacker News 搜索词（AI 健身产品、出海独立开发者的讨论）
-hn_queries: ["fitness app", "workout app", "AI personal trainer", "calorie tracking", "habit app", "health app"]
+# 只抓主帖，且每个词都要出现在标题里；主帖少，所以多回看几天、多放几个词
+hn_queries: ["fitness app", "workout app", "AI personal trainer", "calorie tracking", "calorie counter", "habit app", "habit tracker", "health app", "strength training", "weight loss app", "nutrition app"]
+hn_lookback_hours: 72
 
 news_keywords: [fitness, 健身, 减脂, 增肌, "AI 教练", workout app, workout, "personal trainer", nutrition, "calorie", strava, whoop, peloton, fitbod, myfitnesspal, "health app"]
 
