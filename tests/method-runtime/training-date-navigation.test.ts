@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
+import { zh } from '../../lib/i18n/messages/zh'
 
 const page = readFileSync(new URL('../../app/training/today/page.tsx', import.meta.url), 'utf8')
 const todayRoute = readFileSync(new URL('../../app/api/training/today/route.ts', import.meta.url), 'utf8')
@@ -9,9 +10,12 @@ const cutover = readFileSync(new URL('../../supabase/cutover/20260926000100_drop
 
 describe('training date navigation and attribution', () => {
   it('navigates Program Days instead of calendar dates (PRD §2.1)', () => {
-    expect(page).toContain('aria-label="训练日导航"')
-    expect(page).toContain('Day ${day.day_index}')
-    expect(page).toContain('{day.name_zh}')
+    // 界面文字搬进了字典（lib/i18n），中文逐字不变
+    expect(page).toContain("aria-label={t('today.dayNavLabel')}")
+    expect(zh.today.dayNavLabel).toBe('训练日导航')
+    expect(page).toContain("t('today.dayLabel', { n: day.day_index })")
+    expect(zh.today.dayLabel).toBe('Day {n}')
+    expect(page).toContain(': day.name_zh}')
     expect(page).toContain('selectDay(day.split_key)')
     // The superseded calendar-day navigation must be gone.
     expect(page).not.toContain('上一天')

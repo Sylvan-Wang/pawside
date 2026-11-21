@@ -16,6 +16,9 @@ import { splitLabel } from '@/lib/split-labels'
 import { describeTimedTarget } from '@/lib/workout-log-summary'
 import { friendlyTargetSummary } from '@/lib/training-copy'
 import { useEffect, useRef, useState } from 'react'
+import { useLocale } from '@/lib/i18n/use-locale'
+import { translate, type Locale, type MessageKey } from '@/lib/i18n'
+import { exerciseDisplayName } from '@/lib/i18n/exercise-names'
 
 interface SetPrescription {
   id: string
@@ -94,22 +97,18 @@ interface TrainingUnavailableState {
   message: string
 }
 
+const SET_TYPES = ['warmup', 'working', 'failure', 'rest_pause', 'backoff', 'other']
 
-const setTypeNames: Record<string, string> = {
-  warmup: '热身',
-  working: '正式',
-  failure: '力竭',
-  rest_pause: '暂停组',
-  backoff: '降重',
-  other: '其他',
+function setTypeName(type: string, locale: Locale) {
+  return SET_TYPES.includes(type) ? translate(locale, `today.setTypes.${type}` as MessageKey) : type
 }
 
-function dayStatusLabel(day: ProgramDay) {
-  if (day.completed) return '已完成'
-  if (day.started) return '进行中'
-  if (!day.available) return '未生成'
-  if (day.status === 'started') return '进行中'
-  return '未开始'
+function dayStatusLabel(day: ProgramDay, locale: Locale) {
+  if (day.completed) return translate(locale, 'today.status.completed')
+  if (day.started) return translate(locale, 'today.status.inProgress')
+  if (!day.available) return translate(locale, 'today.status.notGenerated')
+  if (day.status === 'started') return translate(locale, 'today.status.inProgress')
+  return translate(locale, 'today.status.notStarted')
 }
 
 function localDateString(date = new Date()) {
@@ -121,6 +120,8 @@ function localDateString(date = new Date()) {
 
 export default function TodayTrainingPage() {
   const router = useRouter()
+  const [locale] = useLocale()
+  const t = (key: MessageKey, params?: Record<string, string | number>) => translate(locale, key, params)
   const [training, setTraining] = useState<TodayTraining | null>(null)
   const [workoutActual, setWorkoutActual] = useState<WorkoutActual | null>(null)
   const [recovery, setRecovery] = useState<ActiveSessionRecovery | null>(null)
@@ -171,13 +172,13 @@ export default function TodayTrainingPage() {
         if (selectedSplit) query.set('split', selectedSplit)
         const response = await fetch(`/api/training/today?${query}`, { cache: 'no-store' })
         const payload = await response.json()
-        if (!response.ok) throw new Error(payload?.error?.message || '暂时无法读取训练计划')
+        if (!response.ok) throw new Error(payload?.error?.message || translate(locale, 'today.loadFailed'))
         if (active) {
           const data = payload.data as TodayTrainingPayload | null
           if (!data) {
             setUnavailableState(payload.state ?? {
               kind: 'not_enrolled',
-              message: '尚未启用训练方法',
+              message: translate(locale, 'today.notEnrolledMessage'),
             })
             return
           }
@@ -191,7 +192,7 @@ export default function TodayTrainingPage() {
           writeTodayTrainingCache(data, data.program_day.split_key)
         }
       } catch (reason: unknown) {
-        if (active) setError(reason instanceof Error ? reason.message : '加载失败')
+        if (active) setError(reason instanceof Error ? reason.message : translate(locale, 'today.loadFailedShort'))
       } finally {
         if (active) setLoading(false)
       }
@@ -199,6 +200,8 @@ export default function TodayTrainingPage() {
 
     void load()
     return () => { active = false }
+    // locale only feeds fallback error text; switching language must not refetch the plan.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedSplit])
 
   useEffect(() => {
@@ -249,7 +252,7 @@ export default function TodayTrainingPage() {
         router.push(`/training/sessions/${payload.error.details.session_id}`)
         return
       }
-      if (!response.ok) throw new Error(payload?.error?.message || '暂时无法开始训练')
+      if (!response.ok) throw new Error(payload?.error?.message || t('today.startFailed'))
       const sessionId = payload.data.session_id as string
       clearTodayTrainingCache()
       const sessionUrl = `/training/sessions/${sessionId}`
@@ -257,17 +260,17 @@ export default function TodayTrainingPage() {
       void warmTrainingSessionCache(sessionId).catch(() => undefined)
       router.push(sessionUrl)
     } catch (reason: unknown) {
-      setError(reason instanceof Error ? reason.message : '暂时无法开始训练')
+      setError(reason instanceof Error ? reason.message : t('today.startFailed'))
       setStarting(false)
     }
   }
 
   return (
     <div className="min-h-screen bg-gray-50 pb-10">
-      <PageHeader title="训练计划" back />
+      <PageHeader title={t('today.title')} back />
       <main className="mx-auto max-w-2xl space-y-4 px-4 py-5">
         {days.length > 0 && (
-          <nav className={`grid gap-2 ${days.length === 4 ? 'grid-cols-4' : 'grid-cols-3'}`} aria-label="训练日导航">
+          <nav className={`grid gap-2 ${days.length === 4 ? 'grid-cols-4' : 'grid-cols-3'}`} aria-label={t('today.dayNavLabel')}>
             {days.map((day) => {
               const active = programDay?.split_key === day.split_key
               return (
@@ -279,26 +282,33 @@ export default function TodayTrainingPage() {
                     active ? 'border-black bg-black text-white' : 'border-gray-200 bg-white text-gray-700'
                   }`}
                 >
-                  <p className="text-xs opacity-70">{day.required ? `Day ${day.day_index}` : '可选'} · {day.name_zh}</p>
-                  <p className="mt-1 text-sm font-semibold">{dayStatusLabel(day)}</p>
+                  <p className="text-xs opacity-70">
+                    {day.required ? t('today.dayLabel', { n: day.day_index }) : t('today.optional')} · {locale === 'en' ? splitLabel(day.split_key, day.name_zh, locale) : day.name_zh}
+                  </p>
+                  <p className="mt-1 text-sm font-semibold">{dayStatusLabel(day, locale)}</p>
                 </button>
               )
             })}
           </nav>
         )}
 
-        {loading && <p className="rounded-2xl bg-white p-5 text-sm text-gray-500">正在读取训练计划…</p>}
+        {loading && <p className="rounded-2xl bg-white p-5 text-sm text-gray-500">{t('today.loading')}</p>}
         {!loading && error && <p className="rounded-2xl bg-white p-5 text-sm text-gray-600">{error}</p>}
         {!loading && !error && unavailableState && (
           <section className="rounded-2xl bg-white p-5">
-            <h2 className="text-base font-semibold text-gray-900">还没有启用训练方法</h2>
-            <p className="mt-2 text-sm leading-6 text-gray-500">{unavailableState.message}。启用后即可查看并执行训练日。</p>
+            <h2 className="text-base font-semibold text-gray-900">{t('today.notEnrolledTitle')}</h2>
+            <p className="mt-2 text-sm leading-6 text-gray-500">
+              {t('today.notEnrolledBody', {
+                // The server message is Chinese; English shows its own wording.
+                message: locale === 'en' ? t('today.notEnrolledMessage') : unavailableState.message,
+              })}
+            </p>
             <button
               type="button"
               onClick={() => router.push('/home')}
               className="mt-4 rounded-xl bg-black px-4 py-2.5 text-sm font-medium text-white"
             >
-              返回首页启用
+              {t('today.backToEnable')}
             </button>
           </section>
         )}
@@ -307,20 +317,22 @@ export default function TodayTrainingPage() {
           <>
             {recovery && !workoutActual && (
               <aside className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-                当前还有一条{splitLabel(recovery.split_key)}训练未完成。你可以继续浏览这个训练日，但开始新训练前需要先处理当前训练。
+                {t('today.recoveryNotice', { split: splitLabel(recovery.split_key, null, locale) })}
               </aside>
             )}
             <header className="rounded-2xl bg-black p-5 text-white">
               <p className="text-xs text-white/60">
-                Day {programDay?.day_index ?? '-'} · 第 {programDay?.cycle_number ?? '-'} 轮
+                {t('today.headerMeta', { day: programDay?.day_index ?? '-', cycle: programDay?.cycle_number ?? '-' })}
               </p>
               <h1 className="mt-1 text-xl font-semibold">
-                {programDay?.name_zh || training.method_split?.name_zh || splitLabel(training.split_key)}
+                {locale === 'en'
+                  ? splitLabel(training.split_key, programDay?.name_zh || training.method_split?.name_zh, locale)
+                  : programDay?.name_zh || training.method_split?.name_zh || splitLabel(training.split_key)}
               </h1>
 
               {!recovery && (
                 <div className="mt-4">
-                  <p className="text-sm text-white/80">今天大概想练多久？</p>
+                  <p className="text-sm text-white/80">{t('today.howLong')}</p>
                   <div className="mt-2 grid grid-cols-4 gap-2">
                     {SESSION_MINUTE_OPTIONS.map((minutes) => (
                       <button
@@ -337,7 +349,7 @@ export default function TodayTrainingPage() {
                       </button>
                     ))}
                   </div>
-                  <p className="mt-2 text-xs text-white/50">实际用时会受休息和器械等待影响。</p>
+                  <p className="mt-2 text-xs text-white/50">{t('today.howLongNote')}</p>
                 </div>
               )}
 
@@ -348,38 +360,41 @@ export default function TodayTrainingPage() {
                 className="mt-4 w-full rounded-xl bg-white py-3 text-sm font-semibold text-black disabled:opacity-60"
               >
                 {starting
-                  ? '正在开始…'
+                  ? t('today.starting')
                   : recovery
-                    ? `继续当前${splitLabel(recovery.split_key)}训练`
-                    : '开始这个训练日'}
+                    ? t('today.continueSplit', { split: splitLabel(recovery.split_key, null, locale) })
+                    : t('today.start')}
               </button>
             </header>
 
             {training.exercises.map((item) => {
-              const exerciseName = item.exercise?.canonical_name_zh || `动作 ${item.order_index}`
+              const exerciseName = item.exercise?.canonical_name_zh
+                ? exerciseDisplayName(item.exercise.canonical_name_zh, locale)
+                : t('today.exerciseN', { n: item.order_index })
+              const targetSummary = friendlyTargetSummary(item.target_summary_zh, item.sets, locale)
               return (
                 <section key={item.id} className="rounded-2xl bg-white p-4">
-                  <p className="text-xs text-gray-400">动作 {item.order_index}</p>
+                  <p className="text-xs text-gray-400">{t('today.exerciseN', { n: item.order_index })}</p>
                   <h2 className="mt-1 font-semibold text-gray-900">{exerciseName}</h2>
-                  {friendlyTargetSummary(item.target_summary_zh, item.sets) && <p className="mt-1 text-sm text-gray-500">{friendlyTargetSummary(item.target_summary_zh, item.sets)}</p>}
+                  {targetSummary && <p className="mt-1 text-sm text-gray-500">{targetSummary}</p>}
 
                   {item.media ? (
                     <ExerciseMotion name={exerciseName} media={item.media} animate={false} loading="lazy" />
                   ) : (
-                    <p className="mt-3 rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-800">此动作尚无已登记素材。</p>
+                    <p className="mt-3 rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-800">{t('today.noMedia')}</p>
                   )}
 
                   {item.sets.length > 0 && (
                     <div className="mt-3 space-y-2">
                       {item.sets.map((set) => (
                         <div key={set.id} className="flex items-center justify-between rounded-lg border border-gray-100 px-3 py-2 text-xs">
-                          <span>第 {set.set_index} 组 · {setTypeNames[set.set_type] || set.set_type}</span>
+                          <span>{t('today.setLine', { n: set.set_index, type: setTypeName(set.set_type, locale) })}</span>
                           <span className="text-gray-500">
                             {set.target_reps_min == null
-                              ? describeTimedTarget(set) ?? '次数待定'
+                              ? describeTimedTarget(set, locale) ?? t('today.repsTbd')
                               : set.target_reps_max && set.target_reps_max !== set.target_reps_min
-                                ? `${set.target_reps_min}–${set.target_reps_max} 次`
-                                : `${set.target_reps_min} 次`}
+                                ? t('today.repsRange', { min: set.target_reps_min, max: set.target_reps_max })
+                                : t('today.reps', { n: set.target_reps_min })}
                             {set.target_weight_kg == null ? '' : ` · ${set.target_weight_kg} kg`}
                           </span>
                         </div>

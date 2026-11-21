@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
+import { zh } from '../../lib/i18n/messages/zh'
 
 const todayRoute = readFileSync(new URL('../../app/api/training/today/route.ts', import.meta.url), 'utf8')
 const todayPage = readFileSync(new URL('../../app/training/today/page.tsx', import.meta.url), 'utf8')
@@ -18,7 +19,9 @@ describe('normal business states do not masquerade as missing resources', () => 
   it('renders the not-enrolled state instead of treating it as a load error', () => {
     expect(todayPage).toContain('const data = payload.data as TodayTrainingPayload | null')
     expect(todayPage).toContain('setUnavailableState')
-    expect(todayPage).toContain('还没有启用训练方法')
+    // 界面文字搬进了字典（lib/i18n），中文逐字不变
+    expect(todayPage).toContain("t('today.notEnrolledTitle')")
+    expect(zh.today.notEnrolledTitle).toBe('还没有启用训练方法')
   })
 
   it('returns a successful cache-miss response for an AI review lookup', () => {
