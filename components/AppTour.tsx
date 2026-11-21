@@ -50,8 +50,7 @@ export default function AppTour({
   // `ready` only turns true after Home has loaded client-side, so localStorage and
   // the auth session are only read in the browser.
   useEffect(() => {
-    if (!ready || dismissed) return
-    if (replay) { setDecided({ steps: TOUR_STEPS, returning: false }); return }
+    if (!ready || dismissed || replay) return
     let cancelled = false
     void (async () => {
       const supabase = createClient()
@@ -70,8 +69,8 @@ export default function AppTour({
     return () => { cancelled = true }
   }, [ready, replay, dismissed])
 
-  const steps = dismissed ? [] : decided.steps
-  const returning = decided.returning
+  const steps = dismissed || !ready ? [] : replay ? TOUR_STEPS : decided.steps
+  const returning = replay ? false : decided.returning
 
   if (steps.length === 0) return null
 
