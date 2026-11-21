@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import PageHeader from '@/components/PageHeader'
 import { useToast } from '@/components/Toast'
+import { applyFoodEdit, type EditableFood } from '@/lib/food-edit'
 
 const MEAL_TYPES = [
   { value: 'breakfast', label: '早餐' },
@@ -11,17 +12,7 @@ const MEAL_TYPES = [
   { value: 'snack', label: '加餐' },
 ] as const
 
-interface FoodItem {
-  name: string
-  weight: string
-  calories: string
-  protein: string
-  carbs: string
-  fat: string
-  foodId: number | null
-  /** Saved from chat as "what was eaten" only: no weight, no nutrition. Kept as such unless filled in. */
-  rawOnly?: boolean
-}
+type FoodItem = EditableFood
 
 export default function EditFoodPage() {
   const { id } = useParams<{ id: string }>()
@@ -79,9 +70,7 @@ export default function EditFoodPage() {
   }
 
   function updateFood(i: number, key: keyof FoodItem, val: string) {
-    setFoods(f => f.map((item, idx) => idx === i
-      ? { ...item, [key]: val, ...(key === 'name' ? { foodId: null } : { rawOnly: false }) }
-      : item))
+    setFoods(f => f.map((item, idx) => idx === i ? applyFoodEdit(item, key, val) : item))
   }
 
   function removeFood(i: number) {
@@ -211,6 +200,9 @@ export default function EditFoodPage() {
                   <input placeholder="脂肪(g)" type="number" value={food.fat} onChange={e => updateFood(i, 'fat', e.target.value)}
                     className="w-full border border-gray-200 rounded-lg px-2 py-2 text-sm outline-none" />
                 </div>
+                {food.manualNutrition && (
+                  <p className="text-xs text-gray-400">会按你填写的数字保存</p>
+                )}
               </div>
             ))}
           </div>
