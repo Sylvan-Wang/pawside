@@ -13,7 +13,7 @@ import type { DateRefKind, MealSlot } from './dates'
  */
 
 export const PLAN_SCHEMA_NAME = 'pawside_coach_plan_v1'
-export const PLAN_PROMPT_VERSION = 'coach_chat_plan_v3.4'
+export const PLAN_PROMPT_VERSION = 'coach_chat_plan_v3.5'
 
 export const MAX_TASKS = 4
 export const MAX_ITEMS_PER_MEAL = 12
@@ -88,6 +88,12 @@ const rawTask = z.object({
   source_quote: z.string(),
 })
 
+/** Tappable "you could also ask" suggestions shown under a reply. */
+export const MAX_FOLLOW_UPS = 3
+export const FOLLOW_UP_MAX_CHARS = 20
+/** Advice replies may run to a few sentences (v3.4: richer, personal answers). */
+export const REPLY_MAX_CHARS = 220
+
 export const rawPlanSchema = z.object({
   tasks: z.array(rawTask).max(MAX_TASKS),
   reply: z.string().nullable(),
@@ -96,6 +102,9 @@ export const rawPlanSchema = z.object({
     question: z.string(),
     options: z.array(z.string()).max(4),
   }).nullable(),
+  // Optional here so plans written before v3.4 (fixtures, scripted tests) still parse;
+  // the JSON schema below makes the model always send it.
+  follow_ups: z.array(z.string()).max(MAX_FOLLOW_UPS).optional(),
 })
 export type RawPlan = z.infer<typeof rawPlanSchema>
 
@@ -181,7 +190,7 @@ export const PLAN_JSON_SCHEMA = {
         ],
       },
     },
-    reply: { type: ['string', 'null'], maxLength: 160 },
+    reply: { type: ['string', 'null'], maxLength: REPLY_MAX_CHARS },
     clarification: {
       anyOf: [
         { type: 'null' },
@@ -197,8 +206,13 @@ export const PLAN_JSON_SCHEMA = {
         },
       ],
     },
+    follow_ups: {
+      type: 'array',
+      maxItems: MAX_FOLLOW_UPS,
+      items: { type: 'string', maxLength: FOLLOW_UP_MAX_CHARS },
+    },
   },
-  required: ['tasks', 'reply', 'clarification'],
+  required: ['tasks', 'reply', 'clarification', 'follow_ups'],
 } as const
 
 // ---------------------------------------------------------------------------
@@ -254,6 +268,8 @@ export interface NormalizedPlan {
   /** Model text, only when it passed the no-numbers / no-internal-terms checks. */
   reply: string | null
   clarification: { about: ClarifyAbout; question: string; options: string[] } | null
+  /** Short questions the user can tap to send next; same text filter as the reply. */
+  followUps: string[]
   issues: string[]
 }
 
@@ -481,7 +497,7 @@ export function normalizePlan(raw: RawPlan): NormalizedPlan {
     .map((task) => normalizeTask(task, issues))
     .filter((task): task is PlanTask => task !== null)
 
-  const replyText = acceptableModelText(raw.reply)
+  const replyText = acceptableModelText(raw.reply, REPLY_MAX_CHARS)
   if (raw.reply && !replyText) issues.push('dropped_model_reply')
 
   let clarification: NormalizedPlan['clarification'] = null
@@ -495,5 +511,13 @@ export function normalizePlan(raw: RawPlan): NormalizedPlan {
     else issues.push('dropped_clarification')
   }
 
-  return { tasks, reply: replyText, clarification, issues }
+  const followUps: string[] = []
+  for (const candidate of raw.follow_ups ?? []) {
+    const text = acceptableModelText(candidate, FOLLOW_UP_MAX_CHARS)
+    if (text && !followUps.includes(text)) followUps.push(text)
+    if (followUps.length >= MAX_FOLLOW_UPS) break
+  }
+  if ((raw.follow_ups ?? []).length > followUps.length) issues.push('dropped_follow_up')
+
+  return { tasks, reply: replyText, clarification, followUps, issues }
 }

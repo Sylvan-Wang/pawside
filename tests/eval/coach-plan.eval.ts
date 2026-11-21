@@ -40,6 +40,7 @@ describe.skipIf(!process.env.OPENAI_API_KEY)(`planner vs real model (${PLAN_PROM
           timeZone: tz,
           recentMessages: testCase.recent ?? [],
           openDrafts: (testCase.openDrafts ?? []).map((d) => ({ id: d.id, kind: d.kind, summary: d.summary, pendingQuestion: d.pendingQuestion ?? null })),
+          userContext: testCase.userContext ?? null,
           userMessage: testCase.say,
         })
         const result = await planner(COACH_CHAT_SYSTEM_PROMPT, input)
@@ -52,7 +53,7 @@ describe.skipIf(!process.env.OPENAI_API_KEY)(`planner vs real model (${PLAN_PROM
         outcomes.push({
           id: testCase.id, group: testCase.group, run, ok: problems.length === 0, problems,
           latencyMs: result.latencyMs, tokensIn: result.usage?.inputTokens ?? null, tokensOut: result.usage?.outputTokens ?? null,
-          summary: JSON.stringify({ tasks: plan.tasks, reply: plan.reply, clarification: plan.clarification, issues: plan.issues }),
+          summary: JSON.stringify({ tasks: plan.tasks, reply: plan.reply, clarification: plan.clarification, follow_ups: plan.followUps, issues: plan.issues }),
         })
         // On failure the plan is printed so the reader can judge the model, the prompt or the fixture.
         expect(problems, `${testCase.say}\n${outcomes[outcomes.length - 1].summary}`).toEqual([])

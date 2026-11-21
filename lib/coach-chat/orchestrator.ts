@@ -24,7 +24,8 @@ import {
   type FoodEstimator,
 } from './meal'
 import type { Planner } from './planner'
-import { buildPlannerInput, COACH_CHAT_SYSTEM_PROMPT, weekdayOf } from './prompt'
+import { buildPlannerInput, COACH_CHAT_SYSTEM_PROMPT, RECENT_MESSAGES, weekdayOf } from './prompt'
+import { loadUserContext } from './user-context'
 import {
   normalizePlan,
   PLAN_PROMPT_VERSION,
@@ -82,7 +83,7 @@ import { buildWorkoutPayload } from './workout'
 
 export const MAX_MESSAGE_CHARS = 2000
 export const MAX_TOOL_CALLS = 6
-const CONTEXT_MESSAGES = 6
+const CONTEXT_MESSAGES = RECENT_MESSAGES
 const LAST_MEAL_WINDOW_MS = 24 * 60 * 60 * 1000
 // A repeated send of a message that has no answer yet: how long the first attempt is presumed alive, and how long to wait for it.
 const IN_FLIGHT_WINDOW_MS = 60_000
@@ -127,6 +128,8 @@ export interface TurnResult {
    * keeps offering a button that no longer applies.
    */
   updatedCards: CardView[]
+  /** Tappable next questions from the model (not stored; shown under the newest reply only). */
+  followUps: string[]
 }
 
 interface Ctx {
@@ -637,6 +640,7 @@ async function finish(
   userMessage: MessageRow,
   text: string,
   drafts: DraftRow[],
+  followUps: string[] = [],
 ): Promise<TurnResult> {
   const assistantMessage = await insertAssistantMessage(ctx.deps.supabase, {
     userId: ctx.userId,
@@ -659,6 +663,7 @@ async function finish(
     assistantMessage,
     cards: toCards(fresh, ctx.now, ctx.today),
     updatedCards: toCards(updated, ctx.now, ctx.today),
+    followUps,
   }
 }
 
@@ -725,7 +730,7 @@ export async function handleChatTurn(deps: TurnDeps, input: TurnInput): Promise<
     }
     if (reply) {
       const cards = await getDrafts(deps.supabase, deps.userId, reply.cards.map((card) => card.draft_id))
-      return { duplicate: true, userMessage: stored.message, assistantMessage: reply, cards: toCards(cards, now, today), updatedCards: [] }
+      return { duplicate: true, userMessage: stored.message, assistantMessage: reply, cards: toCards(cards, now, today), updatedCards: [], followUps: [] }
     }
   }
 
@@ -759,6 +764,7 @@ export async function handleChatTurn(deps: TurnDeps, input: TurnInput): Promise<
     .filter((message) => message.id !== stored.message.id)
     .slice(-CONTEXT_MESSAGES)
 
+  const userContext = await loadUserContext(deps.supabase, deps.userId, today)
   const plannerInput = buildPlannerInput({
     today,
     weekday: weekdayOf(today),
@@ -771,6 +777,7 @@ export async function handleChatTurn(deps: TurnDeps, input: TurnInput): Promise<
       summary: summarizeDraft(draft),
       pendingQuestion: draft.status === 'needs_clarification' ? (draft.payload as ClarifyPayload).question : null,
     })),
+    userContext,
     userMessage: text,
   })
 
@@ -848,6 +855,8 @@ export async function handleChatTurn(deps: TurnDeps, input: TurnInput): Promise<
     payload: {
       task_kinds: taskKinds,
       issues: plan.issues,
+      follow_ups: plan.followUps.length,
+      has_user_context: userContext !== null,
       tool_calls: ctx.calls,
       open_drafts: openDrafts.length,
       input_chars: text.length,
@@ -858,5 +867,7 @@ export async function handleChatTurn(deps: TurnDeps, input: TurnInput): Promise<
     tokensOut: planned.usage?.outputTokens ?? null,
   })
 
-  return finish(ctx, stored.message, texts.filter(Boolean).join('\n') || TEXT.noPlan, drafts)
+  // Suggestions only when the user is not being asked to answer something first.
+  const followUps = ctx.asked || drafts.some((d) => d.status === 'needs_clarification') ? [] : plan.followUps
+  return finish(ctx, stored.message, texts.filter(Boolean).join('\n') || TEXT.noPlan, drafts, followUps)
 }

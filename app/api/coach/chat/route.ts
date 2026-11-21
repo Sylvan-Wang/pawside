@@ -80,6 +80,7 @@ export async function POST(request: NextRequest) {
         user_message: userMessage,
         assistant_message: assistantMessage,
         updated_cards: result.updatedCards,
+        follow_ups: result.followUps,
       },
     })
   } catch (reason) {
