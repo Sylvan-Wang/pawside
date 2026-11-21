@@ -9,20 +9,23 @@ vi.mock('../../lib/ai-client.ts', () => ({
     modelCalls.push(user)
     const next = responses.shift()
     if (next === 'PROVIDER_FAIL') return { ok: false, reason: 'upstream_error', model: 'test-model' }
+    if (next === 'TRUNCATED') return { ok: false, reason: 'invalid_response', model: 'test-model', detail: 'incomplete:max_output_tokens' }
     return { ok: true, data: next, model: 'test-model' }
   }),
 }))
 
 const logCalls: Array<{ status: string; failReason: string | null; attempt: number }> = []
+const detailCalls: Array<string | null> = []
 let logShouldThrow = false
 
 vi.mock('../../lib/ai/generation-log.ts', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../../lib/ai/generation-log.ts')>()
   return {
     ...actual,
-    logGeneration: vi.fn(async (record: { status: string; failReason?: string | null; attempt?: number }) => {
+    logGeneration: vi.fn(async (record: { status: string; failReason?: string | null; failDetail?: string | null; attempt?: number }) => {
       if (logShouldThrow) throw new Error('supabase is down')
       logCalls.push({ status: record.status, failReason: record.failReason ?? null, attempt: record.attempt ?? 1 })
+      detailCalls.push(record.failDetail ?? null)
       return 'gen-id'
     }),
   }
@@ -53,6 +56,7 @@ describe('spec A0-3 — composeWithEvidence writes ai_generations per attempt', 
   beforeEach(() => {
     modelCalls.length = 0
     logCalls.length = 0
+    detailCalls.length = 0
     responses = []
     logShouldThrow = false
   })
@@ -79,6 +83,14 @@ describe('spec A0-3 — composeWithEvidence writes ai_generations per attempt', 
     const result = await composeWithEvidence(baseInput)
     expect(result.ok).toBe(false)
     expect(logCalls).toEqual([{ status: 'failed', failReason: 'upstream_error', attempt: 1 }])
+  })
+
+  it('stores the provider failure detail (e.g. a truncated response) in fail_detail', async () => {
+    responses = ['TRUNCATED']
+    const result = await composeWithEvidence(baseInput)
+    expect(result.ok).toBe(false)
+    expect(logCalls).toEqual([{ status: 'failed', failReason: 'invalid_response', attempt: 1 }])
+    expect(detailCalls).toEqual(['incomplete:max_output_tokens'])
   })
 
   it('logs the unbound_evidence failure before ever calling the model', async () => {
