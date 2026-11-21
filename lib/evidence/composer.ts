@@ -3,6 +3,7 @@ import {
   getOpenAIConfigStatus,
   type OpenAIFailureReason,
   type OpenAIResult,
+  type OpenAIUsage,
 } from '../ai-client'
 import { EVIDENCE_REGISTRY_VERSION, buildOutputCheckRegistry, getEvidenceItem } from './registry'
 import {
@@ -190,6 +191,7 @@ export async function composeWithEvidence(input: ComposeInput): Promise<ComposeR
     output?: unknown
     model: string
     latencyMs: number
+    usage?: OpenAIUsage
   }): Promise<void> {
     if (!input.userId) return
     // Belt-and-braces on top of logGeneration's own never-throws contract:
@@ -210,6 +212,8 @@ export async function composeWithEvidence(input: ComposeInput): Promise<ComposeR
         failDetail: record.failDetail ?? null,
         attempt: record.attemptNumber,
         latencyMs: record.latencyMs,
+        tokensIn: record.usage?.inputTokens ?? null,
+        tokensOut: record.usage?.outputTokens ?? null,
         trace: input.trace,
       })
     } catch (err) {
@@ -299,7 +303,7 @@ export async function composeWithEvidence(input: ComposeInput): Promise<ComposeR
       const detail = retryHint(checks.failures)
       await logAttempt({
         attemptNumber, payload, status: 'failed', failReason: first.code, failDetail: detail,
-        output: result.data, model: result.model, latencyMs,
+        output: result.data, model: result.model, latencyMs, usage: result.usage,
       })
       return {
         kind: 'checked',
@@ -317,7 +321,7 @@ export async function composeWithEvidence(input: ComposeInput): Promise<ComposeR
       if (leaked.length > 0) {
         await logAttempt({
           attemptNumber, payload, status: 'failed', failReason: 'internal_term', failDetail: leaked.join(', '),
-          output: rendered, model: result.model, latencyMs,
+          output: rendered, model: result.model, latencyMs, usage: result.usage,
         })
         return {
           kind: 'checked',
@@ -332,12 +336,12 @@ export async function composeWithEvidence(input: ComposeInput): Promise<ComposeR
         // Not a hard failure and not part of the output-checks fail_reason
         // vocabulary (spec A0-1 does not cover headline length); logged as ok,
         // the composer still retries once to try for a shorter one.
-        await logAttempt({ attemptNumber, payload, status: 'ok', output: rendered, model: result.model, latencyMs })
+        await logAttempt({ attemptNumber, payload, status: 'ok', output: rendered, model: result.model, latencyMs, usage: result.usage })
         return { kind: 'checked', data: rendered, model: result.model, hard: null, soft: `summary 超过 ${HEADLINE_MAX_CHARS} 个字` }
       }
     }
 
-    await logAttempt({ attemptNumber, payload, status: 'ok', output: rendered, model: result.model, latencyMs })
+    await logAttempt({ attemptNumber, payload, status: 'ok', output: rendered, model: result.model, latencyMs, usage: result.usage })
     return { kind: 'checked', data: rendered, model: result.model, hard: null, soft: null }
   }
 

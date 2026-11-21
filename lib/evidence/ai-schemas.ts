@@ -249,6 +249,22 @@ export const AI_NUMERIC_INTEGRITY_RULES = `Rules you must follow:
 - Subjective recovery values are context only. Never announce that the user cannot train today.
 - All user-facing text must be Chinese.`
 
+/**
+ * Output-token caps for the composer surfaces. `gpt-5.6-luna` is a reasoning
+ * model: `max_output_tokens` covers its hidden reasoning *and* the JSON, so a cap
+ * sized for the JSON alone gets cut off (HTTP 200, status "incomplete", no usable
+ * text → logged as `invalid_response`). Production 2026-10-05 → 11-18: 9 of 9
+ * `invalid_response` failures were composer surfaces at 600–700 tokens, ~9 s
+ * each; the 小爪 planner (1200 tokens) had none. A cap is a ceiling, not a spend:
+ * billing follows tokens actually generated. P0 2026-11-16, see docs/auto-iteration/P0.md.
+ */
+export const COMPOSER_MAX_OUTPUT_TOKENS = {
+  workout_session_feedback: 1600,
+  meal_feedback: 1600,
+  daily_review: 1600,
+  weekly_review: 2000,
+} as const
+
 export interface AiSchemaBundle {
   name: string
   schema: object
@@ -274,25 +290,25 @@ export const AI_SCHEMAS = {
   workout_session_feedback: {
     name: 'pawside_workout_session_feedback',
     schema: workoutSessionFeedbackSchema,
-    maxOutputTokens: 600,
+    maxOutputTokens: COMPOSER_MAX_OUTPUT_TOKENS.workout_session_feedback,
     promptVersion: AI_PROMPT_VERSIONS.workout_session_feedback,
   },
   meal_feedback: {
     name: 'pawside_meal_feedback',
     schema: mealFeedbackSchema,
-    maxOutputTokens: 600,
+    maxOutputTokens: COMPOSER_MAX_OUTPUT_TOKENS.meal_feedback,
     promptVersion: AI_PROMPT_VERSIONS.meal_feedback,
   },
   daily_review: {
     name: 'pawside_daily_review',
     schema: dailyReviewSchemaV2,
-    maxOutputTokens: 700,
+    maxOutputTokens: COMPOSER_MAX_OUTPUT_TOKENS.daily_review,
     promptVersion: AI_PROMPT_VERSIONS.daily_review,
   },
   weekly_review: {
     name: 'pawside_weekly_review',
     schema: weeklyReviewSchema,
-    maxOutputTokens: 900,
+    maxOutputTokens: COMPOSER_MAX_OUTPUT_TOKENS.weekly_review,
     promptVersion: AI_PROMPT_VERSIONS.weekly_review,
   },
 } as const satisfies Record<string, AiSchemaBundle>
