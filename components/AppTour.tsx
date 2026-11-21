@@ -1,19 +1,32 @@
 'use client'
 
 import CatMascot from '@/components/CatMascot'
-import { markTourSeen, readSeenVersion } from '@/lib/tour/storage'
-import { stepsFor, TOUR_STEPS, TOUR_VERSION, type TourStep } from '@/lib/tour/steps'
+import { ACCOUNT_KEY, markTourSeen, readSeenVersion } from '@/lib/tour/storage'
+import { TOUR_STEPS, TOUR_VERSION, type TourStep } from '@/lib/tour/steps'
+import { decideTour, seenVersionFrom } from '@/lib/tour/decide'
+import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import { useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { translate, type MessageKey } from '@/lib/i18n'
 import { useLocale } from '@/lib/i18n/use-locale'
 
 /**
  * Walkthrough sheet. Mounted on Home for signed-in users who finished onboarding.
- * - never seen it: all steps
- * - saw an older version: only the steps added since
+ * - new account (lib/tour/decide.ts) that never saw it: all steps
+ * - returning user: only steps whose feature launched today
  * - `replay`: all steps, regardless of what was seen (used by Settings)
+ * What was seen is stored both in this browser and on the account.
  */
+/** Remember the current version in this browser and on the account. Failures are ignored. */
+async function recordSeen() {
+  markTourSeen()
+  try {
+    await createClient().auth.updateUser({ data: { [ACCOUNT_KEY]: TOUR_VERSION } })
+  } catch {
+    // worst case: another device decides again, and an old account still sees nothing
+  }
+}
+
 export default function AppTour({
   ready,
   replay = false,
@@ -32,15 +45,32 @@ export default function AppTour({
   const [index, setIndex] = useState(0)
   const [dismissed, setDismissed] = useState(false)
 
-  // `ready` only turns true after Home has loaded client-side, so reading
-  // localStorage here never runs during server rendering.
-  const { steps, returning } = useMemo(() => {
-    if (!ready || dismissed) return { steps: [] as TourStep[], returning: false }
-    if (replay) return { steps: TOUR_STEPS, returning: false }
-    const seen = readSeenVersion()
-    if (seen !== null && seen >= TOUR_VERSION) return { steps: [] as TourStep[], returning: false }
-    return { steps: stepsFor(seen ?? 0), returning: seen !== null }
+  const [decided, setDecided] = useState<{ steps: TourStep[]; returning: boolean }>({ steps: [], returning: false })
+
+  // `ready` only turns true after Home has loaded client-side, so localStorage and
+  // the auth session are only read in the browser.
+  useEffect(() => {
+    if (!ready || dismissed || replay) return
+    let cancelled = false
+    void (async () => {
+      const supabase = createClient()
+      const { data } = await supabase.auth.getSession().catch(() => ({ data: { session: null } }))
+      const user = data.session?.user ?? null
+      if (!user || cancelled) return
+      const decision = decideTour({
+        seen: seenVersionFrom(readSeenVersion(), user.user_metadata?.[ACCOUNT_KEY]),
+        accountCreatedAt: user.created_at ?? null,
+        now: new Date(),
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      })
+      if (decision.markSeenSilently) { void recordSeen(); return }
+      if (!cancelled) setDecided({ steps: decision.steps, returning: decision.returning })
+    })()
+    return () => { cancelled = true }
   }, [ready, replay, dismissed])
+
+  const steps = dismissed || !ready ? [] : replay ? TOUR_STEPS : decided.steps
+  const returning = replay ? false : decided.returning
 
   if (steps.length === 0) return null
 
@@ -48,7 +78,7 @@ export default function AppTour({
   const last = index === steps.length - 1
 
   function close() {
-    markTourSeen()
+    if (!replay) void recordSeen()
     setDismissed(true)
     onClose?.()
   }
