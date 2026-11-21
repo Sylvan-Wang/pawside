@@ -24,7 +24,8 @@ import {
   type FoodEstimator,
 } from './meal'
 import type { Planner } from './planner'
-import { buildPlannerInput, COACH_CHAT_SYSTEM_PROMPT, weekdayOf } from './prompt'
+import { buildPlannerInput, COACH_CHAT_SYSTEM_PROMPT, RECENT_MESSAGES, weekdayOf } from './prompt'
+import { loadUserContext } from './user-context'
 import {
   normalizePlan,
   PLAN_PROMPT_VERSION,
@@ -66,6 +67,7 @@ import type {
   WeightDraftPayload,
   WorkoutDraftPayload,
 } from './types'
+import { asksForMealIdeas, coachMealIdeasKilled, mealIdeasText, pickMealIdeas } from './meal-ideas'
 import { pickRecipes, recipeText } from './recipes'
 import { buildWeightPayload } from './weight'
 import { buildWorkoutPayload } from './workout'
@@ -81,7 +83,7 @@ import { buildWorkoutPayload } from './workout'
 
 export const MAX_MESSAGE_CHARS = 2000
 export const MAX_TOOL_CALLS = 6
-const CONTEXT_MESSAGES = 6
+const CONTEXT_MESSAGES = RECENT_MESSAGES
 const LAST_MEAL_WINDOW_MS = 24 * 60 * 60 * 1000
 // A repeated send of a message that has no answer yet: how long the first attempt is presumed alive, and how long to wait for it.
 const IN_FLIGHT_WINDOW_MS = 60_000
@@ -126,6 +128,8 @@ export interface TurnResult {
    * keeps offering a button that no longer applies.
    */
   updatedCards: CardView[]
+  /** Tappable next questions from the model (not stored; shown under the newest reply only). */
+  followUps: string[]
 }
 
 interface Ctx {
@@ -526,6 +530,42 @@ async function runCancel(ctx: Ctx, task: Extract<PlanTask, { kind: 'cancel_draft
   return { drafts: [], texts: ['好，这条不记了。'] }
 }
 
+/** A recipe/what-to-eat question is about food, not training (「今天练什么」 stays a fitness question). */
+const FOOD_ASK = /(食谱|菜谱|吃|饭|餐|菜|做法)/
+
+/**
+ * 「想吃 / 吃什么 / 推荐个食谱」. When the user is asking for something to eat, the answer is
+ * two concrete dishes with ingredients in grams, calories and protein, chosen in code against
+ * today's target and what is already logged (meal-ideas.ts); the model's one-line reply is
+ * dropped then, because it is generic by design (it may not contain numbers). A yes/no question
+ * («奶茶能喝吗») keeps the model's reply and the day summary, as before.
+ */
+async function runConsultFood(ctx: Ctx, topic: string | null, reply: string | null): Promise<TaskResult> {
+  ctx.calls += 1
+  const facts = await getDayFacts(ctx.deps.supabase, ctx.userId, ctx.today, ['nutrition'])
+  const lines: string[] = []
+  const wantsIdeas = !coachMealIdeasKilled() && asksForMealIdeas(ctx.rawText)
+  const ideas = wantsIdeas
+    ? mealIdeasText(pickMealIdeas(`${ctx.rawText} ${topic ?? ''}`, ctx.hour, ctx.today, {
+      targetKcal: facts.nutrition.target_kcal,
+      targetProtein: facts.nutrition.targets.protein_g,
+      eatenKcal: facts.nutrition.complete ? facts.nutrition.known_kcal : facts.meals.length === 0 ? 0 : null,
+      eatenProtein: facts.nutrition.known_protein_g ?? (facts.meals.length === 0 ? 0 : null),
+    }))
+    : ''
+  if (ideas) {
+    lines.push(ideas)
+  } else {
+    lines.push(reply ?? TEXT.consultFallback)
+    if (facts.meals.length > 0) {
+      lines.push(`${dayFactsText(facts, ctx.today)}\n（只算已记录的，可能不完整。）`)
+    }
+  }
+  const suggestions = recipeText(await pickRecipes(ctx.deps.supabase, topic, ctx.today))
+  if (suggestions) lines.push(suggestions)
+  return none(lines.join('\n'))
+}
+
 async function runTask(ctx: Ctx, task: PlanTask, plan: NormalizedPlan): Promise<TaskResult> {
   const features = ctx.deps.features ?? {}
   if ((task.kind === 'log_meal' || task.kind === 'edit_meal') && features.meals === false) return none(TEXT.featureOff)
@@ -542,19 +582,12 @@ async function runTask(ctx: Ctx, task: PlanTask, plan: NormalizedPlan): Promise<
     case 'query_day': return runQueryDay(ctx, task)
     case 'cancel_draft': return runCancel(ctx, task)
     case 'confirm_draft': return none(TEXT.confirmByButton)
-    case 'consult_food': {
-      ctx.calls += 1
-      const facts = await getDayFacts(ctx.deps.supabase, ctx.userId, ctx.today, ['nutrition'])
-      const lines = [plan.reply ?? TEXT.consultFallback]
-      if (facts.meals.length > 0) {
-        lines.push(`${dayFactsText(facts, ctx.today)}\n（只算已记录的，可能不完整。）`)
-      }
-      const suggestions = recipeText(await pickRecipes(ctx.deps.supabase, task.topic, ctx.today))
-      if (suggestions) lines.push(suggestions)
-      return none(lines.join('\n'))
-    }
+    case 'consult_food': return runConsultFood(ctx, task.topic, plan.reply)
     case 'smalltalk': return none(plan.reply ?? TEXT.smalltalk)
-    case 'fitness_question': return none(plan.reply ?? TEXT.fitnessFallback)
+    case 'fitness_question':
+      // 「晚上推荐个食谱」被模型当成一般问题时，照样给具体菜谱，而不是一句「吃清淡点」。
+      if (asksForMealIdeas(ctx.rawText) && FOOD_ASK.test(ctx.rawText)) return runConsultFood(ctx, null, plan.reply)
+      return none(plan.reply ?? TEXT.fitnessFallback)
     case 'out_of_scope':
       // A medical reply may use the model's own wording only when it still hands off to a professional;
       // otherwise the fixed line is used. Free text has already passed the no-numbers/no-internals filter.
@@ -607,6 +640,7 @@ async function finish(
   userMessage: MessageRow,
   text: string,
   drafts: DraftRow[],
+  followUps: string[] = [],
 ): Promise<TurnResult> {
   const assistantMessage = await insertAssistantMessage(ctx.deps.supabase, {
     userId: ctx.userId,
@@ -629,6 +663,7 @@ async function finish(
     assistantMessage,
     cards: toCards(fresh, ctx.now, ctx.today),
     updatedCards: toCards(updated, ctx.now, ctx.today),
+    followUps,
   }
 }
 
@@ -695,7 +730,7 @@ export async function handleChatTurn(deps: TurnDeps, input: TurnInput): Promise<
     }
     if (reply) {
       const cards = await getDrafts(deps.supabase, deps.userId, reply.cards.map((card) => card.draft_id))
-      return { duplicate: true, userMessage: stored.message, assistantMessage: reply, cards: toCards(cards, now, today), updatedCards: [] }
+      return { duplicate: true, userMessage: stored.message, assistantMessage: reply, cards: toCards(cards, now, today), updatedCards: [], followUps: [] }
     }
   }
 
@@ -729,6 +764,7 @@ export async function handleChatTurn(deps: TurnDeps, input: TurnInput): Promise<
     .filter((message) => message.id !== stored.message.id)
     .slice(-CONTEXT_MESSAGES)
 
+  const userContext = await loadUserContext(deps.supabase, deps.userId, today)
   const plannerInput = buildPlannerInput({
     today,
     weekday: weekdayOf(today),
@@ -741,6 +777,7 @@ export async function handleChatTurn(deps: TurnDeps, input: TurnInput): Promise<
       summary: summarizeDraft(draft),
       pendingQuestion: draft.status === 'needs_clarification' ? (draft.payload as ClarifyPayload).question : null,
     })),
+    userContext,
     userMessage: text,
   })
 
@@ -818,6 +855,8 @@ export async function handleChatTurn(deps: TurnDeps, input: TurnInput): Promise<
     payload: {
       task_kinds: taskKinds,
       issues: plan.issues,
+      follow_ups: plan.followUps.length,
+      has_user_context: userContext !== null,
       tool_calls: ctx.calls,
       open_drafts: openDrafts.length,
       input_chars: text.length,
@@ -828,5 +867,7 @@ export async function handleChatTurn(deps: TurnDeps, input: TurnInput): Promise<
     tokensOut: planned.usage?.outputTokens ?? null,
   })
 
-  return finish(ctx, stored.message, texts.filter(Boolean).join('\n') || TEXT.noPlan, drafts)
+  // Suggestions only when the user is not being asked to answer something first.
+  const followUps = ctx.asked || drafts.some((d) => d.status === 'needs_clarification') ? [] : plan.followUps
+  return finish(ctx, stored.message, texts.filter(Boolean).join('\n') || TEXT.noPlan, drafts, followUps)
 }

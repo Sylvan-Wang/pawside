@@ -22,6 +22,7 @@ const WARNING_TEXT: Record<string, string> = {
   estimate_unavailable: 'AI 暂时算不出营养，这几样先只记录吃了什么。',
   food_lookup_failed: '食物库暂时查不了，营养先不算。',
   some_items_without_weight: '没有记过重量的食物没有被调整。',
+  photo_estimate: '份量是从照片估的，可能差得不少。不对就直接告诉我，比如「米饭 150 克」。',
 }
 
 function kcal(value: number | null): string | null {

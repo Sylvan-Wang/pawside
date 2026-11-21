@@ -300,6 +300,11 @@ export default function SettingsPage() {
 
         {/* Actions */}
         <div className="bg-white rounded-2xl overflow-hidden">
+          <Link href="/settings/album"
+            className="flex w-full items-center justify-between px-4 py-4 text-left text-sm text-gray-700 border-b border-gray-50">
+            <span>我的相册</span>
+            <span className="text-xs text-gray-400">身体记录 / 饮食 / 报告海报 ›</span>
+          </Link>
           <Link href="/settings/method"
             className="flex w-full items-center justify-between px-4 py-4 text-left text-sm text-gray-700 border-b border-gray-50">
             <span>训练方法</span>

@@ -53,6 +53,14 @@ export const SITE_FEATURES: SiteFeature[] = [
     heldBackBecause: '官网不提 Oura（避免暗示合作，Oura 协议限制）；只对被授权的内测用户开放',
   },
   {
+    id: 'photo-album',
+    name: '我的相册',
+    summary: '在小爪里或相册页上传照片，按身体记录、饮食、报告海报、其他分类存放。只存不看，不发给 AI。',
+    status: 'planned',
+    public: false,
+    heldBackBecause: '线上 Supabase 还没跑迁移、没实测上传；报告海报还没有生成功能。上线并实测后改成 live 再考虑对外',
+  },
+  {
     id: 'data-control',
     name: '导出全部数据、删除账号',
     summary: '在设置里导出自己的全部数据，或者删除账号。',

@@ -2,6 +2,9 @@ import type { NormalizedPlan, PlanTask, RawPlan } from '../../lib/coach-chat/sch
 import { rawItem, rawPlan, rawTask } from '../coach-chat/helpers'
 import { CASES_80 } from './fixtures-80'
 import { CASES_LIVE } from './fixtures-live'
+import { CASES_RECIPES } from './fixtures-recipes'
+import { CASES_PERSONAL } from './fixtures-personal'
+import type { UserContext } from '../../lib/coach-chat/user-context'
 
 /**
  * The evaluation corpus for the chat planner.
@@ -26,6 +29,8 @@ export interface EvalCase {
   hour?: number
   recent?: Array<{ role: 'user' | 'assistant'; text: string }>
   openDrafts?: Array<{ id: string; kind: string; summary: string; pendingQuestion?: string | null }>
+  /** What the server would know about the user (v3.4); omitted = null. */
+  userContext?: UserContext | null
   gold: RawPlan
   check: (plan: NormalizedPlan) => string[]
 }
@@ -518,4 +523,6 @@ export const CASES: EvalCase[] = [
   },
   ...CASES_80,
   ...CASES_LIVE,
+  ...CASES_RECIPES,
+  ...CASES_PERSONAL,
 ]

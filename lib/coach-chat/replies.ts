@@ -27,6 +27,7 @@ export const TEXT = {
   budgetExhausted: '这条我先不记了，信息还差一点。想好了随时再告诉我。',
   aiUnavailable: '我这会儿有点转不过来。你可以直接去饮食或运动页面记录，稍后再来找我。',
   rateLimited: '今天聊得有点多啦，明天再来找我，或者先去页面里手动记录。',
+  photoRateLimited: '今天识别照片的次数用完了，明天再来；也可以直接打一句吃了什么。',
   disabled: '小爪暂时没有对你开放。',
   featureOff: '这部分功能暂时关闭了，先到对应的页面里手动记录吧。',
   tooLong: '这句话有点长，可以拆成几句再说吗？',
