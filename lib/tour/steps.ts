@@ -4,13 +4,20 @@
  *
  * `since` is the tour version in which the step was added. A returning user who
  * last saw version N is only shown steps with since > N ("what's new"); a new
- * user, or someone replaying from Settings, sees all of them.
+ * user, or someone replaying from Settings, sees all of them. Who counts as new
+ * and when "what's new" pops up is decided in lib/tour/decide.ts.
  */
 export const TOUR_VERSION = 1
 
 export type TourStep = {
   id: string
   since: number
+  /**
+   * The day (YYYY-MM-DD) this step's feature went live. Returning users only get a
+   * "what's new" popup for it on that day (see lib/tour/decide.ts). Set it when
+   * adding a step with since > 1; steps without it never pop up for returning users.
+   */
+  launchedOn?: string
   mood: 'wave' | 'peek'
   title: string
   body: string

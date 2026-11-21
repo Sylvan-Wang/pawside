@@ -7,6 +7,8 @@ import { TOUR_VERSION } from './steps'
  * private windows — and a failure just means the tour is not shown.
  */
 const KEY = 'pawside.tour.seen'
+/** Same value, kept on the account (auth user_metadata) so it follows the person across devices. */
+export const ACCOUNT_KEY = 'tour_seen_version'
 
 export function readSeenVersion(): number | null {
   try {
