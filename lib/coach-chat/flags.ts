@@ -34,3 +34,13 @@ export async function coachChatEnabledFor(supabase: SupabaseClient): Promise<boo
   const { data, error } = await supabase.rpc('feature_enabled', { p_key: 'coach_chat' })
   return !error && data === true
 }
+
+/**
+ * 「识别这一餐」 sends meal photos to the model, so it is OFF unless
+ * PAWSIDE_PHOTO_RECOGNITION=1|true|on. Turn it on only after `npm run photo:check`
+ * shows the configured model reads images, and the privacy page says so.
+ */
+export function photoRecognitionEnabled(): boolean {
+  const raw = process.env.PAWSIDE_PHOTO_RECOGNITION?.trim().toLowerCase()
+  return raw === '1' || raw === 'true' || raw === 'on'
+}

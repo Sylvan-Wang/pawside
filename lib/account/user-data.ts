@@ -43,6 +43,8 @@ export const USER_DATA_TABLES: UserDataTable[] = [
   { table: 'coach_conversations', userColumn: 'user_id' },
   { table: 'coach_messages', userColumn: 'user_id' },
   { table: 'coach_drafts', userColumn: 'user_id' },
+  // Album entries (the image files themselves stay in Storage; the export lists them).
+  { table: 'user_photos', userColumn: 'user_id' },
 ]
 
 /** Owned rows that are deliberately not exported (still deleted with the account). */

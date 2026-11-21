@@ -195,6 +195,18 @@ export async function countUserMessagesSince(supabase: SupabaseClient, userId: s
   return count ?? 0
 }
 
+/** Photo recognitions the user started in the window, counted from the AI log (ok and failed both count). */
+export async function countPhotoRecognitionsSince(supabase: SupabaseClient, userId: string, sinceIso: string): Promise<number> {
+  const { count, error } = await supabase
+    .from('ai_generations')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .like('prompt_version', 'coach_photo_meal_%')
+    .gte('created_at', sinceIso)
+  if (error) fail('count photo recognitions', error)
+  return count ?? 0
+}
+
 export async function deleteConversation(supabase: SupabaseClient, userId: string, conversationId: string): Promise<void> {
   const { error } = await supabase
     .from('coach_conversations')
