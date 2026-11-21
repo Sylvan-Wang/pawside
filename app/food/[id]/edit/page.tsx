@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import PageHeader from '@/components/PageHeader'
 import { useToast } from '@/components/Toast'
-import { applyFoodEdit, type EditableFood } from '@/lib/food-edit'
+import { applyFoodEdit, basisOf, type EditableFood } from '@/lib/food-edit'
 
 const MEAL_TYPES = [
   { value: 'breakfast', label: '早餐' },
@@ -56,7 +56,7 @@ export default function EditFoodPage() {
           foodId: f.food_id,
           rawOnly: f.weight_g == null && f.energy_kcal == null && f.protein_g == null
             && f.carb_g == null && f.fat_g == null,
-        }))
+        })).map((item: FoodItem) => ({ ...item, basis: basisOf(item) }))
       )
       setLoading(false)
     }
