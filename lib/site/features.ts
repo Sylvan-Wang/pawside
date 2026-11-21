@@ -28,6 +28,7 @@ export interface SiteFeature {
 export const SITE_FEATURES: SiteFeature[] = [
   { id: 'methods', name: '三分化与四分化', summary: '选一套训练方法，之后的训练日按它轮着排。', status: 'live', public: true },
   { id: 'today-plan', name: '今天练什么', summary: '打开就是今天的部位、动作和每组目标。', status: 'live', public: true },
+  { id: 'session-duration', name: '选今天练多久', summary: '开练前选今天大概有多久：30、45、60 或 90 分钟，完成这次训练要做的动作数跟着调；练到一半也能改短。', status: 'live', public: true },
   { id: 'set-guidance', name: '每组说明', summary: '每一组是热身、正式还是休息-暂停组，目标是多少，写在组旁边。', status: 'live', public: true },
   { id: 'exercise-motion', name: '动作示意', summary: '每个动作配示意动画。', status: 'live', public: true },
   { id: 'set-logging', name: '逐组记录', summary: '做完一组点一下，记下重量和次数。', status: 'live', public: true },
