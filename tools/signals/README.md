@@ -2,7 +2,7 @@
 
 参照 ai_companion_signal_agent 的采集和清洗部分改写，分析交给每日例程（见 `docs/auto-iteration/`）。
 
-- 不需要 Reddit 账号或任何密钥：Reddit 先试公开 JSON，被拦再试 RSS；另有 App Store 竞品评论和行业新闻 RSS。
+- 不需要 Reddit 账号或任何密钥：Reddit 先试公开 JSON，被拦再试 RSS，再被拦走 PullPush 公开存档（连续 3 个版块都被拦就直接走 PullPush）；另有 App Store 竞品评论和行业新闻 RSS。
 - 不调用 AI。
 - 每个来源成败记在「来源健康」表里。
 - 配置只改 `config/sources.yml`。

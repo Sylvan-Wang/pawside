@@ -4,7 +4,8 @@
 分析由每天 20:30（北京）的 Claude 例程按 docs/auto-iteration/SIGNAL_METHOD.md 完成。
 
 数据来源（全部公开、免登录）：
-  1. Reddit：先试公开 JSON，失败再试 RSS（old.reddit.com/.rss）
+  1. Reddit：先试公开 JSON，失败再试 RSS（old.reddit.com/.rss），再失败试 PullPush
+     （Reddit 公开存档接口，免费、免密钥；2026-11-18 起 Reddit 拦了 Actions 出口）
   2. App Store 竞品评论（公开 RSS）
   3. 行业新闻 RSS
 
@@ -144,24 +145,79 @@ def _reddit_rss(sub: str) -> list[dict] | None:
     return None
 
 
+PULLPUSH_URL = "https://api.pullpush.io/reddit/search/submission/"
+
+
+def parse_pullpush(payload: Any) -> list[dict] | None:
+    """PullPush 的返回 → 和 _reddit_json 一样的结构。格式不对返回 None。"""
+    if not isinstance(payload, dict) or not isinstance(payload.get("data"), list):
+        return None
+    out = []
+    for p in payload["data"]:
+        if not isinstance(p, dict) or not p.get("id"):
+            continue
+        body = p.get("selftext") or ""
+        if body in ("[removed]", "[deleted]"):
+            body = ""
+        permalink = p.get("permalink") or f"/comments/{p['id']}/"
+        out.append({
+            "id": str(p["id"]),
+            "title": p.get("title") or "",
+            "body": body,
+            "score": p.get("score"),
+            "num_comments": p.get("num_comments"),
+            "created": float(p.get("created_utc") or 0),
+            "url": "https://reddit.com" + permalink,
+        })
+    return out
+
+
+def _reddit_pullpush(session, sub: str, cutoff: float) -> list[dict] | None:
+    # 存档有几小时到一两天的延迟，所以多给一天回看；按时间过滤仍在 collect_reddit 里做。
+    params = {"subreddit": sub, "size": 100, "sort": "desc", "sort_type": "created_utc",
+              "after": int(cutoff - 24 * 3600)}
+    for wait in (0, 10):
+        if wait:
+            time.sleep(wait)
+        try:
+            r = session.get(PULLPUSH_URL, params=params, headers={"User-Agent": UA}, timeout=30)
+        except Exception:
+            continue
+        if r.status_code != 200:
+            continue
+        try:
+            return parse_pullpush(r.json())
+        except ValueError:
+            return None
+    return None
+
+
 def collect_reddit(cfg: dict, health: Health, cutoff: float) -> list[dict]:
     import requests
     session = requests.Session()
     exclusions = cfg.get("exclusion_keywords", [])
     cache: dict[str, tuple[str, list[dict]]] = {}
     posts: dict[str, dict] = {}
+    direct_failures = 0
 
     for track, tcfg in cfg["tracks"].items():
         for sub in tcfg["subreddits"]:
             if sub not in cache:
-                raw = _reddit_json(session, sub)
-                method = "json"
+                raw, method = None, "json"
+                if direct_failures < 3:
+                    raw = _reddit_json(session, sub)
+                    if raw is None:
+                        time.sleep(1.0)
+                        raw = _reddit_rss(sub)
+                        method = "rss"
+                    direct_failures = 0 if raw is not None else direct_failures + 1
+                # 连续 3 个版块 JSON 和 RSS 都失败，说明出口被拦了，后面的直接走 PullPush，
+                # 不再每个版块等 RSS 重试（否则 18 个版块会把 30 分钟的任务时限耗光）。
                 if raw is None:
-                    time.sleep(1.0)
-                    raw = _reddit_rss(sub)
-                    method = "rss"
+                    raw = _reddit_pullpush(session, sub, cutoff)
+                    method = "pullpush"
                 if raw is None:
-                    health.add("reddit", f"r/{sub}", "json+rss", "blocked_or_failed", 0)
+                    health.add("reddit", f"r/{sub}", "json+rss+pullpush", "blocked_or_failed", 0)
                     cache[sub] = ("failed", [])
                 else:
                     health.add("reddit", f"r/{sub}", method, "ok", len(raw))
@@ -413,6 +469,13 @@ def main(argv: list[str] | None = None) -> int:
     if args.sample:
         assert stats["kept"] == 1 and stats["duplicate"] == 1 and stats["low_signal"] + stats["too_short"] == 1, stats
         assert "[user]" in items[0]["body"] and "u/someone" not in items[0]["body"]
+        pp = parse_pullpush({"data": [
+            {"id": "abc", "title": "t", "selftext": "[removed]", "score": 3, "num_comments": 1,
+             "created_utc": 1763600000, "permalink": "/r/Fitness/comments/abc/t/"},
+            {"title": "no id, skipped"}]})
+        assert pp == [{"id": "abc", "title": "t", "body": "", "score": 3, "num_comments": 1,
+                       "created": 1763600000.0, "url": "https://reddit.com/r/Fitness/comments/abc/t/"}], pp
+        assert parse_pullpush({"error": "x"}) is None and parse_pullpush([]) is None
         print("[signals] sample self-test passed")
     return 0
 
