@@ -9,7 +9,7 @@ import { handlePhotoMeal, PhotoMealError } from '@/lib/coach-chat/photo-meal'
 import { makePhotoRecognizer, MAX_PHOTOS_PER_MEAL } from '@/lib/coach-chat/photo-recognize'
 import { createEstimator } from '@/lib/coach-chat/planner'
 import { TEXT } from '@/lib/coach-chat/replies'
-import { countUserMessagesSince, describeError } from '@/lib/coach-chat/store'
+import { countPhotoRecognitionsSince, countUserMessagesSince, describeError } from '@/lib/coach-chat/store'
 import { toMessageViews } from '@/lib/coach-chat/views'
 
 /**
@@ -22,6 +22,8 @@ import { toMessageViews } from '@/lib/coach-chat/views'
  */
 
 const DAILY_MESSAGE_LIMIT = 300
+/** Photo calls cost far more than text, so they get their own, much smaller daily cap (xxa, 2026-11-21). */
+const DAILY_PHOTO_LIMIT = 20
 const PHOTO_TIMEOUT_MS = 30_000
 
 const bodySchema = z.object({
@@ -46,6 +48,9 @@ export async function POST(request: NextRequest) {
   const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString()
   if (await countUserMessagesSince(supabase, user.id, since) >= DAILY_MESSAGE_LIMIT) {
     return apiError('RATE_LIMITED', TEXT.rateLimited, 429)
+  }
+  if (await countPhotoRecognitionsSince(supabase, user.id, since) >= DAILY_PHOTO_LIMIT) {
+    return apiError('RATE_LIMITED', TEXT.photoRateLimited, 429)
   }
 
   try {
