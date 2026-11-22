@@ -4,6 +4,7 @@ import { buildWorkoutGuideMedia, type ExerciseMediaMapping } from '@/lib/exercis
 import { createClient } from '@/lib/supabase/server'
 import { completionCountUnit, prescribedSetsAreComplete } from '@/lib/training-completion'
 import { effectiveRequiredExerciseCount } from '@/lib/training-duration'
+import { isExerciseProgressEnabled, loadLastPoints } from '@/lib/workout/exercise-history'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
@@ -25,6 +26,7 @@ interface RawSet {
 
 interface RawExecution {
   id: string
+  exercise_id?: string | null
   exercise: RawExercise | RawExercise[] | null
   prescription: unknown
   sets: RawSet[] | null
@@ -72,6 +74,7 @@ export async function GET(
       .select(`
         id,
         exercise_prescription_id,
+        exercise_id,
         order_index,
         status,
         exercise:exercises(
@@ -164,9 +167,24 @@ export async function GET(
         ? 'legacy_one_completed_set_v1'
         : 'exercise_count_threshold_v1')
 
+  // #48 逐组记录页「上次」一行：开关默认关，关着时不查、不返回。
+  const lastPoints = isExerciseProgressEnabled() && session.log_date
+    ? await loadLastPoints(
+      supabase,
+      user.id,
+      executions.map((execution) => ({
+        exerciseId: String(execution.exercise_id ?? ''),
+        recordShape: execution.exercise?.record_shape,
+      })),
+      sessionId,
+      session.log_date,
+    )
+    : null
+
   return NextResponse.json({
     data: {
       viewer_id: user.id,
+      ...(lastPoints ? { last_points: lastPoints } : {}),
       preferred_weight_unit: profileResult.data?.weight_unit === 'lb' ? 'lb' : 'kg',
       session,
       exercises: executions,
