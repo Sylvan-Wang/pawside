@@ -34,6 +34,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { clearSessionDrafts, clearSetDraft, readSetDraft, writeSetDraft } from '@/lib/training-draft-store'
 import { describePlannedSet } from '@/lib/coach/set-guidance'
 import { useEffect, useRef, useState } from 'react'
+import { formatLastTime, type ProgressPoint } from '@/lib/workout/exercise-progress'
 
 interface PlannedSet {
   id: string
@@ -68,6 +69,7 @@ interface ActualSet {
 
 interface ExerciseExecution {
   id: string
+  exercise_id?: string
   order_index: number
   status: string
   exercise: { canonical_name_zh: string; record_shape?: RecordShape } | null
@@ -123,6 +125,8 @@ interface SessionResponse {
   session: TrainingSession
   exercises: ExerciseExecution[]
   progress: SessionProgress
+  /** #48「上次」一行：开关 NEXT_PUBLIC_EXERCISE_PROGRESS 打开时才有，按 exercise_id。 */
+  last_points?: Record<string, ProgressPoint>
 }
 
 interface SetDraft {
@@ -897,6 +901,7 @@ export default function TrainingSessionPage() {
   const isCompleted = data.session.status === 'completed'
   const exerciseName = exercise.exercise?.canonical_name_zh || `动作 ${exercise.order_index}`
   const activeShape = shapeOf(exercise)
+  const lastPoint = exercise.exercise_id ? data.last_points?.[exercise.exercise_id] ?? null : null
   const isTimedShape = activeShape === 'duration' || activeShape === 'distance_duration'
   const exerciseDrafts = drafts[exercise.id] ?? []
   const savedSetCount = exerciseDrafts.filter((draft) => draft.saved).length
@@ -1036,6 +1041,9 @@ export default function TrainingSessionPage() {
             <div>
               <p className="text-xs text-gray-400">动作 {exercise.order_index}</p>
               <h2 id={`exercise-${exercise.id}`} className="mt-1 font-semibold text-gray-900">{exerciseName}</h2>
+              {lastPoint && (
+                <p className="mt-0.5 text-xs text-gray-400">{formatLastTime(lastPoint, weightUnit)}</p>
+              )}
             </div>
             <div className="flex shrink-0 flex-col items-end gap-1">
               <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs text-gray-600">
