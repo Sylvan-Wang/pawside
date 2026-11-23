@@ -224,14 +224,19 @@ describe('Minimum P1 session completion eligibility', () => {
 
 describe('Minimum P1 UI contract', () => {
   it('shows the exercise-count threshold and never frames it as debt (PRD §13.2)', () => {
-    expect(sessionPage).toContain('完成任意')
-    expect(sessionPage).toContain('今天的训练已达成')
-    expect(sessionPage).toContain('结束今天训练')
+    // 逐组记录页文字搬进了字典（lib/i18n），中文逐字不变
+    expect(sessionPage).toContain("t('session.header.goalExercises'")
+    expect(zh.session.header.goalExercises).toContain('完成任意')
+    expect(sessionPage).toContain("t('session.footer.goalMet')")
+    expect(zh.session.footer.goalMet).toBe('今天的训练已达成')
+    expect(sessionPage).toContain("t('session.footer.finishToday')")
+    expect(zh.session.footer.finishToday).toBe('结束今天训练')
     for (const banned of ['你还欠', '未完成完整版', '补作业', '训练不完整']) {
       expect(sessionPage).not.toContain(banned)
     }
     // Remaining work is explicitly allowed to stay undone.
-    expect(sessionPage).toContain('不做也不会影响这个训练日')
+    expect(sessionPage).toContain("t('session.footer.goalMetBody')")
+    expect(zh.session.footer.goalMetBody).toContain('不做也不会影响这个训练日')
   })
 
   it('offers the duration choice before starting and while training', () => {
@@ -242,15 +247,16 @@ describe('Minimum P1 UI contract', () => {
     expect(todayPage).toContain('preferred_session_minutes')
     expect(todayPage).toContain("t('today.howLongNote')")
     expect(zh.today.howLongNote).toBe('实际用时会受休息和器械等待影响。')
-    expect(sessionPage).toContain('aria-label="调整本次训练时长"')
+    expect(sessionPage).toContain("aria-label={t('session.header.durationAria')}")
+    expect(zh.session.header.durationAria).toBe('调整本次训练时长')
     expect(sessionPage).toContain('changeDuration')
   })
 
   it('does not label individual exercises as required or optional (PRD §13.1)', () => {
     expect(sessionPage).not.toContain('Required')
     expect(sessionPage).not.toContain('Optional')
-    expect(sessionPage).not.toContain('可删动作')
-    expect(sessionPage).not.toContain('核心动作')
+    expect(sessionPage + JSON.stringify(zh.session)).not.toContain('可删动作')
+    expect(sessionPage + JSON.stringify(zh.session)).not.toContain('核心动作')
   })
 
   it('caches by Program Day rather than calendar date', () => {

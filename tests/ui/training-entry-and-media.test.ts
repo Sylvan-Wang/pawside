@@ -52,8 +52,10 @@ describe('training entry semantics and exercise media contrast', () => {
     expect(session).toContain('const exercise = data.exercises[activeExerciseIndex]')
     expect(session).toContain('data?.exercises[activeExerciseIndex + 1]?.media')
     expect(session).toContain('nextMedia.frames.forEach')
-    expect(session).toContain('上一个动作')
-    expect(session).toContain('下一个动作')
+    expect(session).toContain("t('session.nav.prev')")
+    expect(zh.session.nav.prev).toBe('上一个动作')
+    expect(session).toContain("t('session.nav.next')")
+    expect(zh.session.nav.next).toBe('下一个动作')
   })
 
   it('prebuilds Method detail routes and shows a training route skeleton', async () => {

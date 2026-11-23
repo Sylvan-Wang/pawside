@@ -1,3 +1,4 @@
+import { zh } from '../../lib/i18n/messages/zh'
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { trainingExerciseActionSchema } from '../../lib/contracts/training-exercise-action'
@@ -36,13 +37,19 @@ describe('Method runtime reliability', () => {
     expect(queue).toContain("item.userId === userId && item.sessionId === sessionId")
     expect(queue).toContain('exercise_execution_id')
     expect(page).toContain("window.addEventListener('online', retry)")
-    expect(page).toContain('已暂存在本机，联网后会自动同步')
-    expect(page).toContain('仍有训练记录等待联网同步')
+    // 文字搬进了字典（lib/i18n），中文逐字不变
+    expect(page).toContain("t('session.errors.queuedOffline')")
+    expect(zh.session.errors.queuedOffline).toBe('已暂存在本机，联网后会自动同步')
+    expect(page).toContain("t('session.errors.pendingSyncComplete')")
+    expect(zh.session.errors.pendingSyncComplete).toContain('仍有训练记录等待联网同步')
   })
 
   it('shows separate later and skip actions', () => {
-    expect(page).toContain('稍后做')
-    expect(page).toContain('跳过动作')
-    expect(page).toContain('恢复这个动作')
+    expect(page).toContain("t('session.exercise.later')")
+    expect(zh.session.exercise.later).toBe('稍后做')
+    expect(page).toContain("t('session.exercise.skip')")
+    expect(zh.session.exercise.skip).toBe('跳过动作')
+    expect(page).toContain("t('session.exercise.resume')")
+    expect(zh.session.exercise.resume).toBe('恢复这个动作')
   })
 })
