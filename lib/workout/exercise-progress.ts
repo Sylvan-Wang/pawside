@@ -7,6 +7,7 @@
  */
 
 import { kgToWeightInput, type TrainingWeightUnit } from '@/lib/training-weight-unit'
+import { translate, type Locale } from '@/lib/i18n'
 
 export type ProgressShape = 'weight_reps' | 'bodyweight_reps'
 
@@ -148,18 +149,18 @@ function shortDate(date: string): string {
 /**
  * 「上次 11/12：40 kg × 8, 8, 7」。各组重量相同时合并写；不同时逐组写「40×8, 42.5×6」。
  */
-export function formatLastTime(point: ProgressPoint, unit: TrainingWeightUnit): string {
+export function formatLastTime(point: ProgressPoint, unit: TrainingWeightUnit, locale: Locale = 'zh'): string {
   const sets = point.workingSets
   const weights = sets.map(s => s.weightKg)
   let body: string
   if (weights.every(w => w === null)) {
-    body = `${sets.map(s => s.reps).join(', ')} 次`
+    body = translate(locale, 'session.exercise.repsOnly', { reps: sets.map(s => s.reps).join(', ') })
   } else if (weights.every(w => w === weights[0])) {
     body = `${kgToWeightInput(weights[0], unit)} ${unit} × ${sets.map(s => s.reps).join(', ')}`
   } else {
     body = `${sets.map(s => `${kgToWeightInput(s.weightKg, unit)}×${s.reps}`).join(', ')} ${unit}`
   }
-  return `上次 ${shortDate(point.date)}：${body}`
+  return translate(locale, 'session.exercise.lastTime', { date: shortDate(point.date), body })
 }
 
 export function formatSummary(summary: ProgressSummary, unit: TrainingWeightUnit): string | null {

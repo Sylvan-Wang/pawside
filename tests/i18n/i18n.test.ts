@@ -188,3 +188,63 @@ describe('今日训练（批 1 第 2 页）', () => {
     expect(exerciseDisplayName('没登记的动作', 'en')).toBe('没登记的动作')
   })
 })
+
+describe('逐组记录（批 1 第 3 页）', () => {
+  const visible = (src: string) =>
+    src
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/\{\/\*[\s\S]*?\*\/\}/g, '')
+      .split('\n')
+      .filter((line) => !line.trim().startsWith('//'))
+      .join('\n')
+
+  it('逐组记录页的界面文字不再写死中文', () => {
+    expect(visible(readFileSync('app/training/sessions/[sessionId]/page.tsx', 'utf8'))).not.toMatch(/[一-鿿]/)
+  })
+
+  it('中文文案和搬之前逐字一致（抽查）', async () => {
+    const { NO_PRESET_SETS_NOTICE } = await import('@/lib/training-copy')
+    expect(zh.session.exercise.noPresetSets).toBe(NO_PRESET_SETS_NOTICE)
+    expect(translate('zh', 'session.splitTitle', { split: '推' })).toBe('推训练')
+    expect(translate('zh', 'session.header.progress', { n: 2, total: 5 })).toBe('动作 2 / 5')
+    expect(translate('zh', 'session.set.title', { n: 3 })).toBe('第 3 组')
+    expect(translate('zh', 'session.set.target', { target: '8–12 次' })).toBe('目标 8–12 次')
+    expect(translate('zh', 'session.stale.needExercises', { done: 1, required: 3 })).toBe('完整完成任意 3 个动作才能结束（当前 1 / 3）。')
+    expect(translate('zh', 'session.footer.needSet', { done: 0, required: 1 })).toBe('至少保存 1 组真实训练记录即可结束本次训练（当前 0 / 1）。')
+    expect(translate('zh', 'session.done.next', { split: '拉' })).toBe('下一次继续拉训练。')
+    expect(translate('zh', 'session.done.cycle', { n: 1 })).toBe('第 1 轮已完成，下一次从推训练开始。')
+    expect(translate('zh', 'session.header.duration', { minutes: 45 })).toBe('本次训练时长 45 分钟')
+  })
+
+  it('每组目标：中文和 describePlannedSet 逐字一致；英文不露中文、不显示中文备注', async () => {
+    const { describePlannedSet } = await import('@/lib/coach/set-guidance')
+    const { localizeSetGuidance } = await import('@/lib/i18n/set-guidance-en')
+    const sets = [
+      { set_index: 1, set_type: 'warmup', target_reps_min: 12, target_reps_max: 12 },
+      { set_index: 2, set_type: 'working', target_reps_min: 8, target_reps_max: 12, quality_requirement: '每侧' },
+      { set_index: 3, set_type: 'rest_pause', failure_allowed: true, quality_requirement: '10 + 5' },
+      { set_index: 4, set_type: 'working', target_reps_min: 1, target_reps_max: 1, target_rir: 2 },
+    ]
+    for (const set of sets) {
+      const g = describePlannedSet(set)
+      expect(localizeSetGuidance(set, g, 'zh')).toBe(g)
+      const en = localizeSetGuidance(set, g, 'en')
+      expect(JSON.stringify(en), JSON.stringify(set)).not.toMatch(/[一-鿿]/)
+      expect(en.note).toBeNull()
+      expect(en.emphasis).toBe(g.emphasis)
+    }
+    expect(localizeSetGuidance(sets[1], describePlannedSet(sets[1]), 'en')).toMatchObject({ label: 'Working', target: '8–12 reps', effort: 'Not to failure' })
+    expect(localizeSetGuidance(sets[2], describePlannedSet(sets[2]), 'en')).toMatchObject({ target: '10 + 5 reps', effort: 'Close to or at failure' })
+    expect(localizeSetGuidance(sets[3], describePlannedSet(sets[3]), 'en')).toMatchObject({ target: '1 rep', effort: '2 reps in reserve' })
+  })
+
+  it('「上次」一行：中文不变，英文用 Last time', async () => {
+    const { formatLastTime } = await import('@/lib/workout/exercise-progress')
+    const point = { date: '2026-11-12', workingSets: [{ weightKg: 40, reps: 8 }, { weightKg: 40, reps: 7 }] }
+    expect(formatLastTime(point as never, 'kg')).toBe('上次 11/12：40 kg × 8, 7')
+    expect(formatLastTime(point as never, 'kg', 'en')).toBe('Last time 11/12: 40 kg × 8, 7')
+    const bodyweight = { date: '2026-11-12', workingSets: [{ weightKg: null, reps: 10 }, { weightKg: null, reps: 8 }] }
+    expect(formatLastTime(bodyweight as never, 'kg')).toBe('上次 11/12：10, 8 次')
+    expect(formatLastTime(bodyweight as never, 'kg', 'en')).toBe('Last time 11/12: 10, 8 reps')
+  })
+})

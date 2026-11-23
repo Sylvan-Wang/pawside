@@ -3,7 +3,7 @@
 import PageHeader from '@/components/PageHeader'
 import { splitLabel } from '@/lib/split-labels'
 import { describeTimedTarget } from '@/lib/workout-log-summary'
-import { friendlyTargetSummary, NO_PRESET_SETS_NOTICE } from '@/lib/training-copy'
+import { friendlyTargetSummary } from '@/lib/training-copy'
 import CoachCard from '@/components/CoachCard'
 import ExerciseMotion from '@/components/workout/ExerciseMotion'
 import type { ExerciseMedia } from '@/lib/exercise-media'
@@ -35,6 +35,10 @@ import { clearSessionDrafts, clearSetDraft, readSetDraft, writeSetDraft } from '
 import { describePlannedSet } from '@/lib/coach/set-guidance'
 import { useEffect, useRef, useState } from 'react'
 import { formatLastTime, type ProgressPoint } from '@/lib/workout/exercise-progress'
+import { useLocale } from '@/lib/i18n/use-locale'
+import { translate, type Locale, type MessageKey } from '@/lib/i18n'
+import { exerciseDisplayName } from '@/lib/i18n/exercise-names'
+import { localizeSetGuidance } from '@/lib/i18n/set-guidance-en'
 
 interface PlannedSet {
   id: string
@@ -235,8 +239,8 @@ function inputToMeters(text: string) {
   return Math.round(value * 1000 * 100) / 100
 }
 
-function formatTarget(set: PlannedSet, shape: RecordShape) {
-  return shape === 'duration' || shape === 'distance_duration' ? describeTimedTarget(set) : null
+function formatTarget(set: PlannedSet, shape: RecordShape, locale: Locale) {
+  return shape === 'duration' || shape === 'distance_duration' ? describeTimedTarget(set, locale) : null
 }
 
 function restorePendingDrafts(
@@ -381,6 +385,8 @@ export default function TrainingSessionPage() {
   const params = useParams<{ sessionId: string }>()
   const router = useRouter()
   const sessionId = params.sessionId
+  const [locale] = useLocale()
+  const t = (key: MessageKey, params?: Record<string, string | number>) => translate(locale, key, params)
   const [data, setData] = useState<SessionResponse | null>(null)
   const [drafts, setDrafts] = useState<Record<string, SetDraft[]>>({})
   const [activeExerciseIndex, setActiveExerciseIndex] = useState(0)
@@ -431,7 +437,7 @@ export default function TrainingSessionPage() {
         const firstOpen = nextData.exercises.findIndex((exercise) => !['completed', 'skipped'].includes(exercise.status))
         setActiveExerciseIndex(firstOpen >= 0 ? firstOpen : 0)
       } catch (reason: unknown) {
-        if (active) setError(reason instanceof Error ? reason.message : '暂时无法读取训练')
+        if (active) setError(reason instanceof Error ? reason.message : t('session.errors.loadFailed'))
       } finally {
         if (active) setLoading(false)
       }
@@ -439,6 +445,8 @@ export default function TrainingSessionPage() {
 
     void load()
     return () => { active = false }
+    // t only feeds fallback error text; switching language must not reload the session.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId])
 
   useEffect(() => {
@@ -556,12 +564,12 @@ export default function TrainingSessionPage() {
     if (shape === 'duration' || shape === 'distance_duration') {
       const seconds = inputToSeconds(shape, draft.duration)
       if (seconds == null) {
-        setError(shape === 'duration' ? '请填写这一组坚持的秒数' : '请填写这一组的运动时间')
+        setError(shape === 'duration' ? t('session.errors.needSeconds') : t('session.errors.needMinutes'))
         return null
       }
       const distanceMeters = shape === 'distance_duration' ? inputToMeters(draft.distance) : null
       if (shape === 'distance_duration' && draft.distance !== '' && distanceMeters == null) {
-        setError('距离需要是不小于 0 的数字')
+        setError(t('session.errors.badDistance'))
         return null
       }
       return {
@@ -576,7 +584,7 @@ export default function TrainingSessionPage() {
     }
     const reps = Number(draft.reps)
     if (draft.reps === '' || !Number.isInteger(reps) || reps < 0) {
-      setError('请填写这一组实际完成的次数')
+      setError(t('session.errors.needReps'))
       return null
     }
     return {
@@ -640,7 +648,7 @@ export default function TrainingSessionPage() {
       const result = await response.json()
       if (!response.ok) {
         if (response.status < 500) removePendingSetActual(pending)
-        throw new Error(result?.error?.message || '保存失败')
+        throw new Error(result?.error?.message || t('session.errors.saveFailed'))
       }
       removePendingSetActual(pending)
       clearSetDraft(data.viewer_id, sessionId, executionId, draft.setIndex)
@@ -660,7 +668,7 @@ export default function TrainingSessionPage() {
           index === position ? { ...item, pending: stillPending } : item
         )),
       }))
-      setError(offline ? '已暂存在本机，联网后会自动同步' : reason instanceof Error ? reason.message : '保存失败')
+      setError(offline ? t('session.errors.queuedOffline') : reason instanceof Error ? reason.message : t('session.errors.saveFailed'))
     } finally {
       setSavingKey('')
     }
@@ -676,7 +684,7 @@ export default function TrainingSessionPage() {
         body: JSON.stringify({ action }),
       })
       const result = await response.json()
-      if (!response.ok) throw new Error(result?.error?.message || '动作状态更新失败')
+      if (!response.ok) throw new Error(result?.error?.message || t('session.errors.statusFailed'))
       setData((current) => current ? {
         ...current,
         exercises: current.exercises.map((item) => item.id === executionId
@@ -688,7 +696,7 @@ export default function TrainingSessionPage() {
         showExercise(activeExerciseIndex + 1)
       }
     } catch (reason: unknown) {
-      setError(reason instanceof Error ? reason.message : '动作状态更新失败')
+      setError(reason instanceof Error ? reason.message : t('session.errors.statusFailed'))
     } finally {
       setExerciseActionId('')
     }
@@ -701,18 +709,18 @@ export default function TrainingSessionPage() {
     try {
       await syncPendingSetActuals()
       if (data && listPendingSetActuals(data.viewer_id, sessionId).length > 0) {
-        throw new Error('仍有训练记录等待联网同步，请联网后再结束本次训练')
+        throw new Error(t('session.errors.pendingSyncEnd'))
       }
       const response = await fetch(`/api/training/sessions/${sessionId}/end`, { method: 'POST' })
       const payload = await response.json()
-      if (!response.ok) throw new Error(payload?.error?.message || '暂时无法结束训练')
+      if (!response.ok) throw new Error(payload?.error?.message || t('session.errors.endFailed'))
       if (data) clearSessionDrafts(data.viewer_id, sessionId)
       clearTrainingSessionCache(sessionId)
       clearTodayTrainingCache()
       router.push('/training/today')
     } catch (reason: unknown) {
       setConfirmEnd(false)
-      setError(reason instanceof Error ? reason.message : '暂时无法结束训练')
+      setError(reason instanceof Error ? reason.message : t('session.errors.endFailed'))
     } finally {
       setEndingEarly(false)
     }
@@ -724,7 +732,7 @@ export default function TrainingSessionPage() {
     try {
       await syncPendingSetActuals()
       if (data && listPendingSetActuals(data.viewer_id, sessionId).length > 0) {
-        throw new Error('仍有训练记录等待联网同步，请联网后再完成本次训练')
+        throw new Error(t('session.errors.pendingSyncComplete'))
       }
       completionRequestId.current ??= window.crypto.randomUUID()
       const response = await fetch(`/api/training/sessions/${sessionId}/complete`, {
@@ -733,7 +741,7 @@ export default function TrainingSessionPage() {
         body: JSON.stringify({ completion_request_id: completionRequestId.current }),
       })
       const payload = await response.json()
-      if (!response.ok) throw new Error(payload?.error?.message || '暂时无法完成训练')
+      if (!response.ok) throw new Error(payload?.error?.message || t('session.errors.completeFailed'))
       setCompletion(payload.data)
       if (data) clearSessionDrafts(data.viewer_id, sessionId)
       if (payload.data?.log_date) {
@@ -795,7 +803,7 @@ export default function TrainingSessionPage() {
       }
       return true
     } catch (reason: unknown) {
-      setError(reason instanceof Error ? reason.message : '暂时无法完成训练')
+      setError(reason instanceof Error ? reason.message : t('session.errors.completeFailed'))
       return false
     } finally {
       setFinishing(false)
@@ -832,10 +840,10 @@ export default function TrainingSessionPage() {
           output_json: sessionFeedback.ai,
         }),
       })
-      if (!response.ok) throw new Error('反馈保存失败')
+      if (!response.ok) throw new Error(t('session.errors.feedbackSaveFailed'))
       setSessionFeedback(current => current ? { ...current, rating: next } : current)
     } catch (reason: unknown) {
-      setError(reason instanceof Error ? reason.message : '反馈保存失败')
+      setError(reason instanceof Error ? reason.message : t('session.errors.feedbackSaveFailed'))
     } finally {
       setFeedbackSaving(false)
     }
@@ -860,7 +868,7 @@ export default function TrainingSessionPage() {
         }),
       })
       const payload = await response.json()
-      if (!response.ok) throw new Error(payload?.error?.message || '暂时无法调整训练时长')
+      if (!response.ok) throw new Error(payload?.error?.message || t('session.errors.durationFailed'))
       setData((current) => current ? {
         ...current,
         session: {
@@ -879,27 +887,31 @@ export default function TrainingSessionPage() {
       } : current)
       clearTrainingSessionCache(sessionId)
     } catch (reason: unknown) {
-      setError(reason instanceof Error ? reason.message : '暂时无法调整训练时长')
+      setError(reason instanceof Error ? reason.message : t('session.errors.durationFailed'))
     } finally {
       setChangingDuration(false)
     }
   }
 
   if (loading) {
-    return <div className="min-h-screen bg-gray-50"><PageHeader title="训练中" back /><p className="p-5 text-sm text-gray-500">正在恢复训练记录…</p></div>
+    return <div className="min-h-screen bg-gray-50"><PageHeader title={t('session.headerTitle')} back /><p className="p-5 text-sm text-gray-500">{t('session.restoring')}</p></div>
   }
 
   if (!data) {
-    return <div className="min-h-screen bg-gray-50"><PageHeader title="训练中" back /><p className="p-5 text-sm text-red-500">{error || '训练记录不存在'}</p></div>
+    return <div className="min-h-screen bg-gray-50"><PageHeader title={t('session.headerTitle')} back /><p className="p-5 text-sm text-red-500">{error || t('session.notFound')}</p></div>
   }
 
   const exercise = data.exercises[activeExerciseIndex]
   if (!exercise) {
-    return <div className="min-h-screen bg-gray-50"><PageHeader title="训练中" back /><p className="p-5 text-sm text-gray-500">本次训练没有动作。</p></div>
+    return <div className="min-h-screen bg-gray-50"><PageHeader title={t('session.headerTitle')} back /><p className="p-5 text-sm text-gray-500">{t('session.noExercises')}</p></div>
   }
 
   const isCompleted = data.session.status === 'completed'
-  const exerciseName = exercise.exercise?.canonical_name_zh || `动作 ${exercise.order_index}`
+  const exerciseName = exercise.exercise?.canonical_name_zh
+    ? exerciseDisplayName(exercise.exercise.canonical_name_zh, locale)
+    : t('session.exerciseN', { n: exercise.order_index })
+  const splitTitle = t('session.splitTitle', { split: splitLabel(data.session.split_key, null, locale) })
+  const targetSummary = friendlyTargetSummary(exercise.prescription?.target_summary_zh, exercise.prescription?.sets ?? [], locale)
   const activeShape = shapeOf(exercise)
   const lastPoint = exercise.exercise_id ? data.last_points?.[exercise.exercise_id] ?? null : null
   const isTimedShape = activeShape === 'duration' || activeShape === 'distance_duration'
@@ -939,13 +951,13 @@ export default function TrainingSessionPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-10">
-      <PageHeader title={`${splitLabel(data.session.split_key)}训练`} back />
+      <PageHeader title={splitTitle} back />
       {isStaleSession && !staleBannerDismissed && (
         <div className="mx-auto max-w-2xl px-4 pt-4">
           <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
-            <p className="text-sm font-medium text-amber-900">这是 {staleDaysAgo} 天前开始的训练</p>
+            <p className="text-sm font-medium text-amber-900">{t('session.stale.title', { days: staleDaysAgo })}</p>
             <p className="mt-1 text-xs leading-5 text-amber-800">
-              继续记录会算作同一次训练；也可以结束这一次，重新开始今天的训练。
+              {t('session.stale.body')}
             </p>
             <div className="mt-3 flex gap-2">
               <button
@@ -953,7 +965,7 @@ export default function TrainingSessionPage() {
                 onClick={() => setStaleBannerDismissed(true)}
                 className="flex-1 rounded-lg border border-amber-300 bg-white py-2 text-xs font-medium text-amber-900"
               >
-                继续记录
+                {t('session.stale.keepLogging')}
               </button>
               <button
                 type="button"
@@ -961,14 +973,14 @@ export default function TrainingSessionPage() {
                 disabled={!canComplete || finishing}
                 className="flex-1 rounded-lg bg-amber-900 py-2 text-xs font-medium text-white disabled:opacity-40"
               >
-                结束并开始今天的训练
+                {t('session.stale.restart')}
               </button>
             </div>
             {!canComplete && (
               <p className="mt-2 text-[11px] text-amber-700">
                 {completionUnit === 'set'
-                  ? `至少保存 1 组真实训练记录才能结束（当前 ${completedCount} / ${requiredCount}）。`
-                  : `完整完成任意 ${requiredCount} 个动作才能结束（当前 ${completedCount} / ${requiredCount}）。`}
+                  ? t('session.stale.needSet', { done: completedCount, required: requiredCount })
+                  : t('session.stale.needExercises', { done: completedCount, required: requiredCount })}
               </p>
             )}
           </div>
@@ -977,33 +989,33 @@ export default function TrainingSessionPage() {
       <main className="mx-auto max-w-2xl space-y-4 px-4 py-5">
         <header className="rounded-2xl bg-black p-5 text-white">
           <div className="flex items-center justify-between text-xs text-white/60">
-            <span>{isCompleted ? '本次训练已完成' : '实际训练记录'}</span>
-            <span>动作 {activeExerciseIndex + 1} / {data.exercises.length}</span>
+            <span>{isCompleted ? t('session.header.completed') : t('session.header.actualLog')}</span>
+            <span>{t('session.header.progress', { n: activeExerciseIndex + 1, total: data.exercises.length })}</span>
           </div>
-          <h1 className="mt-2 text-xl font-semibold">{splitLabel(data.session.split_key)}训练</h1>
+          <h1 className="mt-2 text-xl font-semibold">{splitTitle}</h1>
           <span className="sr-only" aria-live="polite">
-            当前为第 {activeExerciseIndex + 1} 个动作，共 {data.exercises.length} 个动作
+            {t('session.header.srProgress', { n: activeExerciseIndex + 1, total: data.exercises.length })}
           </span>
           <div className="mt-4 rounded-xl bg-white/10 p-3">
             <div className="flex items-center justify-between gap-2 text-sm">
               <span className="font-medium">
                 {isCompleted
-                  ? '本次训练已完成'
+                  ? t('session.header.completed')
                   : canComplete
-                    ? '今天的训练已达成'
+                    ? t('session.header.goalMet')
                     : completionUnit === 'set'
-                      ? '至少保存 1 组真实训练记录，就可以结束本次训练'
-                      : `完成任意 ${requiredExerciseCount} 个动作，就可以结束今天的训练`}
+                      ? t('session.header.goalSet')
+                      : t('session.header.goalExercises', { n: requiredExerciseCount })}
               </span>
               <span className="shrink-0 tabular-nums">{completedCount} / {requiredCount}</span>
             </div>
             {!isCompleted && canShortenDuration && (
               <div className="mt-3">
                 <p className="text-xs text-white/60">
-                  本次训练时长 {data.progress.selected_session_minutes ?? '-'} 分钟
-                  {data.progress.selection_source === 'mid_session_change' ? ' · 训练中已调整' : ''}
+                  {t('session.header.duration', { minutes: data.progress.selected_session_minutes ?? '-' })}
+                  {data.progress.selection_source === 'mid_session_change' ? t('session.header.durationAdjusted') : ''}
                 </p>
-                <div className="mt-1.5 grid grid-cols-4 gap-1.5" role="group" aria-label="调整本次训练时长">
+                <div className="mt-1.5 grid grid-cols-4 gap-1.5" role="group" aria-label={t('session.header.durationAria')}>
                   {SESSION_MINUTE_OPTIONS
                     .filter((minutes) => minutes <= (data.progress.selected_session_minutes ?? minutes))
                     .map((minutes) => (
@@ -1025,10 +1037,10 @@ export default function TrainingSessionPage() {
               </div>
             )}
           </div>
-          <div className="mt-3 flex gap-1.5" role="group" aria-label="选择训练动作">
+          <div className="mt-3 flex gap-1.5" role="group" aria-label={t('session.header.pickAria')}>
             {data.exercises.map((item, index) => (
               <button key={item.id} type="button" onClick={() => showExercise(index)}
-                aria-label={`查看动作 ${index + 1}`}
+                aria-label={t('session.header.viewAria', { n: index + 1 })}
                 className={`h-1.5 flex-1 rounded-full ${index <= activeExerciseIndex ? 'bg-white' : 'bg-white/20'}`} />
             ))}
           </div>
@@ -1039,26 +1051,26 @@ export default function TrainingSessionPage() {
         <section key={exercise.id} className="rounded-2xl bg-white p-4" aria-labelledby={`exercise-${exercise.id}`}>
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-xs text-gray-400">动作 {exercise.order_index}</p>
+              <p className="text-xs text-gray-400">{t('session.exerciseN', { n: exercise.order_index })}</p>
               <h2 id={`exercise-${exercise.id}`} className="mt-1 font-semibold text-gray-900">{exerciseName}</h2>
               {lastPoint && (
-                <p className="mt-0.5 text-xs text-gray-400">{formatLastTime(lastPoint, weightUnit)}</p>
+                <p className="mt-0.5 text-xs text-gray-400">{formatLastTime(lastPoint, weightUnit, locale)}</p>
               )}
             </div>
             <div className="flex shrink-0 flex-col items-end gap-1">
               <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs text-gray-600">
-                {savedSetCount} / {exerciseDrafts.length} 组
+                {t('session.exercise.setsCount', { saved: savedSetCount, total: exerciseDrafts.length })}
               </span>
               {exerciseFullyCompleted && (
                 <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs text-emerald-700">
-                  已计入完成数
+                  {t('session.exercise.counted')}
                 </span>
               )}
             </div>
           </div>
 
-          {friendlyTargetSummary(exercise.prescription?.target_summary_zh, exercise.prescription?.sets ?? []) && (
-            <p className="mt-1 text-sm text-gray-500">今天建议：{friendlyTargetSummary(exercise.prescription?.target_summary_zh, exercise.prescription?.sets ?? [])}</p>
+          {targetSummary && (
+            <p className="mt-1 text-sm text-gray-500">{t('session.exercise.suggestion', { summary: targetSummary })}</p>
           )}
 
           {!isCompleted && (
@@ -1067,19 +1079,19 @@ export default function TrainingSessionPage() {
                 <button type="button" onClick={() => setExerciseStatus(exercise.id, 'resume')}
                   disabled={exerciseActionId === exercise.id}
                   className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium disabled:opacity-50">
-                  恢复这个动作
+                  {t('session.exercise.resume')}
                 </button>
               ) : (
                 <>
                   <button type="button" onClick={() => showExercise(Math.min(activeExerciseIndex + 1, data.exercises.length - 1))}
                     disabled={isLastExercise}
                     className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium disabled:opacity-40">
-                    稍后做
+                    {t('session.exercise.later')}
                   </button>
                   <button type="button" onClick={() => setExerciseStatus(exercise.id, 'skip')}
                     disabled={exerciseActionId === exercise.id || savedSetCount > 0}
                     className="rounded-lg px-3 py-2 text-sm text-gray-500 disabled:opacity-40">
-                    跳过动作
+                    {t('session.exercise.skip')}
                   </button>
                 </>
               )}
@@ -1091,8 +1103,8 @@ export default function TrainingSessionPage() {
           )}
 
           {!isTimedShape && <div className="mt-4 flex items-center justify-between rounded-xl bg-gray-50 px-3 py-2">
-            <span className="text-xs text-gray-500">重量单位</span>
-            <div className="flex rounded-lg bg-white p-0.5" role="group" aria-label="重量单位">
+            <span className="text-xs text-gray-500">{t('session.exercise.weightUnit')}</span>
+            <div className="flex rounded-lg bg-white p-0.5" role="group" aria-label={t('session.exercise.weightUnit')}>
               {(['kg', 'lb'] as const).map((unit) => (
                 <button key={unit} type="button" onClick={() => selectWeightUnit(unit)}
                   aria-pressed={weightUnit === unit}
@@ -1106,7 +1118,7 @@ export default function TrainingSessionPage() {
           <div className="mt-4 space-y-3">
             {exerciseDrafts.length === 0 && (
               <p className="rounded-xl bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-800">
-                {NO_PRESET_SETS_NOTICE}
+                {t('session.exercise.noPresetSets')}
               </p>
             )}
             {exerciseDrafts.map((draft, position) => {
@@ -1117,22 +1129,22 @@ export default function TrainingSessionPage() {
                     const planned = draft.isExtra
                       ? null
                       : exercise.prescription?.sets.find((set) => set.set_index === draft.setIndex) ?? null
-                    const guidance = planned ? describePlannedSet(planned) : null
-                    const timedTarget = planned ? formatTarget(planned, activeShape) : null
+                    const guidance = planned ? localizeSetGuidance(planned, describePlannedSet(planned), locale) : null
+                    const timedTarget = planned ? formatTarget(planned, activeShape, locale) : null
                     return (
                       <div className="mb-2">
                         <div className="flex items-center justify-between">
                           <span className="text-sm font-medium">
-                            第 {draft.setIndex} 组
-                            {guidance ? ` · ${guidance.label}` : draft.isExtra ? ' · 额外记录' : ''}
+                            {t('session.set.title', { n: draft.setIndex })}
+                            {guidance ? ` · ${guidance.label}` : draft.isExtra ? ` · ${t('session.set.extra')}` : ''}
                           </span>
                           <span className={`text-xs ${draft.pending ? 'text-amber-600' : draft.saved ? 'text-green-600' : draft.restored ? 'text-amber-600' : 'text-gray-400'}`}>
-                            {draft.pending ? '待同步' : draft.saved ? '已保存' : draft.restored ? '已恢复未保存的输入' : '待保存'}
+                            {draft.pending ? t('session.set.pending') : draft.saved ? t('session.set.saved') : draft.restored ? t('session.set.restored') : t('session.set.unsaved')}
                           </span>
                         </div>
                         {guidance && (guidance.target || timedTarget || guidance.effort || guidance.note) && (
                           <p className={`mt-1 text-xs leading-5 ${guidance.emphasis ? 'font-medium text-gray-900' : 'text-gray-500'}`}>
-                            {[(timedTarget ?? guidance.target) && `目标 ${timedTarget ?? guidance.target}`, timedTarget ? null : guidance.effort, guidance.note]
+                            {[(timedTarget ?? guidance.target) && t('session.set.target', { target: timedTarget ?? guidance.target ?? '' }), timedTarget ? null : guidance.effort, guidance.note]
                               .filter(Boolean)
                               .join(' · ')}
                           </p>
@@ -1143,7 +1155,7 @@ export default function TrainingSessionPage() {
                   {activeShape === 'duration' ? (
                     <div className="grid grid-cols-1 gap-2">
                       <label className="text-xs text-gray-500">
-                        坚持时间（秒）
+                        {t('session.set.holdSeconds')}
                         <input type="number" inputMode="numeric" min="1" max="86400" step="1" value={draft.duration} disabled={isCompleted || exercise.status === 'skipped'}
                           onChange={(event) => updateDraft(exercise.id, position, 'duration', event.target.value)}
                           className="mt-1 w-full rounded-lg border border-gray-200 px-2 py-2 text-gray-900 outline-none focus:border-gray-500 disabled:bg-gray-50" />
@@ -1152,13 +1164,13 @@ export default function TrainingSessionPage() {
                   ) : activeShape === 'distance_duration' ? (
                     <div className="grid grid-cols-2 gap-2">
                       <label className="text-xs text-gray-500">
-                        时间（分钟）
+                        {t('session.set.minutes')}
                         <input type="number" inputMode="decimal" min="0" step="0.5" value={draft.duration} disabled={isCompleted || exercise.status === 'skipped'}
                           onChange={(event) => updateDraft(exercise.id, position, 'duration', event.target.value)}
                           className="mt-1 w-full rounded-lg border border-gray-200 px-2 py-2 text-gray-900 outline-none focus:border-gray-500 disabled:bg-gray-50" />
                       </label>
                       <label className="text-xs text-gray-500">
-                        距离（公里，可不填）
+                        {t('session.set.distance')}
                         <input type="number" inputMode="decimal" min="0" step="0.1" value={draft.distance} disabled={isCompleted || exercise.status === 'skipped'}
                           onChange={(event) => updateDraft(exercise.id, position, 'distance', event.target.value)}
                           className="mt-1 w-full rounded-lg border border-gray-200 px-2 py-2 text-gray-900 outline-none focus:border-gray-500 disabled:bg-gray-50" />
@@ -1167,19 +1179,19 @@ export default function TrainingSessionPage() {
                   ) : (
                     <div className="grid grid-cols-3 gap-2">
                       <label className="text-xs text-gray-500">
-                        重量 {weightUnit}
+                        {t('session.set.weight', { unit: weightUnit })}
                         <input type="number" min="0" step={weightUnit === 'lb' ? '1' : '0.5'} value={draft.weight} disabled={isCompleted || exercise.status === 'skipped'}
                           onChange={(event) => updateDraft(exercise.id, position, 'weight', event.target.value)}
                           className="mt-1 w-full rounded-lg border border-gray-200 px-2 py-2 text-gray-900 outline-none focus:border-gray-500 disabled:bg-gray-50" />
                       </label>
                       <label className="text-xs text-gray-500">
-                        实际次数
+                        {t('session.set.reps')}
                         <input type="number" min="0" step="1" value={draft.reps} disabled={isCompleted || exercise.status === 'skipped'}
                           onChange={(event) => updateDraft(exercise.id, position, 'reps', event.target.value)}
                           className="mt-1 w-full rounded-lg border border-gray-200 px-2 py-2 text-gray-900 outline-none focus:border-gray-500 disabled:bg-gray-50" />
                       </label>
                       <label className="text-xs text-gray-500">
-                        还能再做
+                        {t('session.set.rir')}
                         <input type="number" min="0" max="20" step="1" value={draft.rir} disabled={isCompleted || exercise.status === 'skipped'}
                           onChange={(event) => updateDraft(exercise.id, position, 'rir', event.target.value)}
                           className="mt-1 w-full rounded-lg border border-gray-200 px-2 py-2 text-gray-900 outline-none focus:border-gray-500 disabled:bg-gray-50" />
@@ -1189,7 +1201,7 @@ export default function TrainingSessionPage() {
                   {!isCompleted && (
                     <button type="button" onClick={() => saveSet(exercise.id, position)} disabled={savingKey === key || exercise.status === 'skipped'}
                       className="mt-3 w-full rounded-lg border border-gray-200 py-2 text-sm font-medium disabled:opacity-50">
-                      {savingKey === key ? '保存中…' : draft.saved ? '更新这一组' : '完成这一组'}
+                      {savingKey === key ? t('session.set.saving') : draft.saved ? t('session.set.update') : t('session.set.finish')}
                     </button>
                   )}
                 </div>
@@ -1199,50 +1211,50 @@ export default function TrainingSessionPage() {
 
           {!isCompleted && (
             <button type="button" onClick={() => { if (exercise.status === 'skipped') void setExerciseStatus(exercise.id, 'resume'); addSet(exercise.id) }} className="mt-3 text-sm font-medium text-gray-700">
-              + 记录额外一组
+              {t('session.exercise.addExtra')}
             </button>
           )}
 
           {exercise.tutorial_url && (
             <a href={exercise.tutorial_url} target="_blank" rel="noopener noreferrer"
               className="mt-4 block text-xs text-gray-400 underline underline-offset-2">
-              动作还不清楚？查看完整视频教程 ↗
+              {t('session.exercise.tutorial')}
             </a>
           )}
         </section>
 
-        <nav className="grid grid-cols-2 gap-3" aria-label="训练动作切换">
+        <nav className="grid grid-cols-2 gap-3" aria-label={t('session.nav.aria')}>
           <button type="button" onClick={() => showExercise(activeExerciseIndex - 1)}
             disabled={activeExerciseIndex === 0}
             className="rounded-xl border border-gray-200 bg-white py-3 text-sm font-medium text-gray-700 disabled:opacity-35">
-            上一个动作
+            {t('session.nav.prev')}
           </button>
           <button type="button" onClick={() => showExercise(activeExerciseIndex + 1)}
             disabled={isLastExercise}
             className="rounded-xl bg-black py-3 text-sm font-semibold text-white disabled:opacity-35">
-            下一个动作
+            {t('session.nav.next')}
           </button>
         </nav>
 
         {isCompleted ? (
           <section className="rounded-2xl bg-white p-5">
-            <h2 className="font-semibold text-gray-900">今天的训练已记录</h2>
+            <h2 className="font-semibold text-gray-900">{t('session.done.title')}</h2>
             <p className="mt-2 text-sm text-gray-600">
               {completion && !(completion.program_day_completed ?? completion.progression_advanced)
-                ? `补充训练已归入 ${completion.log_date}，不会改变当前训练顺序。`
+                ? t('session.done.supplemental', { date: completion.log_date })
                 : completion
                   ? completion.cycle_completed
-                  ? `第 ${completion.current_cycle_number - 1} 轮已完成，下一次从推训练开始。`
-                    : `下一次继续${splitLabel(completion.next_split_key)}训练。`
-                  : '本次实际训练已经保存。'}
+                  ? t('session.done.cycle', { n: completion.current_cycle_number - 1 })
+                    : t('session.done.next', { split: splitLabel(completion.next_split_key, null, locale) })
+                  : t('session.done.saved')}
             </p>
             {sessionFeedback && (
               <div className="mt-4 space-y-3 rounded-xl bg-gray-50 p-3" aria-live="polite">
                 <div className="grid grid-cols-2 gap-2 text-xs">
-                  <p>完成动作 <span className="font-semibold">{sessionFeedback.facts.completed_exercise_count}</span></p>
-                  <p>完成组数 <span className="font-semibold">{sessionFeedback.facts.completed_set_count ?? '未完整记录'}</span></p>
-                  <p>训练时长 <span className="font-semibold">{sessionFeedback.facts.duration_excluded ? '记录异常，未计入' : sessionFeedback.facts.duration_minutes == null ? '未记录' : `${sessionFeedback.facts.duration_minutes} 分钟`}</span></p>
-                  <p>训练容量 <span className="font-semibold">{sessionFeedback.facts.total_volume_kg == null ? '无法计算' : `${Math.round(sessionFeedback.facts.total_volume_kg * 10) / 10} kg`}</span></p>
+                  <p>{t('session.done.exercises')} <span className="font-semibold">{sessionFeedback.facts.completed_exercise_count}</span></p>
+                  <p>{t('session.done.sets')} <span className="font-semibold">{sessionFeedback.facts.completed_set_count ?? t('session.done.setsIncomplete')}</span></p>
+                  <p>{t('session.done.duration')} <span className="font-semibold">{sessionFeedback.facts.duration_excluded ? t('session.done.durationExcluded') : sessionFeedback.facts.duration_minutes == null ? t('session.done.notRecorded') : t('session.done.minutes', { n: sessionFeedback.facts.duration_minutes })}</span></p>
+                  <p>{t('session.done.volume')} <span className="font-semibold">{sessionFeedback.facts.total_volume_kg == null ? t('session.done.volumeUnknown') : `${Math.round(sessionFeedback.facts.total_volume_kg * 10) / 10} kg`}</span></p>
                 </div>
                 {/* spec A0-5: the shared CoachCard, so this Coach block looks
                     and behaves the same as Home / History / meal feedback. */}
@@ -1261,7 +1273,7 @@ export default function TrainingSessionPage() {
                   ))}
                   {sessionFeedback.ai && (
                     <div className="mt-3 flex items-center gap-2 text-xs text-gray-400">
-                      <span>这次反馈有帮助吗？</span>
+                      <span>{t('session.done.helpful')}</span>
                       <button type="button" disabled={feedbackSaving} onClick={() => rateSessionFeedback('liked')}
                         className={sessionFeedback.rating === 'liked' ? 'opacity-100' : 'opacity-40'}>👍</button>
                       <button type="button" disabled={feedbackSaving} onClick={() => rateSessionFeedback('disliked')}
@@ -1273,43 +1285,43 @@ export default function TrainingSessionPage() {
             )}
             <button type="button" onClick={() => router.push('/training/today')}
               className="mt-4 w-full rounded-xl bg-black py-3 text-sm font-semibold text-white">
-              查看训练计划
+              {t('session.done.viewPlan')}
             </button>
           </section>
         ) : (
           <section className="rounded-2xl bg-white p-4">
             {canComplete ? (
               <>
-                <p className="text-sm font-medium text-gray-900">今天的训练已达成</p>
+                <p className="text-sm font-medium text-gray-900">{t('session.footer.goalMet')}</p>
                 <p className="mt-1 text-xs leading-5 text-gray-500">
-                  还有时间或体力可以继续做剩余动作；不做也不会影响这个训练日。
+                  {t('session.footer.goalMetBody')}
                 </p>
                 <button type="button" onClick={completeSession} disabled={finishing || savingKey !== ''}
                   className="mt-3 w-full rounded-xl bg-black py-3.5 text-sm font-semibold text-white disabled:opacity-50">
-                  {finishing ? '正在完成…' : '结束今天训练'}
+                  {finishing ? t('session.footer.finishing') : t('session.footer.finishToday')}
                 </button>
               </>
             ) : (
               <p className="text-xs leading-5 text-gray-500">
                 {completionUnit === 'set'
-                  ? `至少保存 1 组真实训练记录即可结束本次训练（当前 ${completedCount} / ${requiredCount}）。`
-                  : `完整完成任意 ${requiredExerciseCount} 个动作即可结束这个训练日（当前 ${completedExerciseCount} / ${requiredExerciseCount}）。`}
-                已保存的记录都会保留，随时可以离开，稍后继续。
+                  ? t('session.footer.needSet', { done: completedCount, required: requiredCount })
+                  : t('session.footer.needExercises', { done: completedExerciseCount, required: requiredExerciseCount })}
+                {t('session.footer.kept')}
               </p>
             )}
             <button type="button" onClick={() => router.push('/training/today')}
               className="mt-2 w-full rounded-xl border border-gray-200 py-3 text-sm font-medium text-gray-700">
-              稍后继续
+              {t('session.footer.later')}
             </button>
             {!canComplete && (
               <button type="button" onClick={() => setConfirmEnd(true)}
                 className="mt-1 w-full rounded-xl py-3 text-sm text-gray-500">
-                结束本次训练
+                {t('session.footer.end')}
               </button>
             )}
             {!isLastExercise && (
               <p className="mt-3 text-center text-xs text-gray-400">
-                下一动作素材正在后台准备，已填写内容会保留在本次训练中。
+                {t('session.footer.preparing')}
               </p>
             )}
           </section>
@@ -1319,19 +1331,19 @@ export default function TrainingSessionPage() {
       {confirmEnd && (
         <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/40 px-4 pb-6 sm:items-center" role="dialog" aria-modal="true" aria-labelledby="end-title">
           <div className="w-full max-w-md rounded-2xl bg-white p-5">
-            <h2 id="end-title" className="text-base font-semibold text-gray-900">结束本次训练？</h2>
+            <h2 id="end-title" className="text-base font-semibold text-gray-900">{t('session.confirm.title')}</h2>
             <ul className="mt-3 space-y-1.5 text-sm leading-6 text-gray-700">
-              <li>• 已经记录的动作和组数都会保留，并计入历史</li>
-              <li>• 这一天不算完成，之后还可以重新练</li>
+              <li>• {t('session.confirm.kept')}</li>
+              <li>• {t('session.confirm.notDone')}</li>
             </ul>
             <div className="mt-5 grid grid-cols-2 gap-3">
               <button type="button" onClick={() => setConfirmEnd(false)} disabled={endingEarly}
                 className="rounded-xl border border-gray-200 py-3 text-sm text-gray-700 disabled:opacity-50">
-                继续训练
+                {t('session.confirm.keepTraining')}
               </button>
               <button type="button" onClick={endEarly} disabled={endingEarly}
                 className="rounded-xl bg-black py-3 text-sm font-medium text-white disabled:opacity-50">
-                {endingEarly ? '正在结束…' : '结束训练'}
+                {endingEarly ? t('session.confirm.ending') : t('session.confirm.end')}
               </button>
             </div>
           </div>
