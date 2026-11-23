@@ -1,0 +1,2530 @@
+{
+  "run_date": "2026-11-24",
+  "generated_at": "2026-11-23T23:27:24.608344+00:00",
+  "source_health": [
+    {
+      "source": "reddit",
+      "target": "r/Fitness",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/beginnerfitness",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/GYM",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/workout",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/xxfitness",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/bodyweightfitness",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/loseit",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/fitmeals",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/EatCheapAndHealthy",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/MealPrepSunday",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/nutrition",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/ChatGPT",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/artificial",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/personaltraining",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/apps",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/homegym",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/college",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "reddit",
+      "target": "r/GradSchool",
+      "method": "json+rss",
+      "status": "blocked_or_failed",
+      "items": 0
+    },
+    {
+      "source": "app_store",
+      "target": "Fitbod",
+      "method": "rss",
+      "status": "ok",
+      "items": 50
+    },
+    {
+      "source": "app_store",
+      "target": "Hevy",
+      "method": "rss",
+      "status": "ok",
+      "items": 50
+    },
+    {
+      "source": "app_store",
+      "target": "MyFitnessPal",
+      "method": "rss",
+      "status": "ok",
+      "items": 50
+    },
+    {
+      "source": "app_store",
+      "target": "MacroFactor",
+      "method": "rss",
+      "status": "ok",
+      "items": 50
+    },
+    {
+      "source": "app_store",
+      "target": "Strong",
+      "method": "rss",
+      "status": "ok",
+      "items": 50
+    },
+    {
+      "source": "news",
+      "target": "Product Hunt",
+      "method": "rss",
+      "status": "ok",
+      "items": 0
+    },
+    {
+      "source": "news",
+      "target": "Google News 健身App",
+      "method": "rss",
+      "status": "ok",
+      "items": 1
+    },
+    {
+      "source": "news",
+      "target": "Google News 健身App 中文",
+      "method": "rss",
+      "status": "ok",
+      "items": 0
+    },
+    {
+      "source": "news",
+      "target": "TechCrunch",
+      "method": "rss",
+      "status": "ok",
+      "items": 0
+    },
+    {
+      "source": "news",
+      "target": "The Verge",
+      "method": "rss",
+      "status": "ok",
+      "items": 0
+    },
+    {
+      "source": "hacker_news",
+      "target": "fitness app",
+      "method": "algolia",
+      "status": "ok",
+      "items": 0
+    },
+    {
+      "source": "hacker_news",
+      "target": "workout app",
+      "method": "algolia",
+      "status": "ok",
+      "items": 0
+    },
+    {
+      "source": "hacker_news",
+      "target": "AI personal trainer",
+      "method": "algolia",
+      "status": "ok",
+      "items": 0
+    },
+    {
+      "source": "hacker_news",
+      "target": "calorie tracking",
+      "method": "algolia",
+      "status": "ok",
+      "items": 0
+    },
+    {
+      "source": "hacker_news",
+      "target": "calorie counter",
+      "method": "algolia",
+      "status": "ok",
+      "items": 0
+    },
+    {
+      "source": "hacker_news",
+      "target": "habit app",
+      "method": "algolia",
+      "status": "ok",
+      "items": 0
+    },
+    {
+      "source": "hacker_news",
+      "target": "habit tracker",
+      "method": "algolia",
+      "status": "ok",
+      "items": 1
+    },
+    {
+      "source": "hacker_news",
+      "target": "health app",
+      "method": "algolia",
+      "status": "ok",
+      "items": 0
+    },
+    {
+      "source": "hacker_news",
+      "target": "strength training",
+      "method": "algolia",
+      "status": "ok",
+      "items": 0
+    },
+    {
+      "source": "hacker_news",
+      "target": "weight loss app",
+      "method": "algolia",
+      "status": "ok",
+      "items": 0
+    },
+    {
+      "source": "hacker_news",
+      "target": "nutrition app",
+      "method": "algolia",
+      "status": "ok",
+      "items": 0
+    }
+  ],
+  "cleaning": {
+    "raw": 152,
+    "duplicate": 0,
+    "deleted": 0,
+    "bot": 0,
+    "too_short": 11,
+    "low_signal": 1,
+    "kept": 140
+  },
+  "items": [
+    {
+      "id": "appstore:Fitbod:14820677389",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "Timer sound stopped",
+      "body": "It seems like the latest update has made the timer ending chime stop working.",
+      "score": 4,
+      "num_comments": null,
+      "created_utc": "2026-11-22T05:53:15-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14820626621",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "Unintuitive, Frustrating Slop",
+      "body": "I hate that this is the best app currently for the money… because it offers SO MUCH JANK, SO MUCH FRUSTRATION. I cannot, in simple terms, possibly dictate how many times I’ve opened this app only to see my previously and delicately created workouts completely wiped and replaced by the app’s ridiculously unintuitive and worm-brained default workouts. It’s horrendous. But it’s the best I can find… maybe I should develop one myself if I had brains for that.",
+      "score": 2,
+      "num_comments": null,
+      "created_utc": "2026-11-22T05:38:19-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14818542563",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "Great!",
+      "body": "Great app, very useful for a beginner like me. I do wish they had some sort of toggle for pregnancy that would filter out unsafe exercises.",
+      "score": 4,
+      "num_comments": null,
+      "created_utc": "2026-11-21T16:16:37-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14817591973",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "Improved workouts",
+      "body": "This app helps me with direction and a organized way to workout all muscle groups efficiently and effectively! My daughter and I love it!",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-21T10:35:35-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14814169699",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "iPhone Duo!!!",
+      "body": "Finally updated to support the iPhone Duo!  Awesome work!  Great app!",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-20T14:28:08-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14811105625",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "Pocket trainer",
+      "body": "I love the way it suggests workouts without me thinking about it. Keeping score of 1MR is also great",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-19T19:51:04-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14810431152",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "False Advertising Not Free",
+      "body": "It’s Not Free … Don’t waste your time. It says it’s free but once you get to the end of registration boom💥it ask for your payment information.",
+      "score": 1,
+      "num_comments": null,
+      "created_utc": "2026-11-19T15:24:39-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14810234027",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "Great workout app",
+      "body": "The Fitbot app handles all the planning and tracking, so you can fully focus on the exercises. Easy to setup and navigate.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-19T14:06:55-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14810178744",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "Don’t expect HR Tracking to Work with an Apple Watch",
+      "body": "Verified all permissions are enabled, no issues getting HR to work with anything else. The guide gives basic instructions and if those don’t work then they don’t even try to help, just say contact apple. Really glad I spent nearly $100 on this app /s.",
+      "score": 2,
+      "num_comments": null,
+      "created_utc": "2026-11-19T13:45:40-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14808556213",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "My trainer and guide",
+      "body": "i've been using Fitbod for four years. The last year I have been my most serious. I've lost 70 pounds and I attribute a great deal of that success to Fitbod. It makes my workouts easy and takes the guest work out of it. I follow the recommendations and if I don't like something, I can change it with no problem. I appreciate this app and I look forward to what's to come!",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-19T04:56:24-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14808170510",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "Picture",
+      "body": "Why not show a picture of the muscle that’s being worked in each exercise",
+      "score": 1,
+      "num_comments": null,
+      "created_utc": "2026-11-19T02:44:17-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14806786520",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "Still getting charged for canceling membership",
+      "body": "I canceled this over a year ago and still am being charged I’ve contacted customer support and have been told I’m not currently under a subscription but yet they continue to take money out.",
+      "score": 3,
+      "num_comments": null,
+      "created_utc": "2026-11-18T16:44:07-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14803354102",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "Thumbs up",
+      "body": "I use this app for tracking and as a PT it’s excellent",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-17T19:30:33-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14803123628",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "Whyyy this is the best workout app",
+      "body": "1 it let's you do it over again a get a good result and tracks your process and i saw a really big approve meny in every thing!!!!!!!!! \n\n2 It keeps it all track up and shows what exercise through your body and they really help if you are trying to lose fat in your body and when you see  super models bodys I know you want that or something like that",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-17T17:59:01-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14802796726",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "The best",
+      "body": "I tried another app temporarily but fitbod is what worked for me and I shouldn't have left.",
+      "score": 1,
+      "num_comments": null,
+      "created_utc": "2026-11-17T15:52:15-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14802050140",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "Almost great",
+      "body": "Need to be able to delete reps that you don’t plan on doing.",
+      "score": 3,
+      "num_comments": null,
+      "created_utc": "2026-11-17T08:13:57-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14801937512",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "10 year user",
+      "body": "I have been using Fitbod for over 10 years and it has never disappointed me and i have never felt better about recommending a fitness app to anyone",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-17T07:39:45-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14801687023",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "5 stars",
+      "body": "Every year they improve the app. Very easy to use. Both my wife and I love it.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-17T06:24:55-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14801675192",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "Takes insecurities out of it",
+      "body": "Love Fitbod but would love to see an option when coming back from surgery or weight bearing limitations.",
+      "score": 4,
+      "num_comments": null,
+      "created_utc": "2026-11-17T06:21:24-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14794033778",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "Good",
+      "body": "There are a lot of workouts still missing from the catalog it should be updated",
+      "score": 4,
+      "num_comments": null,
+      "created_utc": "2026-11-15T07:24:35-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14791595680",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "Mid app for mid results",
+      "body": "If you’re really looking for gains and inspiration look for a different app. This seems suited to those folks who start working out in January. IYKYK, right? Uninspiring exercise videos. And an AI coach that pulls back just when you need to be pushed. Other minor annoyances include no timer between exercises. Meh.",
+      "score": 2,
+      "num_comments": null,
+      "created_utc": "2026-11-14T16:45:29-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14791218699",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "Good app but…",
+      "body": "Really need the ability to provide specific machine limitations, weight increments and the ability to report physical limitations due to injury. This app needs to get a lot smarter.",
+      "score": 4,
+      "num_comments": null,
+      "created_utc": "2026-11-14T14:23:02-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14790823640",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "Best workout app ever!",
+      "body": "Absolutely love this app. I went from 180 lbs to 140 lbs. This app helped me overcome my fear of the gym. It planned out my workouts and even showed me how to do them with a short video if I didn’t know. The only thing I wish it had was a workout plan for women who are post partum.",
+      "score": 4,
+      "num_comments": null,
+      "created_utc": "2026-11-14T12:02:02-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14790666298",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "Great workout app",
+      "body": "Good app to keep track of your weight and reps.  Keeps you challenged. Only thing I don’t like is that it only splits workout’s into two groups. Upper body and legs.",
+      "score": 4,
+      "num_comments": null,
+      "created_utc": "2026-11-14T11:10:18-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14790276096",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "So help full",
+      "body": "I love that I just open the app and start my workout. No need to think what I need to work today or what I did last time.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-14T09:12:54-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14789926708",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "Inconsistent Apple Watch Support",
+      "body": "Really like Fitbod. Have been using for many years now. \n\nThe Apple Watch support has been disastrously inconsistent. For some reason, every other update breaks the watch functionality, which is how I primarily interact with the app.\n\nPlease guys, put some extra focus on this. It used to work really great, but I’m considering going elsewhere for this issue alone.",
+      "score": 2,
+      "num_comments": null,
+      "created_utc": "2026-11-14T07:35:10-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Fitbod:14789600717",
+      "source": "app_store",
+      "where": "Fitbod",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Fitbod",
+      "title": "Excellent workout app",
+      "body": "By far the easiest and best fitness app out there. I’ve achieved massive results all thanks to Fitbod.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-14T06:05:57-07:00",
+      "url": "https://apps.apple.com/us/app/id1041517543"
+    },
+    {
+      "id": "appstore:Hevy:14821103920",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Wow",
+      "body": "Very very useful app. So many options for organizing your program.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-22T07:54:41-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14820888517",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Challenge yourself",
+      "body": "Fantastic app. Made a difference in the quality of workout. Can easily track multiple workout programs",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-22T06:53:38-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14819613344",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Goated app",
+      "body": "Clean ui, easy to use, keeps me motivated to workout and helps me coach friends. I tell every gym goer I meet to download this app",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-21T23:23:50-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14819343684",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Great Workout App",
+      "body": "Hevy is a great app for anyone looking to start their training journey or an experienced lifter hoping to count their reps. I highly recommend.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-21T21:24:18-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14818723036",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Great app to track workouts",
+      "body": "I’ve been using this app for about a year app. It’s so easy and simple to use. I’ve made a lot progress with this app and it helps me keep track of the weights I’m doing",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-21T17:24:09-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14818603520",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Very good app, I just wish it had more kettlebell exercises.",
+      "body": "I’ve been using hevy for over a year, and I wish it more more kettlebell exercises.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-21T16:39:34-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14818189037",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "BEST FREE APP",
+      "body": "Great app, no ads, if you want to record your lifts and even find new exercises this is a great app. Beginner friendly too!",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-21T14:01:26-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14817995020",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Honest",
+      "body": "Best lift tracker I’ve ever used - simple and effective interface",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-21T12:50:20-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14817928984",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Good app for beginners",
+      "body": "The free tier is sufficient and useful for beginners getting started. I haven’t needed the paid version yet and am finding it helpful for tracking progress over time and planning my workouts.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-21T12:27:02-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14817750079",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "The Best!",
+      "body": "Everything you would want in a weight training app. Makes tracking progressive overload easy by showing prior weight and reps. Very easy to use. Love it!",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-21T11:26:39-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14817645164",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Great App",
+      "body": "Awesome app to track workout progress, I’m still on the free version and it’s really great. I’ll probably go on the paid version soon but you could easily stay on the free version and get a lot of use out of it. Overall A+",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-21T10:52:23-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14817489480",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Gran app",
+      "body": "Está app me ayuda mucho a organizar mis rutinas , desde que la uso he notado mucho más avance que improvisando rutinas",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-21T10:03:52-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14817487365",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Perfect",
+      "body": "This app is awesome for tracking workouts. Even the free version is incredible. It makes tracking progress so easy.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-21T10:03:13-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14817475848",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Like",
+      "body": "Very user friendly and has helpful tracking all without paying any subscription. Keeps track of weight, sets, lengths as a form of growth. Even allows a certain amount of custom made exercises.",
+      "score": 4,
+      "num_comments": null,
+      "created_utc": "2026-11-21T09:59:44-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14817337722",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Motivation",
+      "body": "Love the app, love that it shows you how to do certain workouts and it tracks my last workouts so I can try to do better the next. I love this app I choose this app over the one my gym offers.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-21T09:18:33-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14817158308",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Best app out there",
+      "body": "Hevy has been the most useful app out there. I tried other fitness apps and none of them can compare to Hevy! Thank you Hevy! Yall are amazing!",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-21T08:27:06-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14817107211",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "great lifting app",
+      "body": "super straightforward no nonsense app. i love the workout set functionality and Hevy makes it easy to track progress !!",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-21T08:12:48-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14816893537",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Heyyyy Hevy is a great app",
+      "body": "Enjoying this app!! Great features and it’s easy for beginners to",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-21T07:13:33-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14816809497",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Best Fitness App Ever",
+      "body": "Can’t say enough good things. Was clearly designed by people who workout. So easy to enter in what you’re doing while you do it and reference your history.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-21T06:51:12-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14816790446",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Perfect gym tracker",
+      "body": "Has exact features which are needed without unnecessary noise. Intuitive ui. Export workout data is a very critical feature for me.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-21T06:46:01-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14816707831",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Great app",
+      "body": "Nice UI, flexible, easy to use. Love the Hevy app!",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-21T06:23:23-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14816631548",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Fantastic, simple, reasonable",
+      "body": "I started last year when Hevy ran a black Friday promotion. I'm an athlete who likes to blend some CrossFit movements into my workouts, and super-setting is my go to. The UI is fantastic. I'm easily able to add custom movements, and still track them per muscle group, which I love. I can bring the workouts I already like to do to the AI trainer and it will help me build a plan. I love the new Chat GPT integration, and the development team seems to put a lot of meaningful time to listen to their users to make each update meaningful. Highly satisfied, and just moved to the lifetime membership from Pro. \n\n- - -\n\nIf I could make a suggestion, adding the options for supersets to be pre-included in the AI trainer workouts would be a small quality of life improvement for me, but I imagine I'm in the minority group that uses them regularly.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-21T06:02:19-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14816559477",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Great Workout Tracker",
+      "body": "I love this app! It’s motivating to see the equivalent of what I lifted each day. Also it works seamlessly with my Apple Watch with no glitches",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-21T05:42:12-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14816533189",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "iPhone Due",
+      "body": "They have already optimized their app for the iPhone Duo. They have beaten a lot of these other big app companies and I appreciate that. Also constantly trying to improve their app. 100% recommend.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-21T05:34:45-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14816513900",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Great app",
+      "body": "App works great, has everything you want \nMaking updates constantly",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-21T05:29:11-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14816431643",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "Personal training without the price tag!",
+      "body": "Hevy is a fantastic tool for anyone who wants the structure and accountability of personal training without the expense of hiring a trainer. It makes planning workouts, tracking progress, and building consistency easy. Highly recommend, and that’s before trying the new AI features, which I suspect will make it even better!",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-21T05:05:23-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:Hevy:14816308332",
+      "source": "app_store",
+      "where": "Hevy",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Hevy",
+      "title": "10/10",
+      "body": "I share this app with my friends in the gym, great for tracking workout, setting goals, it recognizes PRs for you. The basic version of this trumps most premium versions of other “similar” apps",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-21T04:28:01-07:00",
+      "url": "https://apps.apple.com/us/app/id1458862350"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14821128281",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "App has declined",
+      "body": "Lately the placement of meals and ads has become unstable, with ads being so wide that the meal runs off the page. Another glitch is that the ads cause a meal to be moved to a different position, sometimes on the very edge of the page where details are not visible. Please fix this!",
+      "score": 2,
+      "num_comments": null,
+      "created_utc": "2026-11-22T08:01:37-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14820895059",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "This used to be a good app but they eliminated all the valuable tracking data",
+      "body": "I used this app for years (free version) which offered macro, caloric and other data. There was always a push to upgrade to the paid version, but most of the reviews for the paid version were that the paid version sucked. One of the problems w the app is that nutritional information is user entered but not vetted so you’ll get 15 review for the same item and none of them show the same information for calories, protein, fiber, etc. it is very much a garbage in, garbage out database. So rather than fixing the app to make the paid version better, in Oct 2026 they stripped the free version of everything that was useful and now.. It is no longer even worth using.",
+      "score": 2,
+      "num_comments": null,
+      "created_utc": "2026-11-22T06:55:30-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14820467941",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "Popup is annoying",
+      "body": "I hate the streak pop up. It's annoying when I'm trying to log something. Also, the food calories vary so much for the same food. There's not consistency with calories for a specific type of food.",
+      "score": 2,
+      "num_comments": null,
+      "created_utc": "2026-11-22T04:49:54-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14819471338",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "Past lover of app",
+      "body": "I used to absolutely love this app- BEFORE THE UPDATE. Now I absolutely can’t stand it. It’s not user friendly. Not a good interface anymore. And I hate the format. PLEASE CHANGE IT BACK",
+      "score": 1,
+      "num_comments": null,
+      "created_utc": "2026-11-21T22:20:36-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14819230868",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "Hate the changes",
+      "body": "The new changes are hard to use. Couldn’t find the delete button when I had put a food in wrong. Also, could no longer find all the categories to track anymore :-(",
+      "score": 2,
+      "num_comments": null,
+      "created_utc": "2026-11-21T20:36:30-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14817967346",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "Stupid Ads",
+      "body": "I understand ads but when they take up most of the page and shift all the info in the app off the edge so it can’t be read is so stupid.",
+      "score": 1,
+      "num_comments": null,
+      "created_utc": "2026-11-21T12:40:26-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14817080750",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "Useless without Premium",
+      "body": "I just wanted to track my meals and macros, but without paying premium, I can only log calories. All macro entry is Premium. Barcode is Premium (except for Canada, apparently). UI is ugly, non intuitive, and replete with ads, to include popups at every click to remind you that all the basic features are Premium. Highly distracting and very annoying. It does, however, have the best food database….wait….nope… never mind. I searched for one simple packaged product (protein powder) and got no less than 20 results all with slightly variant names, descriptions, and, more importantly, wildly variant macros. Garbage in, garbage out, am I right? A large, inaccurate, and inconsistent database is no database at all. Even if I could track meals with minimal friction and maximum accuracy, actually viewing my data is nigh impossible with the overstuffed UI. Hard pass for me. Going to try Cronometer now.",
+      "score": 1,
+      "num_comments": null,
+      "created_utc": "2026-11-21T08:05:23-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14815074713",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "Great Health Journey Tool",
+      "body": "I have used this app for 190 days straight! It’s been instrumental in improving my health! Logging food with my changing nutrition needs, feeling better than I have in my entire life! Logging workouts as I transform my body!!",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-20T20:11:42-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14814647955",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "Barcode scanner no longer free",
+      "body": "I used this app a few years ago and only recently started using it again. I was disappointed to find that the barcode scanner is no longer a free feature. Although I like the app, the lack of a free barcode scanner is a deal breaker. I’ll be looking for a new app to use, unfortunately.",
+      "score": 3,
+      "num_comments": null,
+      "created_utc": "2026-11-20T17:28:30-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14814567025",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "Trash",
+      "body": "Started last month, logged me out; tried to log in “no account found “",
+      "score": 1,
+      "num_comments": null,
+      "created_utc": "2026-11-20T16:58:36-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14813680885",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "Used to be free",
+      "body": "Used to be free now costs lots of money even though ads and sponsors give them money. Smh.",
+      "score": 1,
+      "num_comments": null,
+      "created_utc": "2026-11-20T11:28:17-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14813301004",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "Deleted all my data",
+      "body": "Wen into the app and found all my data gone… would not recommend",
+      "score": 1,
+      "num_comments": null,
+      "created_utc": "2026-11-20T09:21:21-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14812960462",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "I miss scanner option",
+      "body": "I love using MyFitnessPal. Not having the premier program, I do not have the scanner option. But it still works.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-20T07:37:02-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14812706918",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "Better To Worse",
+      "body": "I enjoy MyFitnessPal and have for years, but the new version is a lot worse than the OG and I wish they would bring back the features that let me quickly log foods across days.",
+      "score": 3,
+      "num_comments": null,
+      "created_utc": "2026-11-20T06:22:56-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14812575696",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "For a Paid App, the User Experience is Ridiculous",
+      "body": "I’ve been paying for MyFitnessPal Premium, and I honestly don’t understand how an app that’s been around for this long can still have so many basic functionality and usability issues.\n\nFirst, copying meals from friends hasn’t been working properly. I submitted a support ticket, and they couldn’t even give me an estimated timeline for when it would be fixed. How is that acceptable for a paid service?\n\nAnd the user interface is unnecessarily complicated. Why can’t I edit meals and recipes directly from the Recipes tab? Why do I have to go through a completely separate menu to do something so basic? There are many features like this that just aren’t intuitive.\n\nBut here’s the kicker: the ONLY reason I pay for Premium is to customize my macros. That’s literally it. The AI features are a joke. If I want AI-powered nutritional insights, I’ll use ChatGPT or Claude, which are significantly more capable. I don’t need MyFitnessPal trying to reinvent the wheel, especially when they can’t seem to get their existing features right.\n\nInstead of spending resources on AI features that nobody asked for, how about fixing what’s broken and actually improving the user experience?\n\nIt’s ridiculous that",
+      "score": 2,
+      "num_comments": null,
+      "created_utc": "2026-11-20T05:44:51-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14812476199",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "Reactive the barcode reader for the free version",
+      "body": "Why did you take away the feature to log the food by scanning the barcode from the free version of the app??! Please reactivate it, this is very annoying to lose the feature after having and using it for years.",
+      "score": 4,
+      "num_comments": null,
+      "created_utc": "2026-11-20T05:15:33-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14811835281",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "After a few weeks of the redesign…",
+      "body": "Update: I’ve now tried the new interface for weeks. Still awful.  Why can you not just show the whole log on the front screen?!? Just show my daily logged meals without having to click all over. What was your point in changing something that wasn’t broken in the first place - more clicks, more scrolling, less useful functionality. Over 3000 days in a row I’ve logged in and this is what you give me now. So disappointing. \n\nI’ve used the My Fitness Pal app for over 10 years. I have now attempted to get used to and use this new redesign and adapt to its “nuances” for quite a few weeks. I’d like to say, it’s absolutely awful!  Awful to log, awful to track, awful to see your meals, awful to see progress, awful to see daily totals, awful to have to click all over to see anything. Literally awful. Any reviews saying how “amazing” this app is are clearly fake - there is just no way anyone who’s been using this app is even remotely impressed and happy with this remake. No stars is more appropriate.",
+      "score": 1,
+      "num_comments": null,
+      "created_utc": "2026-11-20T01:26:36-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14810898458",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "Keeps logging me out",
+      "body": "After update it keeps logging me out daily. What the heck it’s super annoying",
+      "score": 2,
+      "num_comments": null,
+      "created_utc": "2026-11-19T18:26:54-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14810765917",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "app",
+      "body": "the app itself works well but it keeps logging me out and doesn’t allow me to log back in",
+      "score": 1,
+      "num_comments": null,
+      "created_utc": "2026-11-19T17:35:31-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14810683631",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "Always amazing results when I follow this app",
+      "body": "Always amazing results when I follow this app",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-19T17:03:54-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14810235135",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "Disappointed",
+      "body": "The fact that the “upgrade” clutters the screen with options I don’t track and there are No Options to modify the dashboard is very disappointing. I have no need for tracking Water, Exercise, Steps, Weight, etc. They should be Dashboard Options.",
+      "score": 1,
+      "num_comments": null,
+      "created_utc": "2026-11-19T14:07:21-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14809683157",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "STOP LOGGING ME OUT!",
+      "body": "You’re getting 1-starred for this ongoing glitch. Have 30 seconds to enter snack calories before a break ends? Sorry; time to log in again because the app has decided to randomly log you out again for no apparent reason whatsoever! Soo tired of this issue. These are not CIA secrets; they are OREO calories!!😡",
+      "score": 1,
+      "num_comments": null,
+      "created_utc": "2026-11-19T10:44:57-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14809224330",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "It lied",
+      "body": "The app says 16+ so I got it because I am 16 yet you need to actually be 18 to use it so it is lying and it isn’t okay. A person under 18 should be allowed to count their calories.",
+      "score": 1,
+      "num_comments": null,
+      "created_utc": "2026-11-19T08:17:08-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14809204025",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "Now it’s just full of junk",
+      "body": "I’ve used this four times in the past 20 or so years and this latest version is terrible.   It’s so full of junk that the basics are hard to find.  Hey developers, stop messing with a good thing.\n\nSadly I’ll be moving on to try other products.  Too bad you ruined it",
+      "score": 2,
+      "num_comments": null,
+      "created_utc": "2026-11-19T08:10:51-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14808845548",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "This app is amazing!",
+      "body": "I’ve been using it on and off for almost 3 years now. I bought the anual subscription twice, which had amazing resources. This time I decided I would wait to buy the premium package. However, Im still able to enjoy this app a lot even without the subscription, which makes me really happy. I will still get it, once I know Im committed to use it for a year because it’s definitely worth it. Thank you for making such an amazing and helpful app accessible!",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-19T06:22:49-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14807302195",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "Streak",
+      "body": "Please bring back log in streak count on the main page like it used to be for the last 10 years. \nThanks.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-18T20:09:38-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MyFitnessPal:14807294800",
+      "source": "app_store",
+      "where": "MyFitnessPal",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MyFitnessPal",
+      "title": "Retired",
+      "body": "Excellent coach and tracker. Helped me stay on course and showed exactly where I needed to improve either on nutrition or water intake love it.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-18T20:06:18-07:00",
+      "url": "https://apps.apple.com/us/app/id341232718"
+    },
+    {
+      "id": "appstore:MacroFactor:14819324311",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "AI is very productive with this.",
+      "body": "I’ve been looking for the perfect app to capture and track what I eat straight to the Apple Health App. I can take a photo or describe the item and it breaks the food down to all the nutrients. And again, it goes to my Health App on my phone and Apple Watch. And then I ChatGPT analyze my health and food intake lol. It’s perfect. I’ll be buying the full version once my trial ends.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-21T21:16:00-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14816803940",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "Life changing",
+      "body": "I’ve been using this app for almost two years now and nothing keeps me on track better. If you ever wonder why you “can’t” lose weight or gain weight (or maintain weight) it’s because you’re not logging your food. You’re not eating what you think you’re eating macro-wise. Weight it. Tracks it. Let MF do its thing with the algorithm. Give the app clean data (weigh ins, food logging) and let it do its thing. You will accomplish your goals. Worth every penny.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-21T06:49:42-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14815480790",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "Terrible library",
+      "body": "Literally 1/5 things I eat per day show up as easy additions … my fitness pal I have not once in 6 months on that not been able to search what I ate and have it pop up. This? Maybe 1 thing I eat per day will pop up .. it’s pathetic",
+      "score": 1,
+      "num_comments": null,
+      "created_utc": "2026-11-20T23:11:17-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14809158222",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "Great Food (And Macro) Tracking App",
+      "body": "The past month, I’ve really focused on logging my food and hitting my goal protein each day. This map has played a HUGE role in helping me achieve that. It’s super easy to log food, it has a huge database of food and entering new food not in the database is very easy as well. This has made me want to eat better, because I know if I’m going to eat something, I have to scan it, and I don’t want to scan “bad” foods. The weight trend is super helpful as well, so I don’t stress if my daily weigh-ins are off by some. It’s the trend that matters. I love this app and highly recommend it.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-19T07:56:41-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14791120335",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "Maybe The Best",
+      "body": "I used many calorie-tracking apps. This one is the most intuitive to me, personally. I also appreciate that there’s no push to lose weight, nor shame in going over the goal. It’s just data.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-14T13:46:27-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14774415951",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "Game Changer",
+      "body": "I’ve been using this app for the past 1.5 years and can’t imagine going without it. It keeps things simple, but really feels like I’m in control of my weight now, and can decide what I want to do. Over this time I’ve lost about 60 lbs and am using it with my training for bulking/cutting cycles now. Highly recommend!",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-10T10:13:20-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14772108511",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "not bad",
+      "body": "i searched up FREE calorie tracker apps and this was the first thing that popped up, the app tells me it’s take about a year and it’s $143 for 12 months. But the app seems to know what it’s doing after all.",
+      "score": 3,
+      "num_comments": null,
+      "created_utc": "2026-11-09T19:59:49-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14770199875",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "Not angry, just honest feedback",
+      "body": "I have a hard time using the app. It’s not intuitive at all - and everyone who has tried the app along side with me has said the same. Nobody likes it. I am only on this app because of Jeff Nippard. \n\nIf you make the app 1000% easier to use, then you will have better retainage.",
+      "score": 1,
+      "num_comments": null,
+      "created_utc": "2026-11-09T08:24:15-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14769510290",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "Best macro tracker app",
+      "body": "Love the app! Makes it super easy to track my macros!",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-09T04:53:53-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14767007208",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "The last food logger I’ll ever use",
+      "body": "It’s fast, accurate, has a workout companion. What else could you want?",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-08T11:59:32-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14758954420",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "Bugs need fixing",
+      "body": "The price is not justified considering the bugs in the app. My biggest peeve is that you can't manually change the macro or calorie values after a quick add entry. You have to delete it and put all the info all over again. Small but significant for me.",
+      "score": 2,
+      "num_comments": null,
+      "created_utc": "2026-11-06T12:49:39-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14755154784",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "No iPhone Duo support",
+      "body": "Releases app updates after the release of the IPhone Duo that do not support it",
+      "score": 1,
+      "num_comments": null,
+      "created_utc": "2026-11-05T13:20:43-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14748088630",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "No shame with logging",
+      "body": "I have struggled with restrictive eating in the past and have had a very negative experience with most logging apps because any overage is bright red and highlighted.  I love that MacroFactor gives you the ability to hide that.  It is a completely objective interface from the dashboard to the food log and weight trends.   It feels wonderful to have a healthy relationship with tracking my food.  What a great tool for my health.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-03T18:22:39-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14742999706",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "Tracking is easy and nice coaching is a waste of money",
+      "body": "The coaching feature is a waste of money it gives the same plan every week and I’m following it and it making 0 progress towards my goals.",
+      "score": 2,
+      "num_comments": null,
+      "created_utc": "2026-11-02T11:52:46-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14742918261",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "So useful and worth the cost",
+      "body": "I actually kind of get annoyed by how hard influencers push ad’s for this app but I truly love it. I’ve been using it for about a year and a half and my favorite feature by far is the calorie expenditure tracking. From what I noticed it’s super accurate and helps the program dial in your macros. Super based tracking app. 5/5.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-02T11:25:10-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14740546384",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "Great App",
+      "body": "Great App. Would love a feature where it would be easier to find menu items from restaurants but other than that its a good app",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-01T21:33:58-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14739557185",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "Excellent app",
+      "body": "It works!!! I’ve been body building for years and finally decided to pair it with healthier eating and I signed up with the intention to do a cut, and successfully completed it faster than the time it projected!! Fantastic app",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-01T14:52:16-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14731252315",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "Overpriced subscription, terrible database",
+      "body": "Paying for a subscription and can’t even scan a mainstream protein shake label, 106g of protein logged when the shake said 30g 😐",
+      "score": 1,
+      "num_comments": null,
+      "created_utc": "2026-10-30T14:57:22-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14729548464",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "Stick with MyFitnessPal",
+      "body": "This app mostly works. But there are so many inaccurate nutrition facts. I have to constantly edit/customize nutrition facts on common foods because they are wildly off. The search feature is also frustrating. Sometimes the search cannot find foods, but scanning a barcode will magically find it. Awful.",
+      "score": 1,
+      "num_comments": null,
+      "created_utc": "2026-10-30T06:06:24-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14729253270",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "Disappointed in direction",
+      "body": "The core feature is easy enough. Track food against a caloric plan. \n\nDisappointed that the team has decided not to allow MCP connections. Switching to another app that still does easy tracking but doesn’t wall my data inside their garden to try to force me to use their ecosystem. The health coach grok bot I have is better than this because it has access to way more data about me than this app alone has. \n\nBad direction.",
+      "score": 2,
+      "num_comments": null,
+      "created_utc": "2026-10-30T04:38:26-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14727888386",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "Great But…",
+      "body": "The app works great overall, but very often struggles to allow you to upload photographs to  analyze them and create recipes from them, very often images just fail to upload for no apparent reason and it quite often struggles to import links even from major website. These issues happen about 50% or more of the time and it’s quite annoying. PLEASE WORK ON THIS, por favor Jeff.",
+      "score": 4,
+      "num_comments": null,
+      "created_utc": "2026-10-29T18:55:50-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14725925472",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "goated app",
+      "body": "helpful and no patronizing “nice job you’re losing weight!” messages or anything like that. Great interface too",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-10-29T07:39:20-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14724535654",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "Excellent app but needs iPhone Duo support urgently",
+      "body": "The best calorie tracking app, and the only one I’ll ever use. Been on it since 2022, and it’s helped me in so many ways unimaginable.\n\nBut now, I may be forced to cancel my subscription. It looks terrible on my iPhone Duo. For an app I use numerous times a day, the experience is atrocious. Fingers crossed they’ll update the app soon",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-10-28T23:25:33-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14724035063",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "Decent so far",
+      "body": "I’ve been using the app for two months now. I’m only 5ft and the programs were attempting to put me at a deficit that was under 1200 calories per day. Thankfully I was able to set it up to prevent that in the future. It seems that the algorithm has accurately adjusted based on my caloric intake and weigh ins. I do have concerns about the foods in the database. Always double check your scanned or searched items. One time my frozen berries listed less than half of what the bag label said. I started paying attention after than and noticed that a lot of the nutritional information is missing or wrong. Overall it’s a nice interface and I really appreciate the absence of marketing ads!",
+      "score": 4,
+      "num_comments": null,
+      "created_utc": "2026-10-28T19:30:54-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14721778864",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "Very good for calorie and nutrient tracking",
+      "body": "I wish there seemed to be more development going on for the high yearly price though.",
+      "score": 4,
+      "num_comments": null,
+      "created_utc": "2026-10-28T06:47:11-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14714055108",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "Disappointing Experience — Not Worth the Subscription Price",
+      "body": "I’ve been using MacroFactor since March, and unfortunately, my experience has deteriorated to the point where I can no longer justify paying for it. I purchased an annual subscription expecting a reliable, well-designed nutrition-tracking app. Instead, I’ve spent far too much time correcting inaccurate information, manually entering foods, and questioning whether the numbers I’m being given can be trusted.\n\nOne of the biggest problems is barcode scanning and nutritional accuracy. For example, scanning a Premier Protein shake that contains 160 calories can return an entry showing 536 calories. That isn’t a minor discrepancy. It’s wildly inaccurate and defeats the entire purpose of scanning a product for convenient, reliable tracking. This isn’t an isolated concern, either. Too many entries are missing, and other entries contain nutritional information that is so far off that I have to correct it myself.\n\nI understand that not every product will be in a database. I’ve never expected that. Manually adding an occasional missing item is reasonable. But when recognizable products return completely incorrect calorie counts, the burden shifts to the customer to verify and fix the app’s wor",
+      "score": 1,
+      "num_comments": null,
+      "created_utc": "2026-10-26T08:24:52-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14712821126",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "Unsafe Calorie Goals & Inaccurate Expenditure",
+      "body": "The weight trend is far too slow to react to aggressive cuts and substantial bulks and will cause your expenditure to be wildly inaccurate. Strongly recommend a manual diet program rather than MacroFactor’s.\n\nI tried to do a bulk and an aggressive cut using MacroFactor’s program and it failed. My bulk goal was 1.1lb per week, I followed the program strictly and I gained 2.6lb per week. The weight trend was so slow to react so it kept telling me to eat more calories than I should have for the bulk. Same with a cut I did later on which led to dangerous recommendations. I was cutting ~2lb per week and MacroFactor kept telling me to eat less down to 1500cal for a 15%bf 190lb male. I ultimately had to stop following the recommendation towards the end and followed a coach for my calorie count at 1700 and I ended up losing 2.4lb per week (higher than 2 because of how little I ate on MF diet). This weight trend needs to have other algorithm options that adjust more rapidly - forcing everyone one the app to follow very mellow cuts and bulks can be unsafe.\n\nAdditional issues:\n- No web-based log exports, only by phone which is inconvenient\n- Few updates compared to other health and fitness ap",
+      "score": 2,
+      "num_comments": null,
+      "created_utc": "2026-10-26T01:43:22-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:MacroFactor:14711766171",
+      "source": "app_store",
+      "where": "MacroFactor",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "MacroFactor",
+      "title": "Amazing app",
+      "body": "I’ve used this app for the past year and I’ve lost over 80 pounds it makes it quite easy",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-10-25T17:49:18-07:00",
+      "url": "https://apps.apple.com/us/app/id1553503471"
+    },
+    {
+      "id": "appstore:Strong:14810875047",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "no watch os 27 support",
+      "body": "the whole point of the app now doesn't work",
+      "score": 3,
+      "num_comments": null,
+      "created_utc": "2026-11-19T18:17:48-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14805959151",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "NEW UPDATE BROKE NOTES",
+      "body": "LATEST UPDATE FROZE MY WORKOUT NOTES THEY WILL NOT UPDATE",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-18T11:28:49-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14803708230",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "Bait and switch",
+      "body": "With updates, features started going away. For example, you can’t see your recent exercise history on the watch anymore. Times have changed, if you don’t like the app, you can make your own. And that’s what I intend to do. The developer of this app needs to wisen up and treat people fairly again.",
+      "score": 1,
+      "num_comments": null,
+      "created_utc": "2026-11-17T22:12:35-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14802568930",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "My personal gym tracker",
+      "body": "I tried a few other apps. This on is free and easy to set up my workouts. It tracks my progress and as I add more I thanks me and keeps me on track. Try is and see if it fits you.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-17T14:21:42-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14800224010",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "New watch app is great!",
+      "body": "I’ve been using this app for close to 10 years. Best app for weight lifting. Has every feature I could ever want.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-16T20:43:39-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14795859833",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "Just what I need",
+      "body": "Have been using it for 2 years with some breaks. Great app\nJust what a lifter needs. You can also export you entire workout data! What an app!",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-15T17:25:56-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14792430248",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "Great app, doesn’t connect to strava",
+      "body": "Long time user of strong. Love the app and it works great on Apple Watch. Just wish you could upload workouts to strava",
+      "score": 4,
+      "num_comments": null,
+      "created_utc": "2026-11-14T22:03:57-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14781632780",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "Not optimized",
+      "body": "Devs need to get busy making an iPad version and a version for the new iPhone Duo. Just putting the iPhone version on an iPad is crazy. It’s a good app to use, just need better app development. If the devs can’t or refuse to update it to the iPad and Duo, let us know",
+      "score": 2,
+      "num_comments": null,
+      "created_utc": "2026-11-12T06:29:41-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14773678787",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "So far so good",
+      "body": "Apple Watch app is great, but BOY… is that “update template” button close to the finish workout button and there’s no going back. It’s a pretty destructive action that can be frustrating when tapped. Lease fix that…\n\npinned comments are pinned to the exercise, not the workout… ame with set/rep info. Which can be annoying. \n\n—————\n\nBasics are down... the kicker is how easy it is to track RPE. \n\nI’d love to see an easy way to run a timer in app for rest and for timed sets (and RPE for those too). \n\nAlso, minor annoyance... but I can’t re-order my workout folders. \n\nWould be nice to be able to add an entire program (including the date order) to a folder too.\n\nEdit: this app has been great so far... there are quite a few quirks to creating new exercises but there’s a pretty basic feature missing... the capability to group exercises into super sets.",
+      "score": 4,
+      "num_comments": null,
+      "created_utc": "2026-11-10T06:29:00-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14771759886",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "Awesome App",
+      "body": "I’ve been using it for years and I really like it. It’s simple and helps a ton with my programming. Kinda wish it would sync with my Garmin though. They setup the process for it to sync with Apple Watch and it works fine but ever since I switched over I wish I could use it to sync with my Garmin workouts to.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-09T17:41:16-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14771642956",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "Great workout app",
+      "body": "Easy to setup and use.  Has tremendous flexibility with many built in routines or you can create your own.  Has very useful examples of each exercise and how to perform them properly. Just a well built app designed for all skill levels.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-11-09T16:57:23-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14767870506",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "Please update for iPhone duo!",
+      "body": "I love how consistent, simple, and straightforward this app is but PLEASE update it for the iPhone duo. It truly looks terrible on the new device and I am considering switching workout tracking apps.",
+      "score": 3,
+      "num_comments": null,
+      "created_utc": "2026-11-08T17:17:28-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14767106796",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "Near perfection",
+      "body": "Two features would make this app perfect: 1. A way to track total volume per muscle group per week/month as a widget on the home tab. 2. Some sort of social feature similar to Strava or hevy.",
+      "score": 4,
+      "num_comments": null,
+      "created_utc": "2026-11-08T12:32:27-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14747489075",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "Limited exercises on here",
+      "body": "Majority of popular exercises are excluded from this app. Very glitchy. Sets disappear from history. Have to continually update saved sets because it keeps deleting them. Great app if you want 15 exercises to choose from",
+      "score": 2,
+      "num_comments": null,
+      "created_utc": "2026-11-03T14:35:03-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14743894723",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "Would be 5 star but…",
+      "body": "I wanna love this app but my biggest pet peeve is that when I do a new workout using a template but I’ve added a note (usually tips to self for better form) to some exercise during the workout it doesn’t always give me the option to update the template at the end of my workout. So then later I have to go into to directly edit the template and manually copy paste my notes which is soooooooo tedious and irritating. Please fix!",
+      "score": 4,
+      "num_comments": null,
+      "created_utc": "2026-11-02T17:24:13-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14729445878",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "Good, but basic",
+      "body": "The app is simple and gets the job done. But there are other apps that offer tracking methods that are more supportive of your goals. Wish the app had a way to build rep ranges into templates.",
+      "score": 3,
+      "num_comments": null,
+      "created_utc": "2026-10-30T05:36:43-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14722735429",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "Great!",
+      "body": "I’ve been using this app for many many years and it only gets better! Great job, I will continue to use it. Makes workouts and tracking workouts easier.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-10-28T11:33:02-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14707729406",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "Need an MCP",
+      "body": "Great app overall. It can be even better with an MCP so that I can let my agent read my workout records and help me plan.",
+      "score": 4,
+      "num_comments": null,
+      "created_utc": "2026-10-24T18:49:10-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14705336275",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "Great, versatile app",
+      "body": "Tracks all my exercises and progress. Works well!",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-10-24T06:01:44-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14705253552",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "Great",
+      "body": "Only complaint is that it doesn’t let me log certain exercises the way I want to. For example, for farmers carries, it will either track it by weight or time but not both. Otherwise it’s a great app.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-10-24T05:38:17-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14702420459",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "Garbage app",
+      "body": "Unable to change password. Tried multiple times. New password fails each time.  Can’t log in any longer.  Would not recommend.  Minus five thousand out of ten.",
+      "score": 1,
+      "num_comments": null,
+      "created_utc": "2026-10-23T12:17:14-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14691614663",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "Great for tracking progress",
+      "body": "Been using this app for years. It’s amazing to see what you do over time. Great app..",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-10-20T19:28:42-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14687480205",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "Can’t believe it took me this long to write this review",
+      "body": "This app is in my honest opinion, the only workout tracker app you need. It’s so simple to use, it doesn’t dance around stuff, it’s basic, and it’s free!!!! \nOnly 4 routines allowed at a time? Pshhh, easy fix, just store 2 workout in one, that makes 8 workout, I don’t know about you, there’s only 7 days a week, ain’t no way a normal person needs more than 8 workout routines for a week. \nThe interface is so easy to use. \nDon’t have a exercise you want? CREATE IT YOURSELF.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-10-19T17:52:37-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14685613154",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "Great App!! Just one suggestion.",
+      "body": "I really love this app and have been using it for quite a while. It’s just missing one super important feature: duration exercises with added weight. Things like weighted plank, weighted dead hang are just impossible to encode in the app, which can be super frustrating. Please consider adding this feature!",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-10-19T07:06:34-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14640396650",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "App Makes the Gym Notebook Extinct",
+      "body": "App is awesome for tracking workouts, and has features I haven't even tapped into yet. This app replaces the notebook, and will save time in the gym. Gym notebook and music all in one.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-10-07T19:26:57-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14628024819",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "The rare free app that hasn’t gotten worse over time",
+      "body": "This app did exactly what I’m personally looking for as someone that exercises casually but also wants to improve in the long term. \n\nIn my experience, most free apps gradually get worse and more aggressively demand cash over time. This app has followed the opposite trajectory. Good show by the devs.",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-10-04T12:51:23-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14613344308",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "Huge Potential, Huge Shortcomings",
+      "body": "I’m trying to be consistent at gym, and a large part of this process is keeping track of my journey. I’ve found it to be incredibly helpful to have a plan laid out, and this app has certainly made it intuitive to do so. \n\nMy biggest gripe is just that as well. Often, the apple watch sync removes sets, and even entirely fails to track my workouts after completion; I can’t see them in history. It’s incredibly frustrating. It’s encouraging to see the numbers and history rack up automatically, but having to manually plug them in again is irritating.\n\nI’m also annoyed at the paywall, which removes the most basic features such as graphs.\n\nOne more thing, I’d hope to see a way to add notes to custom workout exercises. In other words, I can add custom instructions.\n\nAll in all, it could be perfect, but it’s just not there.",
+      "score": 3,
+      "num_comments": null,
+      "created_utc": "2026-09-30T20:05:47-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14612889519",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "Best Exercise app!",
+      "body": "I have tried and use many many workout apps. This by far is the best one I have used yet. So good I paid the $29 for the yearly with hesitation after using the free one for a free days.\nHighly recommended!!",
+      "score": 5,
+      "num_comments": null,
+      "created_utc": "2026-09-30T17:13:19-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "appstore:Strong:14601012132",
+      "source": "app_store",
+      "where": "Strong",
+      "via": "rss",
+      "tracks": [
+        "apps_and_pricing"
+      ],
+      "matched": "Strong",
+      "title": "Suggestion",
+      "body": "The app is good for what it offers! One suggestion I’d like to see implemented is the ability to minimize exercises after completing all sets during an active workout (with an option of auto-minimizing when all sets are checked off). I’d gladly change my review to 5 stars if something like that could be added.",
+      "score": 4,
+      "num_comments": null,
+      "created_utc": "2026-09-27T13:58:42-07:00",
+      "url": "https://apps.apple.com/us/app/id464254577"
+    },
+    {
+      "id": "news:83d795587d05",
+      "source": "news",
+      "where": "Google News 健身App",
+      "via": "rss",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "fitness",
+      "title": "Zing Coach – AI Fitness Coaching Platform, Adaptive Workouts & App Integration - Quasa.io",
+      "body": "Zing Coach – AI Fitness Coaching Platform, Adaptive Workouts & App Integration Quasa.io",
+      "score": null,
+      "num_comments": null,
+      "created_utc": "2026-11-22T18:58:13+00:00",
+      "url": "https://news.google.com/rss/articles/CBMinAFBVV95cUxOczQ0NWZNdW1CTWxXQjZHNUNrWWt4UlV3NDRnQXM4d2R0OVlia0stZi1FUHE4WjhITHdTVlJFRWxWWUlWS1ZyemxDOFdpN0JaaDBxeS1EakJCWWxIREQ2N3pxalpRM0JXTVoySFhFYnVxV1BLOEY4LV9JcXRjV2tmQk5mWUtFeDlXN2FnSnZPdVFKT2stWG9sajZmM0U?oc=5"
+    },
+    {
+      "id": "hn:50608470",
+      "source": "hacker_news",
+      "where": "Hacker News",
+      "via": "algolia",
+      "tracks": [
+        "industry_news"
+      ],
+      "matched": "habit tracker",
+      "title": "Show HN: FocusStreak – Fast, offline habit tracker without account walls",
+      "body": "（无外链） · 2 分 · 0 条评论",
+      "score": 2,
+      "num_comments": 0,
+      "created_utc": "2026-11-23T07:12:58Z",
+      "url": "https://news.ycombinator.com/item?id=50608470"
+    }
+  ]
+}
