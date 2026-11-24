@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { buildFoodHistorySuggestions } from '../../lib/food-history'
+import { zh } from '../../lib/i18n/messages/zh'
 
 describe('food history quick add', () => {
   it('deduplicates identical snapshots while preserving different portions', () => {
@@ -68,9 +69,12 @@ describe('food history quick add', () => {
       'utf8',
     )
 
-    expect(page).toContain('最近常吃 · 点击快速填入')
+    // 界面文字已搬进字典（food.row.*），中文逐字不变
+    expect(page).toContain("t('food.row.recent')")
+    expect(zh.food.row.recent).toBe('最近常吃 · 点击快速填入')
     expect(page).toContain("fetch('/api/food/history?limit=8')")
-    expect(page).toContain('已按历史记录填入相同分量与营养')
+    expect(page).toContain("t('food.row.historyFilled')")
+    expect(zh.food.row.historyFilled).toBe('✓ 已按历史记录填入相同分量与营养')
     expect(route).toContain(".eq('user_id', user.id)")
   })
 })
