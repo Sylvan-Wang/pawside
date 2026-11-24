@@ -18,7 +18,7 @@ type LoadState =
   | { kind: 'error' }
   | { kind: 'not_found' }
   | { kind: 'timed' }
-  | { kind: 'ready'; trend: ExerciseTrend }
+  | { kind: 'ready'; trend: ExerciseTrend; unit: TrainingWeightUnit }
 
 function readUnit(): TrainingWeightUnit {
   try {
@@ -66,17 +66,15 @@ export default function ExerciseTrendClient({ exerciseId }: { exerciseId: string
   const t = useT()
   const [locale] = useLocale()
   const [state, setState] = useState<LoadState>({ kind: 'loading' })
-  const [unit, setUnit] = useState<TrainingWeightUnit>('kg')
 
   useEffect(() => {
-    setUnit(readUnit())
     let active = true
     fetch(`/api/training/exercises/${encodeURIComponent(exerciseId)}/history`)
       .then(async response => {
         if (response.status === 404 || response.status === 400) return { kind: 'not_found' } as const
         if (!response.ok) return { kind: 'error' } as const
         const payload = await response.json()
-        return payload?.data ? { kind: 'ready', trend: payload.data as ExerciseTrend } as const : { kind: 'timed' } as const
+        return payload?.data ? { kind: 'ready', trend: payload.data as ExerciseTrend, unit: readUnit() } as const : { kind: 'timed' } as const
       })
       .catch(() => ({ kind: 'error' }) as const)
       .then(next => { if (active) setState(next) })
@@ -84,6 +82,7 @@ export default function ExerciseTrendClient({ exerciseId }: { exerciseId: string
   }, [exerciseId])
 
   const trend = state.kind === 'ready' ? state.trend : null
+  const unit: TrainingWeightUnit = state.kind === 'ready' ? state.unit : 'kg'
   const name = trend ? exerciseDisplayName(trend.nameZh, locale) : ''
   const latest = trend?.points[trend.points.length - 1] ?? null
   const summary = trend ? formatSummary(trend.summary, unit, locale) : null
