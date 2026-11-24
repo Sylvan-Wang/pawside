@@ -60,3 +60,51 @@ describe('「上次」一行的数据', () => {
     expect(formatLastTime(result.bench, 'lb')).toMatch(/^上次 11\/15：[\d.]+ lb × 8$/)
   })
 })
+
+describe('动作走势页的数据', async () => {
+  const { buildExerciseTrend, TREND_POINTS } = await import('@/lib/workout/exercise-history')
+  const { formatSummary, formatTopSet, formatSessionSets } = await import('@/lib/workout/exercise-progress')
+  const bench = { id: 'bench', canonical_name_zh: '杠铃卧推', record_shape: 'weight_reps' }
+
+  it('只取这个动作、已完成的训练，按日期从旧到新，最多 12 次', () => {
+    const rows = Array.from({ length: 15 }, (_, i) =>
+      row('bench', `s${i}`, `2026-10-${String(i + 1).padStart(2, '0')}`, [s(40 + i, 8)]))
+    rows.push(row('squat', 'x', '2026-10-20', [s(100, 5)]))
+    rows.push(row('bench', 'open', '2026-10-30', [s(99, 5)], 'started'))
+    const trend = buildExerciseTrend(bench, rows)!
+    expect(trend.points).toHaveLength(TREND_POINTS)
+    expect(trend.points[0].date).toBe('2026-10-04')
+    expect(trend.points.at(-1)!.topWeightKg).toBe(54)
+    expect(trend.nameZh).toBe('杠铃卧推')
+  })
+
+  it('计时类动作不做走势；没有记录时点为空、总结为 none', () => {
+    expect(buildExerciseTrend({ id: 'run', canonical_name_zh: '跑步', record_shape: 'duration' }, [])).toBeNull()
+    const empty = buildExerciseTrend(bench, [])!
+    expect(empty.points).toEqual([])
+    expect(empty.summary.kind).toBe('none')
+  })
+
+  it('总结和主数字：中文逐字照旧，英文走字典、没有中文', () => {
+    const rows = [
+      row('bench', 'a', '2026-10-20', [s(40, 8)]),
+      row('bench', 'b', '2026-11-17', [s(20, 10, { prescription: { set_type: 'warmup' } }), s(45, 8), s(45, 6)]),
+    ]
+    const trend = buildExerciseTrend(bench, rows)!
+    expect(formatSummary(trend.summary, 'kg')).toBe('比 4 周前 +5 kg')
+    expect(formatSummary(trend.summary, 'kg', 'en')).toBe('+5 kg vs 4 weeks ago')
+    const latest = trend.points.at(-1)!
+    expect(formatTopSet(latest, 'kg')).toBe('45 kg × 8')
+    expect(formatSessionSets(latest, 'kg')).toBe('45 kg × 8, 6')
+    expect(formatSummary({ kind: 'single' }, 'kg', 'en')).not.toMatch(/[一-鿿]/)
+  })
+
+  it('走势接口：开关关着 403、先查登录、只按本人 user_id 读', async () => {
+    const { readFileSync } = await import('node:fs')
+    const route = readFileSync('app/api/training/exercises/[exerciseId]/history/route.ts', 'utf8')
+    expect(route).toContain('isExerciseProgressEnabled()')
+    expect(route).toContain('auth.getUser()')
+    const lib = readFileSync('lib/workout/exercise-history.ts', 'utf8')
+    expect(lib).toMatch(/loadExerciseTrend[\s\S]*\.eq\('user_id', userId\)/)
+  })
+})
