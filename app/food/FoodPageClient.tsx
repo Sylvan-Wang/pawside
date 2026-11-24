@@ -596,7 +596,7 @@ export default function FoodPage() {
       })
       .catch(reason => console.error('[food history error]', reason))
     return () => { active = false }
-  }, [])
+  }, [t])
 
   useEffect(() => {
     let active = true
@@ -612,7 +612,7 @@ export default function FoodPage() {
       })
       .finally(() => { if (active) setDailyLoading(false) })
     return () => { active = false }
-  }, [date])
+  }, [date, t])
 
   function addFood() {
     setFoods(f => [...f, emptyFood()])

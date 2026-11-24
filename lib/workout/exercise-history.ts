@@ -7,8 +7,8 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import {
-  buildProgressPoints, lastPointBefore,
-  type ProgressPoint, type ProgressSessionInput, type ProgressShape,
+  buildProgressPoints, lastPointBefore, summarizeProgress,
+  type ProgressPoint, type ProgressSessionInput, type ProgressShape, type ProgressSummary,
 } from '@/lib/workout/exercise-progress'
 
 export function isExerciseProgressEnabled(flag: string | undefined = process.env.NEXT_PUBLIC_EXERCISE_PROGRESS): boolean {
@@ -42,19 +42,11 @@ function toShape(recordShape: string | null | undefined): ProgressShape | null {
   return null // duration / distance_duration：方案里不做
 }
 
-/**
- * 纯函数：把查询结果按动作分组，算出每个动作「今天之前最近一次」的点。
- * 只用已完成的训练；跳过正在练的这次；计时类动作不返回。
- */
-export function lastPointsByExercise(
-  rows: HistoryRow[],
-  recordShapes: Record<string, string | null | undefined>,
-  currentSessionId: string,
-  today: string,
-): Record<string, ProgressPoint> {
+/** 纯函数：把查询结果按动作分组成「每次训练一组正式组记录」。只用已完成的训练，可排除一次训练。 */
+export function sessionsByExercise(rows: HistoryRow[], excludeSessionId: string | null = null): Map<string, ProgressSessionInput[]> {
   const byExercise = new Map<string, ProgressSessionInput[]>()
   for (const row of rows) {
-    if (row.workout_session_id === currentSessionId) continue
+    if (excludeSessionId && row.workout_session_id === excludeSessionId) continue
     const session = one(row.session)
     if (!session || session.status !== 'completed' || !session.log_date) continue
     const list = byExercise.get(row.exercise_id) ?? []
@@ -71,15 +63,90 @@ export function lastPointsByExercise(
     })
     byExercise.set(row.exercise_id, list)
   }
+  return byExercise
+}
 
+/**
+ * 纯函数：把查询结果按动作分组，算出每个动作「今天之前最近一次」的点。
+ * 只用已完成的训练；跳过正在练的这次；计时类动作不返回。
+ */
+export function lastPointsByExercise(
+  rows: HistoryRow[],
+  recordShapes: Record<string, string | null | undefined>,
+  currentSessionId: string,
+  today: string,
+): Record<string, ProgressPoint> {
   const result: Record<string, ProgressPoint> = {}
-  for (const [exerciseId, sessions] of byExercise) {
+  for (const [exerciseId, sessions] of sessionsByExercise(rows, currentSessionId)) {
     const shape = toShape(recordShapes[exerciseId])
     if (!shape) continue
     const last = lastPointBefore(buildProgressPoints(sessions, shape), currentSessionId, today)
     if (last) result[exerciseId] = last
   }
   return result
+}
+
+/** 动作走势页最多画几次训练（方案 4.2：只画最近 12 次）。 */
+export const TREND_POINTS = 12
+
+export interface ExerciseTrend {
+  exerciseId: string
+  /** exercises.canonical_name_zh；英文名由页面按字典换。 */
+  nameZh: string
+  shape: ProgressShape
+  /** 从旧到新，最多 TREND_POINTS 个。 */
+  points: ProgressPoint[]
+  summary: ProgressSummary
+}
+
+/** 纯函数：一个动作的走势。计时类动作返回 null（方案里不做）。 */
+export function buildExerciseTrend(
+  exercise: { id: string; canonical_name_zh: string; record_shape: string | null },
+  rows: HistoryRow[],
+): ExerciseTrend | null {
+  const shape = toShape(exercise.record_shape)
+  if (!shape) return null
+  const sessions = sessionsByExercise(rows.filter(row => row.exercise_id === exercise.id)).get(exercise.id) ?? []
+  const points = buildProgressPoints(sessions, shape).slice(-TREND_POINTS)
+  return { exerciseId: exercise.id, nameZh: exercise.canonical_name_zh, shape, points, summary: summarizeProgress(points, shape) }
+}
+
+const HISTORY_SELECT = `
+      exercise_id,
+      workout_session_id,
+      session:workout_sessions!inner(log_date,status),
+      sets:set_executions(actual_weight_kg,actual_reps,status,is_extra,prescription:set_prescriptions(set_type))
+    `
+
+/**
+ * 动作走势页的数据：登录用户自己这个动作最近的已完成训练。
+ * 动作不存在返回 'not_found'；查询出错返回 'error'；计时类动作返回 null。
+ */
+export async function loadExerciseTrend(
+  supabase: SupabaseClient,
+  userId: string,
+  exerciseId: string,
+): Promise<ExerciseTrend | null | 'not_found' | 'error'> {
+  const { data: exercise, error: exerciseError } = await supabase
+    .from('exercises')
+    .select('id,canonical_name_zh,record_shape')
+    .eq('id', exerciseId)
+    .maybeSingle()
+  if (exerciseError) return 'error'
+  if (!exercise) return 'not_found'
+  const { data, error } = await supabase
+    .from('exercise_executions')
+    .select(HISTORY_SELECT)
+    .eq('user_id', userId)
+    .eq('exercise_id', exerciseId)
+    .eq('session.status', 'completed')
+    .order('created_at', { ascending: false })
+    .limit(TREND_POINTS * 2)
+  if (error || !data) return 'error'
+  return buildExerciseTrend(
+    exercise as { id: string; canonical_name_zh: string; record_shape: string | null },
+    data as unknown as HistoryRow[],
+  )
 }
 
 /** 读最近的已完成训练里这些动作的组记录。失败时返回空对象：「上次」只是提示，不能挡住记录页。 */
@@ -94,12 +161,7 @@ export async function loadLastPoints(
   if (ids.length === 0) return {}
   const { data, error } = await supabase
     .from('exercise_executions')
-    .select(`
-      exercise_id,
-      workout_session_id,
-      session:workout_sessions!inner(log_date,status),
-      sets:set_executions(actual_weight_kg,actual_reps,status,is_extra,prescription:set_prescriptions(set_type))
-    `)
+    .select(HISTORY_SELECT)
     .eq('user_id', userId)
     .in('exercise_id', ids)
     .neq('workout_session_id', currentSessionId)

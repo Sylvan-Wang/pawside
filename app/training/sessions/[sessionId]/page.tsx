@@ -35,6 +35,7 @@ import { clearSessionDrafts, clearSetDraft, readSetDraft, writeSetDraft } from '
 import { describePlannedSet } from '@/lib/coach/set-guidance'
 import { useEffect, useRef, useState } from 'react'
 import { formatLastTime, type ProgressPoint } from '@/lib/workout/exercise-progress'
+import Link from 'next/link'
 import { useLocale } from '@/lib/i18n/use-locale'
 import { translate, type Locale, type MessageKey } from '@/lib/i18n'
 import { exerciseDisplayName } from '@/lib/i18n/exercise-names'
@@ -1054,7 +1055,14 @@ export default function TrainingSessionPage() {
               <p className="text-xs text-gray-400">{t('session.exerciseN', { n: exercise.order_index })}</p>
               <h2 id={`exercise-${exercise.id}`} className="mt-1 font-semibold text-gray-900">{exerciseName}</h2>
               {lastPoint && (
-                <p className="mt-0.5 text-xs text-gray-400">{formatLastTime(lastPoint, weightUnit, locale)}</p>
+                <p className="mt-0.5 text-xs text-gray-400">
+                  {formatLastTime(lastPoint, weightUnit, locale)}
+                  {exercise.exercise_id && (
+                    <Link href={`/training/exercises/${exercise.exercise_id}`} className="ml-2 text-gray-500 underline-offset-2 hover:underline">
+                      {t('session.exercise.seeTrend')}
+                    </Link>
+                  )}
+                </p>
               )}
             </div>
             <div className="flex shrink-0 flex-col items-end gap-1">

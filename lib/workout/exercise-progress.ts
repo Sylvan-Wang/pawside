@@ -150,30 +150,44 @@ function shortDate(date: string): string {
  * 「上次 11/12：40 kg × 8, 8, 7」。各组重量相同时合并写；不同时逐组写「40×8, 42.5×6」。
  */
 export function formatLastTime(point: ProgressPoint, unit: TrainingWeightUnit, locale: Locale = 'zh'): string {
-  const sets = point.workingSets
-  const weights = sets.map(s => s.weightKg)
-  let body: string
-  if (weights.every(w => w === null)) {
-    body = translate(locale, 'session.exercise.repsOnly', { reps: sets.map(s => s.reps).join(', ') })
-  } else if (weights.every(w => w === weights[0])) {
-    body = `${kgToWeightInput(weights[0], unit)} ${unit} × ${sets.map(s => s.reps).join(', ')}`
-  } else {
-    body = `${sets.map(s => `${kgToWeightInput(s.weightKg, unit)}×${s.reps}`).join(', ')} ${unit}`
-  }
-  return translate(locale, 'session.exercise.lastTime', { date: shortDate(point.date), body })
+  return translate(locale, 'session.exercise.lastTime', { date: shortDate(point.date), body: formatSessionSets(point, unit, locale) })
 }
 
-export function formatSummary(summary: ProgressSummary, unit: TrainingWeightUnit): string | null {
+/** 一次训练的正式组：「40 kg × 8, 8, 7」「40×8, 42.5×6 kg」或徒手「12, 10 次」。 */
+export function formatSessionSets(point: ProgressPoint, unit: TrainingWeightUnit, locale: Locale = 'zh'): string {
+  const sets = point.workingSets
+  const weights = sets.map(s => s.weightKg)
+  if (weights.every(w => w === null)) {
+    return translate(locale, 'session.exercise.repsOnly', { reps: sets.map(s => s.reps).join(', ') })
+  }
+  if (weights.every(w => w === weights[0])) {
+    return `${kgToWeightInput(weights[0], unit)} ${unit} × ${sets.map(s => s.reps).join(', ')}`
+  }
+  return `${sets.map(s => `${kgToWeightInput(s.weightKg, unit)}×${s.reps}`).join(', ')} ${unit}`
+}
+
+/** 一句话总结的文字。中文和改造前逐字一致；英文走字典。 */
+export function formatSummary(summary: ProgressSummary, unit: TrainingWeightUnit, locale: Locale = 'zh'): string | null {
   switch (summary.kind) {
-    case 'single': return '练两次以上就能看到走势'
+    case 'single': return translate(locale, 'trend.summary.single')
     case 'heavier': {
-      const since = summary.weeks ? ` ${summary.weeks} 周前 ` : `第一次（${shortDate(summary.sinceDate)}）`
-      return `比${since}+${kgToWeightInput(summary.deltaKg, unit)} ${unit}`
+      const delta = kgToWeightInput(summary.deltaKg, unit)
+      return summary.weeks
+        ? translate(locale, 'trend.summary.heavierWeeks', { weeks: summary.weeks, delta, unit })
+        : translate(locale, 'trend.summary.heavierFirst', { date: shortDate(summary.sinceDate), delta, unit })
     }
     case 'more_reps': return summary.weightKg === null
-      ? `比 ${shortDate(summary.sinceDate)} 多做了 ${summary.deltaReps} 次`
-      : `同样 ${kgToWeightInput(summary.weightKg, unit)} ${unit}，多做了 ${summary.deltaReps} 次`
-    case 'flat': return '最近 3 次持平'
+      ? translate(locale, 'trend.summary.moreRepsBodyweight', { date: shortDate(summary.sinceDate), n: summary.deltaReps })
+      : translate(locale, 'trend.summary.moreReps', { weight: kgToWeightInput(summary.weightKg, unit), unit, n: summary.deltaReps })
+    case 'flat': return translate(locale, 'trend.summary.flat')
     case 'none': return null
   }
 }
+
+/** 「45 kg × 8」或徒手「12 次」：走势页每个点的主数字。 */
+export function formatTopSet(point: ProgressPoint, unit: TrainingWeightUnit, locale: Locale = 'zh'): string {
+  if (point.topWeightKg === null) return translate(locale, 'session.exercise.repsOnly', { reps: point.topReps })
+  return `${kgToWeightInput(point.topWeightKg, unit)} ${unit} × ${point.topReps}`
+}
+
+export { shortDate as formatShortDate }
