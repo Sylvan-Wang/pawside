@@ -248,3 +248,52 @@ describe('逐组记录（批 1 第 3 页）', () => {
     expect(formatLastTime(bodyweight as never, 'kg', 'en')).toBe('Last time 11/12: 10, 8 reps')
   })
 })
+
+describe('记录饮食（批 1 第 4 页）', () => {
+  const visible = (src: string) =>
+    src
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/\{\/\*[\s\S]*?\*\/\}/g, '')
+      .split('\n')
+      .filter((line) => !line.trim().startsWith('//'))
+      .join('\n')
+
+  it('记录饮食页的界面文字不再写死中文', () => {
+    expect(visible(readFileSync('app/food/FoodPageClient.tsx', 'utf8'))).not.toMatch(/[一-鿿]/)
+  })
+
+  it('数据来源标签和 lib/nutrition 的中文逐字一致', async () => {
+    const { resolutionLabel } = await import('@/lib/nutrition/food-resolution')
+    for (const source of ['canonical_db', 'ai_estimate', 'user_override', 'user_memory', 'candidate_cache', 'unresolved'] as const) {
+      expect(translate('zh', `food.source.${source}`)).toBe(resolutionLabel(source))
+      expect(translate('en', `food.source.${source}`)).not.toMatch(/[一-鿿]/)
+    }
+  })
+
+  it('剩余提示和 describeRemaining 逐字一致（含取整）', async () => {
+    const { describeRemaining } = await import('@/lib/nutrition/guidance')
+    const { remainingParams } = await import('@/lib/i18n/food')
+    for (const [value, unit] of [[null, 'g'], [12.34, 'g'], [-120.06, 'kcal'], [0, 'g']] as const) {
+      const r = remainingParams(value, unit)
+      expect(translate('zh', r.key, r.params)).toBe(describeRemaining(value, unit))
+    }
+    const over = remainingParams(-120.06, 'kcal')
+    expect(translate('en', over.key, over.params)).toBe('120.1 kcal over the guide')
+  })
+
+  it('中文文案和搬之前逐字一致（抽查）', () => {
+    expect(zh.food.title).toBe('记录饮食')
+    expect(translate('zh', 'food.row.label', { n: 2 })).toBe('食物 2')
+    expect(translate('zh', 'food.guide.mealRange', { meal: '早餐', min: 400, max: 500 })).toBe('早餐 400–500')
+    expect(translate('zh', 'food.preview.line', { kcal: 520, protein: 30, carbs: 60, fat: 12.5 }))
+      .toBe('520 kcal · 蛋白质 30g · 碳水 60g · 脂肪 12.5g')
+    expect(translate('zh', 'food.row.recentProtein', { n: 8.2 })).toBe(' · 蛋白 8.2g')
+    expect(zh.food.save.needConfirm).toBe('还有食物缺少营养信息，请先确认估算、手动填写，或删除这条食物')
+  })
+
+  it('英文饮食文案不暗示 AI 反馈是英文', () => {
+    const text = JSON.stringify(en.food)
+    expect(text).not.toMatch(/[一-鿿]/)
+    expect(text).not.toMatch(/feedback in English|English feedback/i)
+  })
+})

@@ -6,22 +6,19 @@ import CoachCard from '@/components/CoachCard'
 import { useToast } from '@/components/Toast'
 import { today } from '@/lib/utils'
 import type { FoodHistorySuggestion } from '@/lib/food-history'
-import { buildTodayGuidance, describeRemaining } from '@/lib/nutrition/guidance'
-import { resolutionLabel, type ResolutionSource } from '@/lib/nutrition/food-resolution'
-
-const MEAL_TYPES = ['早餐', '午餐', '晚餐', '加餐']
+import { buildTodayGuidance } from '@/lib/nutrition/guidance'
+import type { ResolutionSource } from '@/lib/nutrition/food-resolution'
+import { useT } from '@/lib/i18n/use-locale'
+import { remainingParams } from '@/lib/i18n/food'
 
 /**
- * Display label -> canonical `user_food_logs.meal_type` value.
+ * Canonical `user_food_logs.meal_type` values, in button order. Labels come
+ * from the dictionary (food.meal.*).
  * Source: `user_food_logs.meal_type` check constraint
  * (20260413000000_v3_food_schema.sql:82).
  */
-const MEAL_TYPE_VALUES: Record<string, 'breakfast' | 'lunch' | 'dinner' | 'snack'> = {
-  '早餐': 'breakfast',
-  '午餐': 'lunch',
-  '晚餐': 'dinner',
-  '加餐': 'snack',
-}
+const MEAL_TYPES = ['breakfast', 'lunch', 'dinner', 'snack'] as const
+type MealType = typeof MEAL_TYPES[number]
 
 interface NutritionPer100g {
   basis_type?: string
@@ -83,7 +80,7 @@ interface MealFeedbackView {
     explanation: string | null
     authority: string
   }>
-  /** loading → ready (AI text) or failed (rule cards shown as 基础总结). */
+  /** loading → ready (AI text) or failed (rule cards shown as the basic summary). */
   aiState: 'loading' | 'ready' | 'failed'
   ai: null | {
     summary: string
@@ -173,6 +170,7 @@ function FoodRow({
   const [resolutionError, setResolutionError] = useState<string | null>(null)
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const wrapRef = useRef<HTMLDivElement>(null)
+  const t = useT()
 
   useEffect(() => {
     const fn = (e: MouseEvent) => {
@@ -191,7 +189,7 @@ function FoodRow({
       try {
         const response = await fetch(`/api/foods/resolve?q=${encodeURIComponent(q)}`)
         const payload = await response.json()
-        if (!response.ok) throw new Error(payload?.error?.message || '食物解析失败')
+        if (!response.ok) throw new Error(payload?.error?.message || t('food.errors.resolve'))
         const top = (payload.data ?? []).map((item: {
           food_id: number | null
           name: string
@@ -217,7 +215,7 @@ function FoodRow({
         setBusy(false)
       }
     }, 250)
-  }, [])
+  }, [t])
 
   function handleNameChange(val: string) {
     // Coach patch 2026-09-27: values that came from the previous food (a
@@ -345,7 +343,7 @@ function FoodRow({
         body: JSON.stringify({ action: 'estimate', name: food.name }),
       })
       const payload = await response.json()
-      if (!response.ok) throw new Error(payload?.error?.message || 'AI 暂时不可用')
+      if (!response.ok) throw new Error(payload?.error?.message || t('food.errors.aiUnavailable'))
       const per100g = payload.data.nutrition as NutritionPer100g & { caveat?: string; confidence?: number }
       const calculated = calcNutrition(per100g, food.weight)
       onUpdate({
@@ -358,10 +356,10 @@ function FoodRow({
         userConfirmed: false,
         provisional: true,
         confidence: per100g.confidence ?? null,
-        estimateCaveat: per100g.caveat || '不同品牌可能有明显差异。',
+        estimateCaveat: per100g.caveat || t('food.row.caveat'),
       })
     } catch (reason: unknown) {
-      setResolutionError(reason instanceof Error ? reason.message : 'AI 暂时不可用')
+      setResolutionError(reason instanceof Error ? reason.message : t('food.errors.aiUnavailable'))
     } finally {
       setResolving(false)
     }
@@ -391,7 +389,7 @@ function FoodRow({
         }),
       })
       const payload = await response.json()
-      if (!response.ok) throw new Error(payload?.error?.message || '确认失败')
+      if (!response.ok) throw new Error(payload?.error?.message || t('food.errors.confirmFailed'))
       onUpdate({
         per100g: payload.data.nutrition,
         sourceRefId: payload.data.source_ref_id,
@@ -400,7 +398,7 @@ function FoodRow({
         provisional: false,
       })
     } catch (reason: unknown) {
-      setResolutionError(reason instanceof Error ? reason.message : '确认失败')
+      setResolutionError(reason instanceof Error ? reason.message : t('food.errors.confirmFailed'))
     } finally {
       setResolving(false)
     }
@@ -409,13 +407,13 @@ function FoodRow({
   return (
     <div className="border border-gray-100 rounded-xl p-3 space-y-2">
       <div className="flex justify-between items-center">
-        <span className="text-xs text-gray-400">食物 {index + 1}</span>
-        <button type="button" onClick={onRemove} className="text-xs text-gray-400">暂不保存这条</button>
+        <span className="text-xs text-gray-400">{t('food.row.label', { n: index + 1 })}</span>
+        <button type="button" onClick={onRemove} className="text-xs text-gray-400">{t('food.row.remove')}</button>
       </div>
 
       <div className="relative" ref={wrapRef}>
         <input
-          placeholder="食物名称（输入搜索）"
+          placeholder={t('food.row.namePlaceholder')}
           value={food.name}
           onChange={e => handleNameChange(e.target.value)}
           onFocus={() => results.length > 0 && setOpen(true)}
@@ -423,7 +421,7 @@ function FoodRow({
           className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-gray-400"
         />
         {busy && (
-          <span className="absolute right-3 top-2.5 text-xs text-gray-400">搜索中…</span>
+          <span className="absolute right-3 top-2.5 text-xs text-gray-400">{t('food.row.searching')}</span>
         )}
         {open && results.length > 0 && (
           <div
@@ -438,14 +436,14 @@ function FoodRow({
               >
                 <span className="font-medium">{r.canonical_name}</span>
                 {r.matched_alias && (
-                  <span className="text-xs text-gray-400 ml-1">（{r.matched_alias}）</span>
+                  <span className="text-xs text-gray-400 ml-1">{t('food.row.alias', { alias: r.matched_alias })}</span>
                 )}
                 {r.nutrition?.energy_kcal != null && (
                   <span className="text-xs text-gray-400 ml-2">
                     {r.nutrition.energy_kcal} kcal/100g
                   </span>
                 )}
-                <span className="ml-2 text-[11px] text-gray-400">{resolutionLabel(r.source)}</span>
+                <span className="ml-2 text-[11px] text-gray-400">{t(`food.source.${r.source}`)}</span>
               </button>
             ))}
           </div>
@@ -454,7 +452,7 @@ function FoodRow({
 
       {history.length > 0 && (
         <div>
-          <p className="mb-1.5 text-[11px] text-gray-400">最近常吃 · 点击快速填入</p>
+          <p className="mb-1.5 text-[11px] text-gray-400">{t('food.row.recent')}</p>
           <div className="flex gap-2 overflow-x-auto pb-1">
             {history.map(item => (
               <button
@@ -465,7 +463,7 @@ function FoodRow({
               >
                 {item.name} · {item.weight_g}g
                 {item.calories == null ? '' : ` · ${display(String(item.calories))} kcal`}
-                {item.protein_g == null ? '' : ` · 蛋白 ${display(String(item.protein_g), 1)}g`}
+                {item.protein_g == null ? '' : t('food.row.recentProtein', { n: display(String(item.protein_g), 1) })}
               </button>
             ))}
           </div>
@@ -478,9 +476,9 @@ function FoodRow({
           number and the save path is unchanged. */}
       <div className="grid grid-cols-2 gap-2">
         <label className="text-[11px] text-gray-500">
-          重量（g）
+          {t('food.row.weight')}
           <input
-            placeholder="例如 150"
+            placeholder={t('food.row.weightPlaceholder')}
             type="number"
             inputMode="decimal"
             value={food.weight}
@@ -489,7 +487,7 @@ function FoodRow({
           />
         </label>
         <label className="text-[11px] text-gray-500">
-          热量（kcal）
+          {t('food.row.calories')}
           <input
             type="number"
             inputMode="decimal"
@@ -501,7 +499,7 @@ function FoodRow({
           />
         </label>
         <label className="text-[11px] text-gray-500">
-          蛋白质（g）
+          {t('food.row.protein')}
           <input
             type="number"
             inputMode="decimal"
@@ -513,7 +511,7 @@ function FoodRow({
           />
         </label>
         <label className="text-[11px] text-gray-500">
-          碳水（g）
+          {t('food.row.carbs')}
           <input
             type="number"
             inputMode="decimal"
@@ -525,7 +523,7 @@ function FoodRow({
           />
         </label>
         <label className="text-[11px] text-gray-500">
-          脂肪（g）
+          {t('food.row.fat')}
           <input
             type="number"
             inputMode="decimal"
@@ -539,30 +537,30 @@ function FoodRow({
       </div>
 
       {food.autoFilled && (
-        <p className="text-xs text-emerald-600">✓ 已按每 100g 参考值自动计算四项营养</p>
+        <p className="text-xs text-emerald-600">{t('food.row.autoFilled')}</p>
       )}
       {food.historyFilled && (
-        <p className="text-xs text-emerald-600">✓ 已按历史记录填入相同分量与营养</p>
+        <p className="text-xs text-emerald-600">{t('food.row.historyFilled')}</p>
       )}
       {food.resolutionSource !== 'unresolved' && (
-        <p className="text-xs text-gray-500">{resolutionLabel(food.resolutionSource)}{food.userConfirmed ? ' · 已确认' : ' · 待确认'}</p>
+        <p className="text-xs text-gray-500">{t(`food.source.${food.resolutionSource}`)}{food.userConfirmed ? t('food.row.confirmed') : t('food.row.unconfirmed')}</p>
       )}
       {food.provisional && (
         <div className="rounded-xl bg-gray-50 p-3 text-xs text-gray-600">
-          <p className="font-medium text-gray-800">AI 估算 · 待确认</p>
-          <p className="mt-1">{food.estimateCaveat || '不同品牌可能有明显差异。'}</p>
+          <p className="font-medium text-gray-800">{t('food.row.aiEstimate')}</p>
+          <p className="mt-1">{food.estimateCaveat || t('food.row.caveat')}</p>
         </div>
       )}
       {!food.userConfirmed && food.name && food.weight && (
         <div className="flex gap-2">
           <button type="button" disabled={resolving} onClick={estimateWithAI}
             className="rounded-lg border border-gray-200 px-3 py-2 text-xs disabled:opacity-50">
-            {resolving ? '处理中…' : '让 AI 帮我估算'}
+            {resolving ? t('food.row.processing') : t('food.row.estimate')}
           </button>
           {hasCompleteActual && (
             <button type="button" disabled={resolving} onClick={confirmNutrition}
               className="rounded-lg bg-black px-3 py-2 text-xs text-white disabled:opacity-50">
-              {food.provisional ? '使用这个估算' : '确认使用填写值'}
+              {food.provisional ? t('food.row.useEstimate') : t('food.row.confirmTyped')}
             </button>
           )}
         </div>
@@ -575,9 +573,10 @@ function FoodRow({
 export default function FoodPage() {
   const router = useRouter()
   const { show, ToastEl } = useToast()
+  const t = useT()
 
   const [date, setDate] = useState(today())
-  const [mealType, setMealType] = useState('')
+  const [mealType, setMealType] = useState<MealType | ''>('')
   const [foods, setFoods] = useState<FoodItem[]>([emptyFood()])
   const [history, setHistory] = useState<FoodHistorySuggestion[]>([])
   const [loading, setLoading] = useState(false)
@@ -592,7 +591,7 @@ export default function FoodPage() {
     fetch('/api/food/history?limit=8')
       .then(async response => {
         const payload = await response.json()
-        if (!response.ok) throw new Error(payload?.error?.message || '历史食物读取失败')
+        if (!response.ok) throw new Error(payload?.error?.message || t('food.errors.historyLoad'))
         if (active) setHistory(payload.data ?? [])
       })
       .catch(reason => console.error('[food history error]', reason))
@@ -604,7 +603,7 @@ export default function FoodPage() {
     fetch(`/api/nutrition/daily?date=${encodeURIComponent(date)}`)
       .then(async response => {
         const payload = await response.json()
-        if (!response.ok) throw new Error(payload?.error?.message || '当日营养读取失败')
+        if (!response.ok) throw new Error(payload?.error?.message || t('food.errors.dailyLoad'))
         if (active) setDailyNutrition(payload.data)
       })
       .catch(reason => {
@@ -632,16 +631,16 @@ export default function FoodPage() {
    * resulting facts. The client no longer computes or writes nutrition itself.
    */
   async function handleSave() {
-    if (!mealType) return show('请选择餐别', 'error')
+    if (!mealType) return show(t('food.save.needMeal'), 'error')
     const valid = foods.filter(f => f.name && f.weight)
-    if (!valid.length) return show('至少填写一个食物的名称和重量', 'error')
+    if (!valid.length) return show(t('food.save.needFood'), 'error')
     if (valid.some(food => !food.userConfirmed)) {
-      return show('还有食物缺少营养信息，请先确认估算、手动填写，或删除这条食物', 'error')
+      return show(t('food.save.needConfirm'), 'error')
     }
     setLoading(true)
     try {
-      const mealTypeValue = MEAL_TYPE_VALUES[mealType]
-      if (!mealTypeValue) throw new Error('餐别无效')
+      const mealTypeValue = MEAL_TYPES.find(m => m === mealType)
+      if (!mealTypeValue) throw new Error(t('food.save.badMeal'))
       saveRequestId.current ??= crypto.randomUUID()
 
       const response = await fetch('/api/nutrition/food-log', {
@@ -674,7 +673,7 @@ export default function FoodPage() {
 
       const payload = await response.json()
       if (!response.ok) {
-        throw new Error(payload?.error?.message || '保存失败')
+        throw new Error(payload?.error?.message || t('food.save.failed'))
       }
 
       // Clear the client-side review caches so returning to the Daily Log does
@@ -701,7 +700,7 @@ export default function FoodPage() {
       }
       setFeedback(nextFeedback)
       setDailyNutrition(facts.nutrition)
-      show('保存成功')
+      show(t('food.save.success'))
       saveRequestId.current = null
 
       // Facts and rule status render immediately. AI is an optional explanation
@@ -738,7 +737,7 @@ export default function FoodPage() {
         setFeedback(current => current ? { ...current, aiState: 'failed' } : current)
       }
     } catch (err: unknown) {
-      show(err instanceof Error ? err.message : '保存失败', 'error')
+      show(err instanceof Error ? err.message : t('food.save.failed'), 'error')
     } finally {
       setLoading(false)
     }
@@ -778,10 +777,10 @@ export default function FoodPage() {
           output_json: feedback.ai,
         }),
       })
-      if (!response.ok) throw new Error('反馈保存失败')
+      if (!response.ok) throw new Error(t('food.save.ratingFailed'))
       setFeedback(current => current ? { ...current, rating: next } : current)
     } catch (reason: unknown) {
-      show(reason instanceof Error ? reason.message : '反馈保存失败', 'error')
+      show(reason instanceof Error ? reason.message : t('food.save.ratingFailed'), 'error')
     } finally {
       setRatingSaving(false)
     }
@@ -790,11 +789,11 @@ export default function FoodPage() {
   return (
     <div className="min-h-screen bg-gray-50 pb-8">
       {ToastEl}
-      <PageHeader title="记录饮食" back />
+      <PageHeader title={t('food.title')} back />
 
       <div className="px-4 py-4 space-y-4">
         <div className="bg-white rounded-2xl p-4">
-          <label className="block text-sm text-gray-600 mb-1">日期</label>
+          <label className="block text-sm text-gray-600 mb-1">{t('food.date')}</label>
           <input
             type="date"
             value={date}
@@ -809,45 +808,49 @@ export default function FoodPage() {
         </div>
 
         {!dailyLoading && guidance?.calorieTarget != null && guidance.mealRanges && (
-          <section className="rounded-2xl border border-[#efe7da] bg-[#faf7f2] p-4" aria-label="今日饮食参考">
+          <section className="rounded-2xl border border-[#efe7da] bg-[#faf7f2] p-4" aria-label={t('food.guide.title')}>
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h2 className="text-sm font-semibold text-gray-900">今日饮食参考</h2>
+                <h2 className="text-sm font-semibold text-gray-900">{t('food.guide.title')}</h2>
                 <p className="mt-1 text-2xl font-semibold tracking-tight text-gray-950">
                   {display(String(guidance.calorieTarget))} <span className="text-sm font-normal">kcal</span>
                 </p>
               </div>
-              <span className="rounded-full bg-white/80 px-2 py-1 text-[11px] text-gray-500">参考</span>
+              <span className="rounded-full bg-white/80 px-2 py-1 text-[11px] text-gray-500">{t('food.guide.badge')}</span>
             </div>
             <div className="mt-3 grid grid-cols-3 gap-2 text-xs text-gray-700">
-              <p>早餐 {guidance.mealRanges.breakfast[0]}–{guidance.mealRanges.breakfast[1]}</p>
-              <p>午餐 {guidance.mealRanges.lunch[0]}–{guidance.mealRanges.lunch[1]}</p>
-              <p>晚餐 {guidance.mealRanges.dinner[0]}–{guidance.mealRanges.dinner[1]}</p>
+              {(['breakfast', 'lunch', 'dinner'] as const).map(meal => (
+                <p key={meal}>{t('food.guide.mealRange', {
+                  meal: t(`food.meal.${meal}`),
+                  min: guidance.mealRanges![meal][0],
+                  max: guidance.mealRanges![meal][1],
+                })}</p>
+              ))}
             </div>
             <p className="mt-3 text-xs text-gray-600">
-              {guidance.proteinTarget == null ? '蛋白质目标待补充' : `蛋白质 ${display(String(guidance.proteinTarget), 1)}g`}
+              {guidance.proteinTarget == null ? t('food.guide.proteinMissing') : t('food.guide.protein', { n: display(String(guidance.proteinTarget), 1) })}
               {' · '}
-              {guidance.carbTarget == null ? '碳水目标待补充' : `碳水 ${display(String(guidance.carbTarget), 1)}g`}
+              {guidance.carbTarget == null ? t('food.guide.carbsMissing') : t('food.guide.carbs', { n: display(String(guidance.carbTarget), 1) })}
             </p>
-            <p className="mt-1 text-xs text-gray-500">膳食纤维：暂无完整数据</p>
-            <p className="mt-2 text-[11px] leading-4 text-gray-500">餐次热量仅作参考，可按作息和饥饿感调整。</p>
+            <p className="mt-1 text-xs text-gray-500">{t('food.guide.fiber')}</p>
+            <p className="mt-2 text-[11px] leading-4 text-gray-500">{t('food.guide.note')}</p>
             <details className="mt-2 text-[11px] text-gray-500">
-              <summary className="cursor-pointer">为什么这样算？</summary>
+              <summary className="cursor-pointer">{t('food.guide.whyTitle')}</summary>
               <p className="mt-1 leading-4">
-                餐次区间按每日目标的参考比例生成；蛋白质和碳水来自你的每日目标与体重信息。它们用于辅助安排，不是必须吃满的固定处方。
+                {t('food.guide.whyBody')}
               </p>
             </details>
           </section>
         )}
 
         <div className="bg-white rounded-2xl p-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">餐别</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">{t('food.meal.label')}</label>
           <div className="flex gap-2">
             {MEAL_TYPES.map(m => (
               <button key={m} onClick={() => setMealType(m)}
                 className={`flex-1 py-2 rounded-xl text-sm border transition-colors
                   ${mealType === m ? 'bg-black text-white border-black' : 'border-gray-200 text-gray-600'}`}>
-                {m}
+                {t(`food.meal.${m}`)}
               </button>
             ))}
           </div>
@@ -855,8 +858,8 @@ export default function FoodPage() {
 
         <div className="bg-white rounded-2xl p-4 overflow-visible">
           <div className="flex justify-between items-center mb-3">
-            <label className="text-sm font-medium text-gray-700">食物列表</label>
-            <button onClick={addFood} className="text-sm text-black font-medium">+ 添加食物</button>
+            <label className="text-sm font-medium text-gray-700">{t('food.list.title')}</label>
+            <button onClick={addFood} className="text-sm text-black font-medium">{t('food.list.add')}</button>
           </div>
           <div className="space-y-4">
             {foods.map((food, i) => (
@@ -874,35 +877,40 @@ export default function FoodPage() {
 
         {hasPreview && !feedback && (
           <section className="rounded-2xl border border-dashed border-gray-200 bg-white p-4">
-            <p className="text-xs text-gray-400">保存前预览</p>
-            <h2 className="mt-1 text-sm font-medium">本餐预计加入</h2>
+            <p className="text-xs text-gray-400">{t('food.preview.kicker')}</p>
+            <h2 className="mt-1 text-sm font-medium">{t('food.preview.title')}</h2>
             <p className="mt-2 text-xs text-gray-600">
-              {display(String(preview.calories_kcal))} kcal · 蛋白质 {display(String(preview.protein_g), 1)}g · 碳水 {display(String(preview.carbs_g), 1)}g · 脂肪 {display(String(preview.fat_g), 1)}g
+              {t('food.preview.line', {
+                kcal: display(String(preview.calories_kcal)),
+                protein: display(String(preview.protein_g), 1),
+                carbs: display(String(preview.carbs_g), 1),
+                fat: display(String(preview.fat_g), 1),
+              })}
             </p>
           </section>
         )}
 
         {dailyNutrition && (
           <section className="space-y-3 rounded-2xl bg-white p-4" aria-live="polite">
-            <h2 className="text-base font-semibold">今日营养进度</h2>
+            <h2 className="text-base font-semibold">{t('food.progress.title')}</h2>
             <div className="space-y-3">
               {([
-                ['calories_kcal', '热量', 'kcal'],
-                ['protein_g', '蛋白质', 'g'],
-                ['carbs_g', '碳水', 'g'],
-                ['fat_g', '脂肪', 'g'],
+                ['calories_kcal', 'common.nutrients.calories', 'kcal'],
+                ['protein_g', 'common.nutrients.protein', 'g'],
+                ['carbs_g', 'common.nutrients.carbs', 'g'],
+                ['fat_g', 'common.nutrients.fat', 'g'],
               ] as const).map(([key, label, unit]) => {
+                const remainingText = remainingParams(dailyNutrition.remaining?.[key] ?? null, unit)
                 const consumed = dailyNutrition.consumed[key]
                 const target = dailyNutrition.target[key]
-                const remaining = dailyNutrition.remaining?.[key] ?? null
                 return (
                   <div key={key} className="flex items-start justify-between gap-3 text-sm">
                     <div>
-                      <p className="font-medium text-gray-800">{label}</p>
-                      <p className="text-xs text-gray-400">{describeRemaining(remaining, unit)}</p>
+                      <p className="font-medium text-gray-800">{t(label)}</p>
+                      <p className="text-xs text-gray-400">{t(remainingText.key, remainingText.params)}</p>
                     </div>
                     <p className="text-right font-medium">
-                      {consumed == null ? '未记录' : display(String(consumed), 1)}
+                      {consumed == null ? t('food.progress.notLogged') : display(String(consumed), 1)}
                       {target == null ? ` ${unit}` : ` / ${display(String(target), 1)} ${unit}`}
                     </p>
                   </div>
@@ -910,7 +918,7 @@ export default function FoodPage() {
               })}
             </div>
             {dailyNutrition.data_completeness === 'partial' && (
-              <p className="rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-900">部分食物还缺少完整营养信息，补充或确认后会更新进度。</p>
+              <p className="rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-900">{t('food.progress.partial')}</p>
             )}
           </section>
         )}
@@ -918,8 +926,8 @@ export default function FoodPage() {
         {feedback ? (
           <section className="space-y-4 rounded-2xl bg-white p-4" aria-live="polite">
             <div>
-              <p className="text-xs text-gray-400">本餐已保存</p>
-              <p className="mt-1 text-sm font-medium">本餐反馈</p>
+              <p className="text-xs text-gray-400">{t('food.feedback.saved')}</p>
+              <p className="mt-1 text-sm font-medium">{t('food.feedback.title')}</p>
             </div>
             {/* spec A0-5: the shared CoachCard, same structure as Home / History / workout feedback. */}
             <CoachCard
@@ -935,7 +943,7 @@ export default function FoodPage() {
               ))}
               {feedback.ai && (
                 <div className="mt-3 flex items-center gap-2 text-xs text-gray-400">
-                  <span>这次反馈有帮助吗？</span>
+                  <span>{t('food.feedback.helpful')}</span>
                   <button type="button" disabled={ratingSaving} onClick={() => rateFeedback('liked')}
                     className={feedback.rating === 'liked' ? 'opacity-100' : 'opacity-40'}>👍</button>
                   <button type="button" disabled={ratingSaving} onClick={() => rateFeedback('disliked')}
@@ -945,7 +953,7 @@ export default function FoodPage() {
             </CoachCard>
             <button type="button" onClick={() => router.push('/home')}
               className="w-full rounded-xl bg-black py-3.5 text-sm font-medium text-white">
-              完成
+              {t('food.feedback.done')}
             </button>
           </section>
         ) : (
@@ -954,7 +962,7 @@ export default function FoodPage() {
             disabled={loading}
             className="w-full bg-black text-white rounded-xl py-3.5 text-sm font-medium disabled:opacity-50"
           >
-            {loading ? '加载中…' : '保存'}
+            {loading ? t('food.save.loading') : t('food.save.button')}
           </button>
         )}
       </div>
