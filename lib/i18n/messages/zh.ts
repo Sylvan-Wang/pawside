@@ -1,6 +1,6 @@
 // 中文字典：现有界面上的原文，原样搬进来。中文界面以它为准，改这里就是改线上中文文案。
 // 分组照 docs/i18n/batch1-strings.md 第 6 节：common（共用组件、lib 文案）、home、today、session、food。
-// 已搬：底部导航、语言设置、首页（含首页上的教练卡片、新手导览、训练日名、营养行名）、今日训练（含动作示意组件；动作英文名在 ../exercise-names.ts）。
+// 已搬：底部导航、语言设置、首页（含首页上的教练卡片、新手导览、训练日名、营养行名）、今日训练（含动作示意组件；动作英文名在 ../exercise-names.ts）、逐组记录、记录饮食（food）。
 // 其余页面在批 1 后续 PR 里逐页搬。
 
 export const zh = {
@@ -256,6 +256,107 @@ export const zh = {
       keepTraining: '继续训练',
       ending: '正在结束…',
       end: '结束训练',
+    },
+  },
+  // app/food/FoodPageClient.tsx（记录饮食）。source / remaining 必须和 lib/nutrition 里的中文逐字一致（测试会对）
+  food: {
+    title: '记录饮食',
+    date: '日期',
+    meal: {
+      label: '餐别',
+      breakfast: '早餐',
+      lunch: '午餐',
+      dinner: '晚餐',
+      snack: '加餐',
+    },
+    guide: {
+      title: '今日饮食参考',
+      badge: '参考',
+      mealRange: '{meal} {min}–{max}',
+      protein: '蛋白质 {n}g',
+      proteinMissing: '蛋白质目标待补充',
+      carbs: '碳水 {n}g',
+      carbsMissing: '碳水目标待补充',
+      fiber: '膳食纤维：暂无完整数据',
+      note: '餐次热量仅作参考，可按作息和饥饿感调整。',
+      whyTitle: '为什么这样算？',
+      whyBody: '餐次区间按每日目标的参考比例生成；蛋白质和碳水来自你的每日目标与体重信息。它们用于辅助安排，不是必须吃满的固定处方。',
+    },
+    list: {
+      title: '食物列表',
+      add: '+ 添加食物',
+    },
+    row: {
+      label: '食物 {n}',
+      remove: '暂不保存这条',
+      namePlaceholder: '食物名称（输入搜索）',
+      searching: '搜索中…',
+      alias: '（{alias}）',
+      recent: '最近常吃 · 点击快速填入',
+      recentProtein: ' · 蛋白 {n}g',
+      weight: '重量（g）',
+      weightPlaceholder: '例如 150',
+      calories: '热量（kcal）',
+      protein: '蛋白质（g）',
+      carbs: '碳水（g）',
+      fat: '脂肪（g）',
+      autoFilled: '✓ 已按每 100g 参考值自动计算四项营养',
+      historyFilled: '✓ 已按历史记录填入相同分量与营养',
+      confirmed: ' · 已确认',
+      unconfirmed: ' · 待确认',
+      aiEstimate: 'AI 估算 · 待确认',
+      caveat: '不同品牌可能有明显差异。',
+      processing: '处理中…',
+      estimate: '让 AI 帮我估算',
+      useEstimate: '使用这个估算',
+      confirmTyped: '确认使用填写值',
+    },
+    source: {
+      canonical_db: '食物数据库',
+      ai_estimate: 'AI 估算',
+      user_override: '你填写的',
+      user_memory: '上次确认',
+      candidate_cache: '已确认估算',
+      unresolved: '还缺少营养信息',
+    },
+    remaining: {
+      none: '暂无可比较目标',
+      over: '已超过参考 {n} {unit}',
+      left: '还可参考摄入 {n} {unit}',
+    },
+    preview: {
+      kicker: '保存前预览',
+      title: '本餐预计加入',
+      line: '{kcal} kcal · 蛋白质 {protein}g · 碳水 {carbs}g · 脂肪 {fat}g',
+    },
+    progress: {
+      title: '今日营养进度',
+      notLogged: '未记录',
+      partial: '部分食物还缺少完整营养信息，补充或确认后会更新进度。',
+    },
+    feedback: {
+      saved: '本餐已保存',
+      title: '本餐反馈',
+      helpful: '这次反馈有帮助吗？',
+      done: '完成',
+    },
+    save: {
+      button: '保存',
+      loading: '加载中…',
+      success: '保存成功',
+      needMeal: '请选择餐别',
+      needFood: '至少填写一个食物的名称和重量',
+      needConfirm: '还有食物缺少营养信息，请先确认估算、手动填写，或删除这条食物',
+      badMeal: '餐别无效',
+      failed: '保存失败',
+      ratingFailed: '反馈保存失败',
+    },
+    errors: {
+      resolve: '食物解析失败',
+      aiUnavailable: 'AI 暂时不可用',
+      confirmFailed: '确认失败',
+      historyLoad: '历史食物读取失败',
+      dailyLoad: '当日营养读取失败',
     },
   },
   home: {
