@@ -1,6 +1,6 @@
 // 中文字典：现有界面上的原文，原样搬进来。中文界面以它为准，改这里就是改线上中文文案。
 // 分组照 docs/i18n/batch1-strings.md 第 6 节：common（共用组件、lib 文案）、home、today、session、food。
-// 已搬：底部导航、语言设置、首页（含首页上的教练卡片、新手导览、训练日名、营养行名）、今日训练（含动作示意组件；动作英文名在 ../exercise-names.ts）、逐组记录、记录饮食（food）。
+// 已搬：底部导航、语言设置、首页（含首页上的教练卡片、新手导览、训练日名、营养行名）、今日训练（含动作示意组件；动作英文名在 ../exercise-names.ts）、逐组记录、记录饮食（food）、登录注册和找回密码（auth）。
 // 其余页面在批 1 后续 PR 里逐页搬。
 
 export const zh = {
@@ -440,6 +440,71 @@ export const zh = {
       freeWorkout: '记录自由训练',
       food: '记录饮食',
       body: '记录身体',
+    },
+  },
+  // app/auth/**（登录、注册、找回密码、重设密码、邮箱确认失败）和 lib/auth-errors.ts。中文和改造前逐字一致
+  auth: {
+    brand: '爪边 Pawside',
+    tagline: '健身记录，简单有效',
+    tabLogin: '登录',
+    tabRegister: '注册',
+    email: '邮箱',
+    password: '密码',
+    passwordPlaceholder: '至少 6 位',
+    confirmPassword: '确认密码',
+    confirmPlaceholder: '再输一次',
+    rememberMe: '记住我，后续不再重复登录',
+    loading: '加载中…',
+    forgot: '忘记密码？',
+    agreeRegister: '注册即表示你已阅读并同意',
+    agreeLogin: '使用爪边即表示你同意',
+    terms: '服务条款',
+    and: '和',
+    privacy: '隐私政策',
+    agreeEnd: '。',
+    noAccount: '还没有账号？',
+    hasAccount: '已有账号？',
+    goRegister: '去注册',
+    goLogin: '去登录',
+    signedInTitle: '注册成功！',
+    pendingTitle: '请确认你的邮箱',
+    signedInBody: '账户已登录，可以继续完成基础资料。',
+    pendingBody: '如果该邮箱可以注册，确认邮件已经发送。请从邮件链接返回 Pawside。',
+    resent: '确认邮件已重新发送，请检查收件箱和垃圾邮件文件夹。',
+    sending: '发送中…',
+    resend: '重新发送确认邮件',
+    continue: '继续',
+    backToLogin: '返回登录',
+    errors: {
+      fallback: '操作失败',
+      notAuthorized: '当前邮件服务无法向这个邮箱发送确认邮件，请联系管理员配置正式邮件服务',
+      rateLimit: '确认邮件发送过于频繁，请至少等待 60 秒后再试',
+      notConfirmed: '邮箱尚未验证，请检查收件箱并点击确认链接',
+      invalidCredentials: '邮箱或密码错误',
+      alreadyRegistered: '该邮箱已注册，请直接登录',
+      mismatch: '两次密码不一致',
+      tooShort: '密码至少 6 位',
+      sendFailed: '发送失败，请重试',
+      resetFailed: '重置失败，请重试',
+    },
+    forgotPage: {
+      title: '找回密码',
+      subtitle: '输入注册邮箱，我们将发送重置链接',
+      sentTitle: '重置邮件已发送',
+      sentBody: '请检查你的邮箱（包括垃圾邮件箱）',
+      submit: '发送重置邮件',
+    },
+    resetPage: {
+      verifying: '验证链接中…',
+      title: '设置新密码',
+      subtitle: '请输入你的新密码',
+      newPassword: '新密码',
+      submitting: '设置中…',
+      submit: '确认修改',
+    },
+    confirmFailed: {
+      title: '邮箱确认失败',
+      body: '确认链接无效或已经过期。请返回登录；如果还没有完成注册，可以重新提交邮箱。',
     },
   },
   // app/training/exercises/[exerciseId]（动作走势，#48）。summary.* 的中文和改造前的 formatSummary 逐字一致
