@@ -4,34 +4,15 @@ import { useRouter } from 'next/navigation'
 import { createClient, setAuthPersistence } from '@/lib/supabase/client'
 import { clearTrainingNavigationCache } from '@/lib/training-navigation-cache'
 import { signupSourceMetadata } from '@/lib/site/attribution'
-
-function getAuthErrorMessage(err: unknown) {
-  const code = typeof err === 'object' && err !== null && 'code' in err
-    ? String(err.code)
-    : ''
-  const message = err instanceof Error ? err.message : '操作失败'
-
-  if (code === 'email_address_not_authorized') {
-    return '当前邮件服务无法向这个邮箱发送确认邮件，请联系管理员配置正式邮件服务'
-  }
-  if (code === 'over_email_send_rate_limit' || code === 'over_request_rate_limit') {
-    return '确认邮件发送过于频繁，请至少等待 60 秒后再试'
-  }
-  if (code === 'email_not_confirmed' || message.includes('Email not confirmed')) {
-    return '邮箱尚未验证，请检查收件箱并点击确认链接'
-  }
-  if (code === 'invalid_credentials' || message.includes('Invalid login')) {
-    return '邮箱或密码错误'
-  }
-  if (message.includes('already registered')) {
-    return '该邮箱已注册，请直接登录'
-  }
-  return message
-}
+import { getAuthErrorMessage } from '@/lib/auth-errors'
+import { useLocale, useT } from '@/lib/i18n/use-locale'
+import LanguageSwitch from '@/components/LanguageSwitch'
 
 export default function AuthPage() {
   const router = useRouter()
   const supabase = createClient()
+  const [locale] = useLocale()
+  const t = useT()
   const [mode, setMode] = useState<'login' | 'register'>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -54,7 +35,7 @@ export default function AuthPage() {
     setLoading(true)
     try {
       if (mode === 'register') {
-        if (password !== confirm) throw new Error('两次密码不一致')
+        if (password !== confirm) throw new Error(t('auth.errors.mismatch'))
         const emailRedirectTo = `${window.location.origin}/auth/callback?next=/onboarding`
         const { data, error } = await supabase.auth.signUp({
           email,
@@ -73,7 +54,7 @@ export default function AuthPage() {
         return
       }
     } catch (err: unknown) {
-      setError(getAuthErrorMessage(err))
+      setError(getAuthErrorMessage(err, locale))
     } finally {
       setLoading(false)
     }
@@ -91,9 +72,9 @@ export default function AuthPage() {
         options: { emailRedirectTo },
       })
       if (error) throw error
-      setConfirmationMessage('确认邮件已重新发送，请检查收件箱和垃圾邮件文件夹。')
+      setConfirmationMessage(t('auth.resent'))
     } catch (err: unknown) {
-      setConfirmationError(getAuthErrorMessage(err))
+      setConfirmationError(getAuthErrorMessage(err, locale))
     } finally {
       setResending(false)
     }
@@ -106,12 +87,12 @@ export default function AuthPage() {
           <div className="bg-gray-900 text-white px-8 py-6 rounded-2xl shadow-2xl text-center animate-fade-in max-w-sm">
             <p className="text-2xl mb-1">🍻</p>
             <p className="text-base font-medium">
-              {registrationResult === 'signed-in' ? '注册成功！' : '请确认你的邮箱'}
+              {registrationResult === 'signed-in' ? t('auth.signedInTitle') : t('auth.pendingTitle')}
             </p>
             <p className="text-xs text-gray-400 mt-2 leading-5">
               {registrationResult === 'signed-in'
-                ? '账户已登录，可以继续完成基础资料。'
-                : '如果该邮箱可以注册，确认邮件已经发送。请从邮件链接返回 Pawside。'}
+                ? t('auth.signedInBody')
+                : t('auth.pendingBody')}
             </p>
             {registrationResult === 'confirmation-pending' && (
               <>
@@ -131,7 +112,7 @@ export default function AuthPage() {
                   disabled={resending}
                   className="mt-4 w-full rounded-lg border border-white/25 px-5 py-2 text-sm font-medium text-white disabled:opacity-50"
                 >
-                  {resending ? '发送中…' : '重新发送确认邮件'}
+                  {resending ? t('auth.sending') : t('auth.resend')}
                 </button>
               </>
             )}
@@ -148,14 +129,14 @@ export default function AuthPage() {
               }}
               className="mt-3 rounded-lg bg-white px-5 py-2 text-sm font-medium text-gray-900"
             >
-              {registrationResult === 'signed-in' ? '继续' : '返回登录'}
+              {registrationResult === 'signed-in' ? t('auth.continue') : t('auth.backToLogin')}
             </button>
           </div>
         </div>
       )}
       <div className="mb-10">
-        <h1 className="text-2xl font-bold text-gray-900 mb-1">爪边 Pawside</h1>
-        <p className="text-gray-400 text-sm">健身记录，简单有效</p>
+        <h1 className="text-2xl font-bold text-gray-900 mb-1">{t('auth.brand')}</h1>
+        <p className="text-gray-400 text-sm">{t('auth.tagline')}</p>
       </div>
 
       <div className="flex mb-6 border-b border-gray-100">
@@ -163,19 +144,19 @@ export default function AuthPage() {
           onClick={() => { setMode('login'); setRegistrationResult(null); setConfirm('') }}
           className={`flex-1 pb-3 text-sm font-medium transition-colors ${mode === 'login' ? 'text-black border-b-2 border-black' : 'text-gray-400'}`}
         >
-          登录
+          {t('auth.tabLogin')}
         </button>
         <button
           onClick={() => { setMode('register'); setRegistrationResult(null); setConfirm('') }}
           className={`flex-1 pb-3 text-sm font-medium transition-colors ${mode === 'register' ? 'text-black border-b-2 border-black' : 'text-gray-400'}`}
         >
-          注册
+          {t('auth.tabRegister')}
         </button>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm text-gray-600 mb-1">邮箱</label>
+          <label className="block text-sm text-gray-600 mb-1">{t('auth.email')}</label>
           <input
             type="email"
             value={email}
@@ -186,26 +167,26 @@ export default function AuthPage() {
           />
         </div>
         <div>
-          <label className="block text-sm text-gray-600 mb-1">密码</label>
+          <label className="block text-sm text-gray-600 mb-1">{t('auth.password')}</label>
           <input
             type="password"
             value={password}
             onChange={e => setPassword(e.target.value)}
             className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-gray-400"
-            placeholder="至少 6 位"
+            placeholder={t('auth.passwordPlaceholder')}
             required
             minLength={6}
           />
         </div>
         {mode === 'register' && (
           <div>
-            <label className="block text-sm text-gray-600 mb-1">确认密码</label>
+            <label className="block text-sm text-gray-600 mb-1">{t('auth.confirmPassword')}</label>
             <input
               type="password"
               value={confirm}
               onChange={e => setConfirm(e.target.value)}
               className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-gray-400"
-              placeholder="再输一次"
+              placeholder={t('auth.confirmPlaceholder')}
               required
             />
           </div>
@@ -219,7 +200,7 @@ export default function AuthPage() {
               onChange={event => setRememberMe(event.target.checked)}
               className="h-4 w-4 rounded border-gray-300 accent-black"
             />
-            <span>记住我，后续不再重复登录</span>
+            <span>{t('auth.rememberMe')}</span>
           </label>
         )}
 
@@ -230,30 +211,33 @@ export default function AuthPage() {
           disabled={loading}
           className="w-full bg-black text-white rounded-xl py-3.5 text-sm font-medium disabled:opacity-50 mt-2"
         >
-          {loading ? '加载中…' : mode === 'login' ? '登录' : '注册'}
+          {loading ? t('auth.loading') : mode === 'login' ? t('auth.tabLogin') : t('auth.tabRegister')}
         </button>
 
         {mode === 'login' && (
           <p className="text-center">
-            <a href="/auth/forgot-password" className="text-xs text-gray-400 underline">忘记密码？</a>
+            <a href="/auth/forgot-password" className="text-xs text-gray-400 underline">{t('auth.forgot')}</a>
           </p>
         )}
       </form>
 
       <p className="mt-6 text-center text-xs leading-5 text-gray-400">
-        {mode === 'register' ? '注册即表示你已阅读并同意' : '使用爪边即表示你同意'}
-        <a href="/terms" className="underline">服务条款</a>和<a href="/privacy" className="underline">隐私政策</a>。
+        {mode === 'register' ? t('auth.agreeRegister') : t('auth.agreeLogin')}
+        <a href="/terms" className="underline">{t('auth.terms')}</a>{t('auth.and')}<a href="/privacy" className="underline">{t('auth.privacy')}</a>{t('auth.agreeEnd')}
       </p>
 
       <p className="text-center text-sm text-gray-400 mt-4">
-        {mode === 'login' ? '还没有账号？' : '已有账号？'}
+        {mode === 'login' ? t('auth.noAccount') : t('auth.hasAccount')}
         <button
           onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setRegistrationResult(null); setConfirm('') }}
           className="text-black ml-1 font-medium"
         >
-          {mode === 'login' ? '去注册' : '去登录'}
+          {mode === 'login' ? t('auth.goRegister') : t('auth.goLogin')}
         </button>
       </p>
+
+      {/* 英文开关关着时不渲染；开着时英文用户在登录前就能切语言 */}
+      <LanguageSwitch compact />
     </div>
   )
 }
