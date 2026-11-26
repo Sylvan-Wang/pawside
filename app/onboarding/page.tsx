@@ -11,40 +11,43 @@ import {
   weeklyWorkoutTargetBounds,
 } from '@/lib/contracts/onboarding'
 import CatMascot from '@/components/CatMascot'
+import type { MessageKey } from '@/lib/i18n'
+import { useT } from '@/lib/i18n/use-locale'
 import { computeMacroTargets } from '@/lib/nutrition/macro-targets'
 import { useRouter } from 'next/navigation'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
+// 选项的文案在字典 onboarding.* 里（lib/i18n/messages），这里只留值和顺序。
 const goals = [
-  { value: 'lose_fat', label: '减脂' },
-  { value: 'gain_muscle', label: '增肌' },
-  { value: 'maintain', label: '保持' },
-] as const
+  { value: 'lose_fat', label: 'onboarding.goalOptions.lose_fat' },
+  { value: 'gain_muscle', label: 'onboarding.goalOptions.gain_muscle' },
+  { value: 'maintain', label: 'onboarding.goalOptions.maintain' },
+] as const satisfies ReadonlyArray<{ value: string; label: MessageKey }>
 
 const genders = [
-  { value: 'male', label: '男' },
-  { value: 'female', label: '女' },
-  { value: 'other', label: '其他' },
-] as const
+  { value: 'male', label: 'onboarding.genderOptions.male' },
+  { value: 'female', label: 'onboarding.genderOptions.female' },
+  { value: 'other', label: 'onboarding.genderOptions.other' },
+] as const satisfies ReadonlyArray<{ value: string; label: MessageKey }>
 
-const experiences: Array<{ value: TrainingExperience; label: string; note: string }> = [
-  { value: 'new_to_structured', label: '刚开始', note: '还没有稳定执行过训练计划' },
-  { value: 'some_experience', label: '有一些经验', note: '练过一段时间，但不总是连续' },
-  { value: 'consistent', label: '稳定训练', note: '近期持续按计划训练' },
+const experiences: Array<{ value: TrainingExperience; label: MessageKey; note: MessageKey }> = [
+  { value: 'new_to_structured', label: 'onboarding.experience.new_to_structured', note: 'onboarding.experience.new_to_structuredNote' },
+  { value: 'some_experience', label: 'onboarding.experience.some_experience', note: 'onboarding.experience.some_experienceNote' },
+  { value: 'consistent', label: 'onboarding.experience.consistent', note: 'onboarding.experience.consistentNote' },
 ]
 
-const pushupOptions: Array<{ value: PushupCapacity; label: string }> = [
-  { value: 'not_yet', label: '暂时不能' },
-  { value: 'one_to_five', label: '1–5 次' },
-  { value: 'six_to_fifteen', label: '6–15 次' },
-  { value: 'sixteen_plus', label: '16 次以上' },
-  { value: 'unsure', label: '不确定' },
+const pushupOptions: Array<{ value: PushupCapacity; label: MessageKey }> = [
+  { value: 'not_yet', label: 'onboarding.pushup.not_yet' },
+  { value: 'one_to_five', label: 'onboarding.pushup.one_to_five' },
+  { value: 'six_to_fifteen', label: 'onboarding.pushup.six_to_fifteen' },
+  { value: 'sixteen_plus', label: 'onboarding.pushup.sixteen_plus' },
+  { value: 'unsure', label: 'onboarding.pushup.unsure' },
 ]
 
-const equipmentOptions: Array<{ value: EquipmentAccess; label: string; note: string }> = [
-  { value: 'full_gym', label: '完整健身房', note: '杠铃、哑铃、绳索和常见器械' },
-  { value: 'basic_equipment', label: '基础器械', note: '哑铃、弹力带或少量器械' },
-  { value: 'home_bodyweight', label: '居家 / 徒手', note: '目前没有完整训练器械' },
+const equipmentOptions: Array<{ value: EquipmentAccess; label: MessageKey; note: MessageKey }> = [
+  { value: 'full_gym', label: 'onboarding.equipment.full_gym', note: 'onboarding.equipment.full_gymNote' },
+  { value: 'basic_equipment', label: 'onboarding.equipment.basic_equipment', note: 'onboarding.equipment.basic_equipmentNote' },
+  { value: 'home_bodyweight', label: 'onboarding.equipment.home_bodyweight', note: 'onboarding.equipment.home_bodyweightNote' },
 ]
 
 const sessionOptions: PreferredSessionMinutes[] = [30, 45, 60, 90]
@@ -58,6 +61,10 @@ const WEEKLY_TARGET_OPTIONS = [2, 3, 4, 5] as const
 
 export default function OnboardingPage() {
   const router = useRouter()
+  const t = useT()
+  // 读取现有设置的请求只发一次；失败时用最新语言的文案（首次渲染固定是中文，语言随后才同步）。
+  const tRef = useRef(t)
+  useEffect(() => { tRef.current = t }, [t])
   const [form, setForm] = useState({
     goal: '' as typeof goals[number]['value'] | '',
     gender: '' as typeof genders[number]['value'] | '',
@@ -89,7 +96,7 @@ export default function OnboardingPage() {
       try {
         const response = await fetch('/api/onboarding', { cache: 'no-store' })
         const result = await response.json()
-        if (!response.ok) throw new Error(result?.error?.message || '暂时无法读取现有设置')
+        if (!response.ok) throw new Error(result?.error?.message || tRef.current('onboarding.errors.load'))
         if (!active) return
 
         const profile = result.data?.profile
@@ -116,7 +123,7 @@ export default function OnboardingPage() {
           preferred_session_minutes: capability?.preferred_session_minutes || current.preferred_session_minutes,
         }))
       } catch (reason: unknown) {
-        if (active) setError(reason instanceof Error ? reason.message : '暂时无法读取现有设置')
+        if (active) setError(reason instanceof Error ? reason.message : tRef.current('onboarding.errors.load'))
       } finally {
         if (active) setInitialLoading(false)
       }
@@ -171,12 +178,12 @@ export default function OnboardingPage() {
     event.preventDefault()
     setError('')
 
-    if (!form.goal || !form.gender) return setError('请填写基础信息')
+    if (!form.goal || !form.gender) return setError(t('onboarding.errors.basics'))
     if (Number(form.height_cm) <= 0 || Number(form.weight_kg) <= 0) {
-      return setError('身高体重须大于 0')
+      return setError(t('onboarding.errors.bodyPositive'))
     }
     if (!form.training_experience || !form.pushup_capacity || !form.equipment_access) {
-      return setError('请完成轻量能力画像')
+      return setError(t('onboarding.errors.capability'))
     }
 
     // Target layer (Product Patch §4). Blank is allowed and stays null, but an
@@ -191,7 +198,7 @@ export default function OnboardingPage() {
         calorieTarget > dailyCalorieTargetBounds.max)
     ) {
       return setError(
-        `每日热量目标须在 ${dailyCalorieTargetBounds.min}–${dailyCalorieTargetBounds.max} kcal 之间`,
+        t('onboarding.errors.calorieRange', { min: dailyCalorieTargetBounds.min, max: dailyCalorieTargetBounds.max }),
       )
     }
 
@@ -205,14 +212,14 @@ export default function OnboardingPage() {
         weeklyTarget > weeklyWorkoutTargetBounds.max)
     ) {
       return setError(
-        `每周训练目标须在 ${weeklyWorkoutTargetBounds.min}–${weeklyWorkoutTargetBounds.max} 次之间`,
+        t('onboarding.errors.weeklyRange', { min: weeklyWorkoutTargetBounds.min, max: weeklyWorkoutTargetBounds.max }),
       )
     }
 
     // Source: AI Patch §12.2 — an incompatible calorie target must surface as
     // `needs_review` instead of being forced into a macro split.
     if (calorieTarget !== null && macroPreview.status === 'needs_review') {
-      return setError('当前热量目标过低，无法生成合理的三大营养素参考，请调整热量目标')
+      return setError(t('onboarding.errors.calorieTooLow'))
     }
 
     setLoading(true)
@@ -242,15 +249,15 @@ export default function OnboardingPage() {
       })
       const result = await response.json()
       if (!response.ok) {
-        throw new Error(result?.error?.message || result?.message || '保存失败')
+        throw new Error(result?.error?.message || result?.message || t('onboarding.errors.save'))
       }
 
       if (typeof window !== 'undefined') {
-        sessionStorage.setItem('pawside_setup_notice', result?.message || '基础设置已保存。')
+        sessionStorage.setItem('pawside_setup_notice', result?.message || t('onboarding.saved'))
       }
       router.push('/home')
     } catch (reason: unknown) {
-      setError(reason instanceof Error ? reason.message : '保存失败')
+      setError(reason instanceof Error ? reason.message : t('onboarding.errors.save'))
     } finally {
       setLoading(false)
     }
@@ -261,26 +268,26 @@ export default function OnboardingPage() {
       <header className="rounded-2xl bg-black p-5 text-white">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-xs text-white/60">Pawside 基础设置</p>
-            <h1 className="mt-2 text-xl font-semibold">了解你现在的起点</h1>
+            <p className="text-xs text-white/60">{t('onboarding.eyebrow')}</p>
+            <h1 className="mt-2 text-xl font-semibold">{t('onboarding.title')}</h1>
           </div>
           <CatMascot mood="peek" size={56} />
         </div>
         <p className="mt-2 text-sm leading-6 text-white/70">
-          这些答案只用于缩小初始训练范围。第一次训练仍会通过实际表现重新找重量。
+          {t('onboarding.intro')}
         </p>
-        <div className="mt-4" role="progressbar" aria-valuemin={0} aria-valuemax={REQUIRED_TOTAL} aria-valuenow={requiredDone} aria-label="必填项完成进度">
+        <div className="mt-4" role="progressbar" aria-valuemin={0} aria-valuemax={REQUIRED_TOTAL} aria-valuenow={requiredDone} aria-label={t('onboarding.progressAria')}>
           <div className="h-1.5 overflow-hidden rounded-full bg-white/20">
             <div className="h-full rounded-full bg-white transition-all" style={{ width: `${(requiredDone / REQUIRED_TOTAL) * 100}%` }} />
           </div>
           <p className="mt-1.5 text-xs text-white/60">
-            {requiredDone >= REQUIRED_TOTAL ? '必填都完成了，可以保存' : `必填 ${requiredDone} / ${REQUIRED_TOTAL}，每周目标和热量目标可以以后再填`}
+            {requiredDone >= REQUIRED_TOTAL ? t('onboarding.progressDone') : t('onboarding.progressCount', { done: requiredDone, total: REQUIRED_TOTAL })}
           </p>
         </div>
       </header>
 
       {initialLoading && (
-        <p className="mt-4 rounded-2xl bg-white p-4 text-sm text-gray-500">正在读取现有设置…</p>
+        <p className="mt-4 rounded-2xl bg-white p-4 text-sm text-gray-500">{t('onboarding.loadingExisting')}</p>
       )}
 
       <form
@@ -291,11 +298,11 @@ export default function OnboardingPage() {
         <section className="rounded-2xl bg-white p-4">
           <div className="mb-4">
             <p className="text-xs text-gray-400">01</p>
-            <h2 className="mt-1 font-semibold text-gray-900">基础信息</h2>
+            <h2 className="mt-1 font-semibold text-gray-900">{t('onboarding.basics')}</h2>
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">目标</label>
+            <label className="mb-2 block text-sm font-medium text-gray-700">{t('onboarding.goal')}</label>
             <div className="flex gap-3">
               {goals.map((goal) => (
                 <button
@@ -307,14 +314,14 @@ export default function OnboardingPage() {
                     : 'flex-1 rounded-xl border border-gray-200 py-2.5 text-sm text-gray-600'
                   }
                 >
-                  {goal.label}
+                  {t(goal.label)}
                 </button>
               ))}
             </div>
           </div>
 
           <div className="mt-5">
-            <label className="mb-2 block text-sm font-medium text-gray-700">性别</label>
+            <label className="mb-2 block text-sm font-medium text-gray-700">{t('onboarding.gender')}</label>
             <div className="flex gap-3">
               {genders.map((gender) => (
                 <button
@@ -326,7 +333,7 @@ export default function OnboardingPage() {
                     : 'flex-1 rounded-xl border border-gray-200 py-2.5 text-sm text-gray-600'
                   }
                 >
-                  {gender.label}
+                  {t(gender.label)}
                 </button>
               ))}
             </div>
@@ -334,7 +341,7 @@ export default function OnboardingPage() {
 
           <div className="mt-5 grid grid-cols-2 gap-4">
             <div>
-              <label htmlFor="height" className="mb-1 block text-sm text-gray-600">身高（cm）</label>
+              <label htmlFor="height" className="mb-1 block text-sm text-gray-600">{t('onboarding.height')}</label>
               <input
                 id="height"
                 type="number"
@@ -348,7 +355,7 @@ export default function OnboardingPage() {
             </div>
             <div>
               <div className="mb-1 flex items-center justify-between">
-                <label htmlFor="weight" className="text-sm text-gray-600">体重</label>
+                <label htmlFor="weight" className="text-sm text-gray-600">{t('onboarding.weight')}</label>
                 <div className="flex overflow-hidden rounded-lg border border-gray-200">
                   {(['kg', 'lb'] as const).map((unit) => (
                     <button
@@ -383,15 +390,15 @@ export default function OnboardingPage() {
         <section className="rounded-2xl bg-white p-4">
           <div className="mb-4">
             <p className="text-xs text-gray-400">02</p>
-            <h2 className="mt-1 font-semibold text-gray-900">目标设置</h2>
+            <h2 className="mt-1 font-semibold text-gray-900">{t('onboarding.targets')}</h2>
             <p className="mt-1 text-xs leading-5 text-gray-400">
-              热量目标由你自己决定。蛋白质、碳水和脂肪是系统参考值，不是强制限制。
+              {t('onboarding.targetsNote')}
             </p>
           </div>
 
           <div>
             <label htmlFor="calorie-target" className="mb-1 block text-sm font-medium text-gray-700">
-              每日热量目标（kcal，选填）
+              {t('onboarding.calorieLabel')}
             </label>
             <input
               id="calorie-target"
@@ -400,15 +407,15 @@ export default function OnboardingPage() {
               value={form.daily_calorie_target}
               onChange={(event) => set('daily_calorie_target', event.target.value)}
               className="w-full rounded-xl border border-gray-200 px-3 py-3 text-sm outline-none focus:border-gray-400"
-              placeholder="例如 1800"
+              placeholder={t('onboarding.caloriePlaceholder')}
               min={dailyCalorieTargetBounds.min}
               max={dailyCalorieTargetBounds.max}
             />
-            <p className="mt-1 text-xs leading-5 text-gray-400">留空表示暂不设置，之后可在设置中补充。</p>
+            <p className="mt-1 text-xs leading-5 text-gray-400">{t('onboarding.calorieBlank')}</p>
           </div>
 
           <div className="mt-5">
-            <label className="mb-2 block text-sm font-medium text-gray-700">每周训练目标（选填）</label>
+            <label className="mb-2 block text-sm font-medium text-gray-700">{t('onboarding.weeklyLabel')}</label>
             <div className="flex flex-wrap gap-2">
               {WEEKLY_TARGET_OPTIONS.map((option) => (
                 <button
@@ -420,7 +427,7 @@ export default function OnboardingPage() {
                     : 'rounded-xl border border-gray-200 px-4 py-2.5 text-sm text-gray-600'
                   }
                 >
-                  {option} 次
+                  {t('onboarding.weeklyOption', { n: option })}
                 </button>
               ))}
               <button
@@ -431,7 +438,7 @@ export default function OnboardingPage() {
                   : 'rounded-xl border border-gray-200 px-4 py-2.5 text-sm text-gray-600'
                 }
               >
-                暂不设置
+                {t('onboarding.notSet')}
               </button>
             </div>
           </div>
@@ -439,29 +446,29 @@ export default function OnboardingPage() {
           {/* Derived recommendation. Product Patch §4.1 / AC-P02: labelled 系统建议. */}
           {calorieTargetForPreview !== null && (
             <div className="mt-5 rounded-xl bg-gray-50 p-3">
-              <p className="text-xs text-gray-400">每日营养参考</p>
+              <p className="text-xs text-gray-400">{t('onboarding.previewTitle')}</p>
 
               <div className="mt-2 space-y-1.5">
                 <div className="flex items-baseline justify-between">
-                  <span className="text-sm text-gray-700">热量</span>
+                  <span className="text-sm text-gray-700">{t('onboarding.calories')}</span>
                   <span className="text-sm text-gray-900">
                     {Math.round(calorieTargetForPreview)} kcal
-                    <span className="ml-2 text-xs text-gray-400">你的目标</span>
+                    <span className="ml-2 text-xs text-gray-400">{t('onboarding.yourTarget')}</span>
                   </span>
                 </div>
 
                 {macroPreview.status === 'ok' && macroPreview.recommended ? (
                   <>
                     {([
-                      ['蛋白质', macroPreview.recommended.protein_g],
-                      ['碳水', macroPreview.recommended.carb_g],
-                      ['脂肪', macroPreview.recommended.fat_g],
+                      [t('onboarding.protein'), macroPreview.recommended.protein_g],
+                      [t('onboarding.carbs'), macroPreview.recommended.carb_g],
+                      [t('onboarding.fat'), macroPreview.recommended.fat_g],
                     ] as const).map(([label, value]) => (
                       <div key={label} className="flex items-baseline justify-between">
                         <span className="text-sm text-gray-700">{label}</span>
                         <span className="text-sm text-gray-900">
                           {value} g
-                          <span className="ml-2 text-xs text-gray-400">系统建议</span>
+                          <span className="ml-2 text-xs text-gray-400">{t('onboarding.suggested')}</span>
                         </span>
                       </div>
                     ))}
@@ -469,15 +476,15 @@ export default function OnboardingPage() {
                 ) : (
                   <p className="text-xs leading-5 text-gray-500">
                     {macroPreview.calculationBasis.reason === 'missing_weight'
-                      ? '填写体重后即可生成三大营养素参考。'
-                      : '当前热量目标无法生成合理的三大营养素参考，请调整热量目标或先填写体重。'}
+                      ? t('onboarding.previewNeedWeight')
+                      : t('onboarding.previewNeedsReview')}
                   </p>
                 )}
               </div>
 
               {macroPreview.status === 'ok' && (
                 <p className="mt-2 text-xs leading-5 text-gray-400">
-                  Pawside 参考运动营养研究，为你生成上述参考值；它不是医学标准，也不代替你的判断。
+                  {t('onboarding.previewNote')}
                 </p>
               )}
             </div>
@@ -487,14 +494,14 @@ export default function OnboardingPage() {
         <section className="rounded-2xl bg-white p-4">
           <div className="mb-4">
             <p className="text-xs text-gray-400">03</p>
-            <h2 className="mt-1 font-semibold text-gray-900">轻量能力画像</h2>
+            <h2 className="mt-1 font-semibold text-gray-900">{t('onboarding.capability')}</h2>
             <p className="mt-1 text-xs leading-5 text-gray-400">
-              不做考试，也不会把俯卧撑次数直接换算成卧推重量。
+              {t('onboarding.capabilityNote')}
             </p>
           </div>
 
           <fieldset>
-            <legend className="text-sm font-medium text-gray-700">你最近的训练状态</legend>
+            <legend className="text-sm font-medium text-gray-700">{t('onboarding.experienceLegend')}</legend>
             <div className="mt-2 space-y-2">
               {experiences.map((option) => (
                 <button
@@ -506,12 +513,12 @@ export default function OnboardingPage() {
                     : 'w-full rounded-xl border border-gray-200 px-4 py-3 text-left text-gray-700'
                   }
                 >
-                  <span className="block text-sm font-medium">{option.label}</span>
+                  <span className="block text-sm font-medium">{t(option.label)}</span>
                   <span className={form.training_experience === option.value
                     ? 'mt-0.5 block text-xs text-white/60'
                     : 'mt-0.5 block text-xs text-gray-400'
                   }>
-                    {option.note}
+                    {t(option.note)}
                   </span>
                 </button>
               ))}
@@ -519,7 +526,7 @@ export default function OnboardingPage() {
           </fieldset>
 
           <fieldset className="mt-5">
-            <legend className="text-sm font-medium text-gray-700">标准俯卧撑大约能做</legend>
+            <legend className="text-sm font-medium text-gray-700">{t('onboarding.pushupLegend')}</legend>
             <div className="mt-2 grid grid-cols-2 gap-2">
               {pushupOptions.map((option) => (
                 <button
@@ -531,14 +538,14 @@ export default function OnboardingPage() {
                     : 'rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-600'
                   }
                 >
-                  {option.label}
+                  {t(option.label)}
                 </button>
               ))}
             </div>
           </fieldset>
 
           <fieldset className="mt-5">
-            <legend className="text-sm font-medium text-gray-700">你通常在哪里训练</legend>
+            <legend className="text-sm font-medium text-gray-700">{t('onboarding.equipmentLegend')}</legend>
             <div className="mt-2 space-y-2">
               {equipmentOptions.map((option) => (
                 <button
@@ -550,25 +557,25 @@ export default function OnboardingPage() {
                     : 'w-full rounded-xl border border-gray-200 px-4 py-3 text-left text-gray-700'
                   }
                 >
-                  <span className="block text-sm font-medium">{option.label}</span>
+                  <span className="block text-sm font-medium">{t(option.label)}</span>
                   <span className={form.equipment_access === option.value
                     ? 'mt-0.5 block text-xs text-white/60'
                     : 'mt-0.5 block text-xs text-gray-400'
                   }>
-                    {option.note}
+                    {t(option.note)}
                   </span>
                 </button>
               ))}
             </div>
             {form.equipment_access && form.equipment_access !== 'full_gym' && (
               <p className="mt-2 rounded-xl bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-800">
-                当前三分化包含杠铃、绳索与器械动作。基础资料仍会保存，但在替代动作确认前不会自动启用方法。
+                {t('onboarding.equipmentWarning')}
               </p>
             )}
           </fieldset>
 
           <fieldset className="mt-5">
-            <legend className="text-sm font-medium text-gray-700">单次训练通常可安排</legend>
+            <legend className="text-sm font-medium text-gray-700">{t('onboarding.sessionLegend')}</legend>
             <div className="mt-2 grid grid-cols-4 gap-2">
               {sessionOptions.map((minutes) => (
                 <button
@@ -580,7 +587,7 @@ export default function OnboardingPage() {
                     : 'rounded-xl border border-gray-200 py-2.5 text-sm text-gray-600'
                   }
                 >
-                  {minutes} 分
+                  {t('onboarding.sessionOption', { n: minutes })}
                 </button>
               ))}
             </div>
@@ -588,9 +595,9 @@ export default function OnboardingPage() {
         </section>
 
         <section className="rounded-2xl border border-gray-200 bg-white p-4">
-          <p className="text-sm font-medium text-gray-900">接下来会发生什么</p>
+          <p className="text-sm font-medium text-gray-900">{t('onboarding.nextTitle')}</p>
           <p className="mt-1 text-xs leading-5 text-gray-500">
-            如果三分化已经发布且器械条件匹配，系统会固定当前方法版本，从第 1 轮「推」开始。否则只保存设置，不会伪造训练计划。
+            {t('onboarding.nextBody')}
           </p>
         </section>
 
@@ -601,7 +608,7 @@ export default function OnboardingPage() {
           disabled={loading || initialLoading}
           className="w-full rounded-xl bg-black py-3.5 text-sm font-medium text-white disabled:opacity-50"
         >
-          {initialLoading ? '正在读取…' : loading ? '正在保存…' : '保存设置'}
+          {initialLoading ? t('onboarding.submitLoading') : loading ? t('onboarding.submitSaving') : t('onboarding.submit')}
         </button>
       </form>
     </div>
